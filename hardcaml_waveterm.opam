@@ -1,0 +1,34 @@
+opam-version: "1.2"
+maintainer: "opensource@janestreet.com"
+authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
+homepage: "https://github.com/janestreet/hardcaml_waveterm"
+bug-reports: "https://github.com/janestreet/hardcaml_waveterm/issues"
+dev-repo: "git+https://github.com/janestreet/hardcaml_waveterm.git"
+license: "MIT"
+build: [
+  ["jbuilder" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "base"
+  "hardcaml"
+  "notty_async"
+  "ppx_jane"
+  "stdio"
+  "jbuilder"                {build & >= "1.0+beta18.1"}
+  "notty"                   {>= "0.2.1"}
+  "num"
+  "ocaml-migrate-parsetree" {>= "1.0"}
+  "ppxlib"                  {>= "0.1.0"}
+  "re"                      {>= "1.5.0"}
+]
+available: [ ocaml-version >= "4.06.1" ]
+descr: "
+A terminal based digital waveform viewer for Hardcaml.
+
+The hardcaml_waveterm library renders digital waveforms to unicode. Such
+waveforms can be used in expect tests or for debugging using the supplied
+interactive terminal application.
+
+The library is closely integrated with Hardcaml and can be easily attached
+to simulations.
+"
