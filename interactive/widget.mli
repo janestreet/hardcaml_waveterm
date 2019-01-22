@@ -14,4 +14,9 @@ val run : ?signals_width:int -> ?values_width:int -> Waves.t -> unit
 val run_and_close : ?signals_width:int -> ?values_width:int -> Waves.t -> unit
 
 (** Run interactive waveterm viewer. [ESC] to quit. *)
-val run_interactive_viewer : ?display_rules:Display_rules.t -> Waveform.t -> unit
+val run_interactive_viewer
+  :  ?signals_width:int
+  -> ?values_width:int
+  -> ?display_rules:Display_rules.t
+  -> Waveform.t
+  -> unit

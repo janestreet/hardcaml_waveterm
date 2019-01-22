@@ -131,21 +131,22 @@ module Waveform_window = struct
     Scroll.Scrollable.set_offset t.scroll_values.scrollable offset
   ;;
 
-  let create ~rows ~cols waves =
+  let create ~signals_width ~values_width ~rows ~cols waves =
     let hbarheight = 1 in
     let vbarwidth = 2 in
     let signals_window : Signals_window.t With_bounds.t =
-      { bounds = { r = 0; c = 0; w = 10; h = rows - hbarheight }
+      { bounds = { r = 0; c = 0; w = signals_width; h = rows - hbarheight }
       ; window = Signals_window.create waves
       }
     in
     let values_window : Values_window.t With_bounds.t =
-      { bounds = { r = 0; c = 10; w = 10; h = rows - hbarheight }
+      { bounds = { r = 0; c = signals_width; w = values_width; h = rows - hbarheight }
       ; window = Values_window.create waves
       }
     in
     let waves_window : Waves_window.t With_bounds.t =
-      { bounds = { r = 0; c = 20; w = cols - 20 - vbarwidth; h = rows - hbarheight }
+      let sum = signals_width + values_width in
+      { bounds = { r = 0; c = sum; w = cols - sum - vbarwidth; h = rows - hbarheight }
       ; window = Waves_window.create waves
       }
     in
@@ -155,15 +156,18 @@ module Waveform_window = struct
     in
     let scroll_signals =
       Scroll.HScrollbar.create
-        { Draw.r = rows - hbarheight; c = 0; w = 10; h = hbarheight }
+        { Draw.r = rows - hbarheight; c = 0; w = signals_width; h = hbarheight }
     in
     let scroll_values =
       Scroll.HScrollbar.create
-        { Draw.r = rows - hbarheight; c = 10; w = 10; h = hbarheight }
+        { Draw.r = rows - hbarheight; c = signals_width; w = values_width; h = hbarheight
+        }
     in
     let scroll_waves =
+      let sum = signals_width + values_width in
       Scroll.HScrollbar.create
-        { Draw.r = rows - hbarheight; c = 20; w = cols - 20 - vbarwidth; h = hbarheight }
+        { Draw.r = rows - hbarheight; c = sum; w = cols - sum - vbarwidth; h = hbarheight
+        }
     in
     let max_signal_offset = R.get_max_signals waves in
     let max_cycle_offset = R.get_max_cycles waves in
@@ -360,21 +364,43 @@ module Context = struct
     ; events : [Notty.Unescape.event | `Resize of int * int] Pipe.Reader.t
     ; stop : unit Deferred.t
     ; mutable draw_ctx : Draw_notty.ctx
+    ; signals_width : int
+    ; values_width : int
     }
 
-  let create waves =
+  let create ~signals_width ~values_width waves =
     let%bind term = Notty_async.Term.create () in
     let cols, rows = Notty_async.Term.size term in
-    let waveform = Waveform_window.create ~cols ~rows waves in
+    let waveform =
+      Waveform_window.create ~signals_width ~values_width ~cols ~rows waves
+    in
     let events = Notty_async.Term.events term in
     let stop = Pipe.closed events in
     let%bind () = Notty_async.Term.cursor term None in
     let draw_ctx = Draw_notty.init ~rows ~cols in
-    return { term; rows; cols; events; stop; waves; waveform; draw_ctx }
+    return
+      { term
+      ; rows
+      ; cols
+      ; events
+      ; stop
+      ; waves
+      ; waveform
+      ; draw_ctx
+      ; signals_width
+      ; values_width
+      }
   ;;
 
   let resize ~rows ~cols t =
-    let waveform = Waveform_window.create ~cols ~rows t.waves in
+    let waveform =
+      Waveform_window.create
+        ~signals_width:t.signals_width
+        ~values_width:t.values_width
+        ~cols
+        ~rows
+        t.waves
+    in
     let draw_ctx = Draw_notty.init ~rows ~cols in
     t.rows <- rows;
     t.cols <- cols;
@@ -417,8 +443,8 @@ module Context = struct
   ;;
 end
 
-let run_waves ?signals_width:_ ?values_width:_ waves =
-  let%bind ctx = Context.create waves in
+let run_waves ?(signals_width = 20) ?(values_width = 20) waves =
+  let%bind ctx = Context.create ~signals_width ~values_width waves in
   let%bind () = Context.draw ctx in
   don't_wait_for (Context.iter_events ctx);
   ctx.stop
@@ -437,8 +463,10 @@ let run_and_close ?signals_width ?values_width waves =
   Core.never_returns (Scheduler.go ())
 ;;
 
-let run_interactive_viewer ?display_rules t =
+let run_interactive_viewer ?signals_width ?values_width ?display_rules t =
   run_and_close
+    ?signals_width
+    ?values_width
     { cfg = Waves.Config.default; waves = Waveform.sort_ports_and_formats t display_rules
     }
 ;;
