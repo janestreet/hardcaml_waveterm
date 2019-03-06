@@ -1,5 +1,10 @@
 open! Import
 
+type alignment =
+  | Left
+  | Right
+[@@deriving sexp_of]
+
 type t =
   | Binary
   | Bit

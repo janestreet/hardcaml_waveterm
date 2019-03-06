@@ -1,6 +1,10 @@
 open! Import
 
-let apply_wave_format (t : Wave.t) (format : Wave_format.t) : Wave.t =
+let apply_wave_format
+      (t : Wave.t)
+      (format : Wave_format.t)
+      (alignment : Wave_format.alignment)
+  : Wave.t =
   let width =
     try
       let t = Wave.get_data t in
@@ -20,8 +24,8 @@ let apply_wave_format (t : Wave.t) (format : Wave_format.t) : Wave.t =
      | Bit | Bit_or _ -> t
      | _ ->
        (* special case - promote [Binary] to [Data] for single bits, if required. *)
-       Data (name, data, to_str))
-  | Data (name, data, _) -> Data (name, data, to_str)
+       Data (name, data, to_str, alignment))
+  | Data (name, data, _, _) -> Data (name, data, to_str, alignment)
   | Clock _ -> t
 ;;
 
@@ -59,9 +63,9 @@ let sort_ports_and_formats t display_rules : Wave.t array =
   (* Associate ports in display order with waves in [t.waves].  We make no assumptions
      about what [hardcaml_waveterm] is actually doing and do our best to construct the
      requested display.  In fact, [t.waves] should match [t.ports]. *)
-  |> List.filter_map ~f:(fun ((port : Port.t), format) ->
+  |> List.filter_map ~f:(fun ((port : Port.t), format, alignment) ->
     Map.find waves port.port_name
-    |> Option.map ~f:(fun wave -> apply_wave_format wave format))
+    |> Option.map ~f:(fun wave -> apply_wave_format wave format alignment))
   |> Array.of_list
 ;;
 

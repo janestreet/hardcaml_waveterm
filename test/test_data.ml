@@ -27,7 +27,8 @@ let random_data ~length =
     Wave.Data
       ( random_string ~max_length:20
       , random_bits ~length ~width:(Random.int 64 + 1)
-      , random_format () )
+      , random_format ()
+      , Left )
 ;;
 
 let create ~length ~num_signals =

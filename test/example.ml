@@ -4,13 +4,13 @@ module I = struct
   type 'a t =
     { clk : 'a
     ; clr : 'a
-    ; a : 'a [@bits 8]
+    ; a : 'a [@bits 16]
     }
   [@@deriving sexp_of, hardcaml]
 end
 
 module O = struct
-  type 'a t = { b : 'a [@bits 8] } [@@deriving sexp_of, hardcaml]
+  type 'a t = { b : 'a [@bits 16] } [@@deriving sexp_of, hardcaml]
 end
 
 let create (i : Signal.t I.t) =
@@ -27,9 +27,9 @@ let testbench () =
   i.clr := Bits.vdd;
   Cyclesim.cycle sim;
   i.clr := Bits.gnd;
-  i.a := Bits.consti ~width:8 23;
+  i.a := Bits.consti ~width:16 23;
   Cyclesim.cycle sim;
-  i.a := Bits.consti ~width:8 45;
+  i.a := Bits.consti ~width:16 45;
   Cyclesim.cycle sim;
   Cyclesim.cycle sim;
   Cyclesim.cycle sim;

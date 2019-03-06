@@ -39,7 +39,7 @@ let wrap ?cfg sim =
       let wave =
         if Bits.width !v = 1 && Poly.equal t Wave_format.Binary
         then Wave.Binary (n, d)
-        else Wave.Data (n, d, t)
+        else Wave.Data (n, d, t, Wave_format.Left)
       in
       wave, fun _ -> Data.set d !cycle !v
   in

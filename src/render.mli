@@ -107,6 +107,7 @@ module Make (G : Draw.S) : sig
     -> style:G.style
     -> bounds:Draw.rect
     -> to_str:(Bits.t -> string)
+    -> alignment:Wave_format.alignment
     -> w:int
     -> h:int
     -> data:Data.t

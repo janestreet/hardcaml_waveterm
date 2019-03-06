@@ -395,7 +395,7 @@ module Make (G : Draw.S) = struct
     | _ -> ()
   ;;
 
-  let draw_data ~ctx ~style ~bounds ~to_str ~w ~h ~data ~off =
+  let draw_data ~ctx ~style ~bounds ~to_str ~alignment ~w ~h ~data ~off =
     let w_scale, w = w, max 0 w in
     let draw_text r c cnt data =
       match data with
@@ -409,10 +409,16 @@ module Make (G : Draw.S) = struct
           for i = 0 to str_len - 1 do
             putc i str.[i]
           done
-        else
-          for i = 0 to cnt - 1 do
-            putc i (if i = cnt - 1 then '.' else str.[i])
-          done
+        else (
+          match alignment with
+          | Wave_format.Left ->
+            for i = 0 to cnt - 1 do
+              putc i (if i = cnt - 1 then '.' else str.[i])
+            done
+          | Right ->
+            for i = 0 to cnt - 1 do
+              putc i (if i = 0 then '.' else str.[str_len - 1 - (cnt - 1 - i)])
+            done)
     in
     let rec f prev prev_cnt c i =
       let open Draw in
@@ -541,12 +547,13 @@ module Make (G : Draw.S) = struct
       | Binary (_, data) ->
         let off = min (Data.length data - 1) off in
         draw_binary_data ~ctx ~style ~bounds ~w:ww ~h:wh ~data ~off
-      | Data (_, data, _) ->
+      | Data (_, data, _, alignment) ->
         let off = min (Data.length data - 1) off in
         draw_data
           ~ctx
           ~style
           ~bounds
+          ~alignment
           ~to_str:(Wave.get_to_str wave)
           ~w:ww
           ~h:wh
@@ -633,7 +640,7 @@ module Make (G : Draw.S) = struct
          let str = Bits.to_bstr d in
          max_string_length := max !max_string_length (String.length str);
          draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str
-       | Data (_, d, _) ->
+       | Data (_, d, _, _alignment) ->
          let d =
            try Data.get d off with
            | _ -> Data.get d (Data.length d - 1)

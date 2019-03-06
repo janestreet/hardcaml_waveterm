@@ -3,25 +3,25 @@ open! Import
 type t =
   | Clock of string
   | Binary of string * Data.t
-  | Data of string * Data.t * Wave_format.t
+  | Data of string * Data.t * Wave_format.t * Wave_format.alignment
 [@@deriving sexp_of]
 
 let get_name = function
   | Clock n -> n
   | Binary (n, _) -> n
-  | Data (n, _, _) -> n
+  | Data (n, _, _, _) -> n
 ;;
 
 let get_data = function
   | Clock _ -> failwith "no clock data"
   | Binary (_, d) -> d
-  | Data (_, d, _) -> d
+  | Data (_, d, _, _) -> d
 ;;
 
 let get_to_str = function
   | Clock _ -> failwith "no clock to_str"
   | Binary (_, _) -> failwith "no binary to_str"
-  | Data (_, _, f) ->
+  | Data (_, _, f, _) ->
     let rec to_f : Wave_format.t -> _ = function
       | Binary -> Bits.to_bstr
       | Bit -> Bits.to_bstr
@@ -38,8 +38,14 @@ let get_to_str = function
     to_f f
 ;;
 
+let get_alignment = function
+  | Clock _ -> failwith "no clock get_alignment"
+  | Binary _ -> failwith "no binary get_alignment"
+  | Data (_, _, _, alignment) -> alignment
+;;
+
 let get_format : t -> Wave_format.t = function
   | Clock _ -> Binary
   | Binary _ -> Binary
-  | Data (_, _, f) -> f
+  | Data (_, _, f, _) -> f
 ;;

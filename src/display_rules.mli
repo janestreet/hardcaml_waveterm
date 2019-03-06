@@ -19,14 +19,27 @@ module Rule : sig
   val port_name_matches : Re.re -> wave_format:Wave_format.t -> t
 
   (** Use [format] for ports with given name. *)
-  val port_name_is : string -> wave_format:Wave_format.t -> t
+  val port_name_is
+    :  ?alignment:Wave_format.alignment
+    -> string
+    -> wave_format:Wave_format.t
+    -> t
 
   (** Match any one of a list of names. *)
-  val port_name_is_one_of : string list -> wave_format:Wave_format.t -> t
+  val port_name_is_one_of
+    :  ?alignment:Wave_format.alignment
+    -> wave_format:Wave_format.t
+    -> string list
+    -> t
 
   (** In [custom f], [f] returns [None] to signify no match, or [Some format] to specify a
       display format. *)
   val custom : f:(Port.t -> Wave_format.t option) -> t
+
+  (** Similar tp [f], but allows the user to specify the alignment of the wave. *)
+  val custom_with_alignment
+    :  f:(Port.t -> (Wave_format.t * Wave_format.alignment) option)
+    -> t
 end
 
 type t [@@deriving sexp_of]
@@ -50,4 +63,7 @@ val combine : above:t -> below:t -> t
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object).  Unmatched ports are not shown, unless [Rule.default]
     (or a similar custom rule) is included as the last display rule. *)
-val sort_ports_and_formats : t -> Port.t list -> (Port.t * Wave_format.t) list
+val sort_ports_and_formats
+  :  t
+  -> Port.t list
+  -> (Port.t * Wave_format.t * Wave_format.alignment) list

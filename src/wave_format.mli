@@ -2,6 +2,11 @@
 
 open! Import
 
+type alignment =
+  | Left
+  | Right
+[@@deriving sexp_of]
+
 type t =
   | Binary  (** Binary. *)
   | Bit  (** Like [Binary], but shows a single bit as a line. *)
