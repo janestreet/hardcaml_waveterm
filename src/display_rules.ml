@@ -4,7 +4,7 @@ module Rule = struct
   type t =
     | Default
     | Regexp of
-        { re : Re.re sexp_opaque
+        { re : (Re.re[@sexp.opaque])
         ; wave_format : Wave_format.t
         ; alignment : Wave_format.alignment
         }

@@ -7,7 +7,7 @@ module Signals_window = struct
     { waves : Waves.t
     ; max_signal_name_width : int
     ; num_waves : int
-    ; style : Draw_notty.style sexp_opaque
+    ; style : (Draw_notty.style[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
@@ -27,7 +27,7 @@ module Values_window = struct
     { waves : Waves.t
     ; mutable max_value_width : int
     ; num_waves : int
-    ; style : Draw_notty.style sexp_opaque
+    ; style : (Draw_notty.style[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
@@ -54,7 +54,7 @@ module Waves_window = struct
     { waves : Waves.t
     ; mutable num_cycles : int
     ; num_waves : int
-    ; style : Draw_notty.style sexp_opaque
+    ; style : (Draw_notty.style[@sexp.opaque])
     }
   [@@deriving sexp_of]
 

@@ -4,7 +4,7 @@ module Adjustment = struct
   type t =
     { mutable range : int
     ; mutable offset : int
-    ; mutable on_offset_change : (int -> unit) sexp_opaque
+    ; mutable on_offset_change : (int -> unit[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
@@ -62,7 +62,7 @@ module Scrollable = struct
     ; mutable mouse_mode : Mouse_mode.t
     ; mutable page_size : int
     ; mutable document_size : int
-    ; mutable on_scrollbar_change : (unit -> unit) sexp_opaque
+    ; mutable on_scrollbar_change : (unit -> unit[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
@@ -245,8 +245,8 @@ module Scrollbar = struct
   type t =
     { scrollable : Scrollable.t
     ; mutable bar_style : Scroll_bar_style.t
-    ; incr_key : Notty.Unescape.key sexp_opaque
-    ; decr_key : Notty.Unescape.key sexp_opaque
+    ; incr_key : (Notty.Unescape.key[@sexp.opaque])
+    ; decr_key : (Notty.Unescape.key[@sexp.opaque])
     ; mutable bounds : Draw.rect
     ; orientation : Orientation.t
     }
