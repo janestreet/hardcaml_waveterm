@@ -30,3 +30,4 @@ interactive terminal application.
 The library is closely integrated with Hardcaml and can be easily attached
 to simulations.
 "
+conflicts: ["hardcaml-waveterm"] 
