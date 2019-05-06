@@ -109,21 +109,24 @@ module Make (G : Draw.S) = struct
     then (
       match (* subcycle rendering *)
         d with
-      | Clock _ -> w, 1
+      | Empty _ | Clock _ -> w, 1
       | Binary _ | Data _ -> w, 1)
     else (
       match d with
-      | Clock _ -> w, (w + 1) * 2
+      | Empty _ | Clock _ -> w, (w + 1) * 2
       | Data _ | Binary _ -> (w * 2) + 1, (w + 1) * 2)
   ;;
 
   let get_wave_height = function
+    | 0, Empty _
     | 0, Clock _ -> 0, 2
     | 0, Data _ -> 0, 2
     | 0, Binary _ -> 0, 2
+    | 1, Empty _
     | 1, Clock _ -> 0, 2
     | 1, Data _ -> 1, 3
     | 1, Binary _ -> 0, 2
+    | h, Empty _
     | h, Clock _ -> h - 1, h + 1
     | h, Data _ -> h - 1, h + 1
     | h, Binary _ -> h - 1, h + 1
@@ -543,6 +546,7 @@ module Make (G : Draw.S) = struct
       let off = state.cfg.start_cycle in
       (*let cnt = max 0 ((min (off+cnt) max_cycles) - off) in*)
       match wave with
+      | Empty _ -> ()
       | Clock _ -> draw_clock_cycles ~ctx ~style ~bounds ~w:ww ~waw ~h:wh ~cnt
       | Binary (_, data) ->
         let off = min (Data.length data - 1) off in
@@ -631,7 +635,7 @@ module Make (G : Draw.S) = struct
       let _, wah = get_wave_height (state.cfg.wave_height, wave) in
       let r = (wah - 1) / 2 in
       (match wave with
-       | Clock _ -> ()
+       | Empty _ | Clock _ -> ()
        | Binary (_, d) ->
          let d =
            try Data.get d off with

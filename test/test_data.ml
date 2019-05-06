@@ -20,20 +20,21 @@ let random_format () =
   | _ -> Wave_format.Binary
 ;;
 
-let random_data ~length =
+let random_data ~prefix ~length =
   if Random.int 2 = 0
-  then Wave.Binary (random_string ~max_length:20, random_bits ~length ~width:1)
+  then Wave.Binary (prefix ^ random_string ~max_length:20, random_bits ~length ~width:1)
   else
     Wave.Data
-      ( random_string ~max_length:20
+      ( prefix ^ random_string ~max_length:20
       , random_bits ~length ~width:(Random.int 64 + 1)
       , random_format ()
       , Left )
 ;;
 
-let create ~length ~num_signals =
+let create ~prefix ~length ~num_signals =
   { Waves.cfg = Waves.Config.default
   ; waves =
-      clock :: List.init num_signals ~f:(fun _ -> random_data ~length) |> Array.of_list
+      clock :: List.init num_signals ~f:(fun i -> random_data ~prefix:(prefix i) ~length)
+      |> Array.of_list
   }
 ;;

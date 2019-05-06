@@ -39,7 +39,7 @@ let write ch w =
         Array.map
           ~f:(fun (d : Wave.t) ->
             ( match d with
-              | Clock n -> Clock n
+              | Empty _ | Clock _ -> d
               | Binary (n, d) ->
                 Binary
                   (n, { d with Data.data = Array.init d.length ~f:(Array.get d.data) })

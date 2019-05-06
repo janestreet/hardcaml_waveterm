@@ -1,3 +1,3 @@
 open! Import
 
-val create : length:int -> num_signals:int -> Waves.t
+val create : prefix:(int -> string) -> length:int -> num_signals:int -> Waves.t

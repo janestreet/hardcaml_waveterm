@@ -11,7 +11,7 @@ let ctx =
     ~style:Render.Styles.colour_on_black
     ~rows:20
     ~cols:80
-    Test_data.(create ~length:20 ~num_signals:10)
+    Test_data.(create ~prefix:(fun _ -> "") ~length:20 ~num_signals:10)
 ;;
 
 let image = Draw_notty.to_image ctx

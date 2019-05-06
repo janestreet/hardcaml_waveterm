@@ -2,38 +2,147 @@ open! Import
 open! Async
 module R = Render.Make (Draw_notty)
 
+module Hierarchy = struct
+  type node =
+    { mutable visible : bool
+    ; signals : Wave.t list
+    ; children : node Base.Map.M(String).t
+    }
+  [@@deriving sexp_of]
+
+  type currently_rendered =
+    { actual_wave : Wave.t array
+    ; for_rendering : Wave.t array
+    }
+  [@@deriving sexp_of]
+
+  type t =
+    { cfg : Waves.Config.t
+    ; node : node
+    ; mutable currently_rendered : currently_rendered option
+    }
+  [@@deriving sexp_of]
+
+  let empty_node = { visible = false; signals = []; children = Map.empty (module String) }
+
+  let rec update ~path ~wave t =
+    match path with
+    | [] -> assert false
+    | [ _ ] -> { t with signals = wave :: t.signals }
+    | hd :: tl ->
+      let children =
+        Map.update t.children hd ~f:(function
+          | None -> update ~path:tl ~wave empty_node
+          | Some x -> update ~path:tl ~wave x)
+      in
+      { t with children }
+  ;;
+
+  let toggle_module t name =
+    let rec loop path (node : node) =
+      match path with
+      | [] -> node.visible <- not node.visible
+      | hd :: tl -> loop tl (Map.find_exn node.children hd)
+    in
+    (try loop (String.split name ~on:'$') t.node with
+     | Not_found_s _ -> raise_s [%message "Cannot resolve key in module" name]);
+    t.currently_rendered <- None
+  ;;
+
+  let of_waves (waves : Waves.t) =
+    let init = empty_node in
+    let ret =
+      Array.fold waves.waves ~init ~f:(fun acc wave ->
+        let path = String.split ~on:'$' (Wave.get_name wave) in
+        update ~path ~wave acc)
+    in
+    ret.visible <- true;
+    { cfg = waves.cfg; node = ret; currently_rendered = None }
+  ;;
+
+  let iter_wave ~f t =
+    let rec loop ~depth ~rev_path node =
+      if node.visible
+      then (
+        List.iter ~f:(fun node -> f ~depth node) node.signals;
+        Map.iteri node.children ~f:(fun ~key ~data:node ->
+          let module_name = String.concat ~sep:"$" (List.rev (key :: rev_path)) in
+          f ~depth (Wave.Empty module_name);
+          loop ~rev_path:(key :: rev_path) ~depth:(depth + 1) node))
+    in
+    loop ~depth:0 ~rev_path:[] t.node
+  ;;
+
+  let set_currently_rendered t =
+    let actual_wave = ref [] in
+    let for_rendering = ref [] in
+    let () =
+      iter_wave t ~f:(fun ~depth w ->
+        actual_wave := w :: !actual_wave;
+        let padding = String.init (depth * 2) ~f:(fun _ -> ' ') in
+        let name = String.split ~on:'$' (Wave.get_name w) |> List.last_exn in
+        let name =
+          match w with
+          | Empty _ -> "<" ^ name ^ ">"
+          | _ -> name
+        in
+        for_rendering := Wave.set_name w (padding ^ name) :: !for_rendering)
+    in
+    let for_rendering = Array.of_list_rev !for_rendering in
+    let actual_wave = Array.of_list_rev !actual_wave in
+    t.currently_rendered <- Some { for_rendering; actual_wave }
+  ;;
+
+  let find_actual_wave t i =
+    set_currently_rendered t;
+    (Option.value_exn t.currently_rendered).actual_wave.(i)
+  ;;
+
+  let get_currently_rendered_waves t =
+    set_currently_rendered t;
+    let currently_rendered = (Option.value_exn t.currently_rendered).for_rendering in
+    { Waves.cfg = t.cfg; waves = currently_rendered }
+  ;;
+end
+
 module Signals_window = struct
   type t =
-    { waves : Waves.t
+    { hierarchy : Hierarchy.t
     ; max_signal_name_width : int
     ; num_waves : int
     ; style : (Draw_notty.style[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
-  let create (waves : Waves.t) =
-    { waves
+  let create ~waves ~hierarchy =
+    { hierarchy
     ; max_signal_name_width = R.get_max_signal_width waves
     ; num_waves = R.get_max_signals waves
     ; style = Render.Styles.(colour white_on_black).signals
     }
   ;;
 
-  let draw ~ctx ~bounds t = R.draw_signals ~style:t.style ~ctx ~bounds t.waves
+  let draw ~ctx ~bounds t =
+    R.draw_signals
+      ~style:t.style
+      ~ctx
+      ~bounds
+      (Hierarchy.get_currently_rendered_waves t.hierarchy)
+  ;;
 end
 
 module Values_window = struct
   type t =
-    { waves : Waves.t
+    { hierarchy : Hierarchy.t
     ; mutable max_value_width : int
     ; num_waves : int
     ; style : (Draw_notty.style[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
-  let create (waves : Waves.t) =
+  let create ~waves ~hierarchy =
     let max_value_width = R.get_estimated_max_value_width waves in
-    { waves
+    { hierarchy
     ; max_value_width
     ; num_waves = R.get_max_signals waves
     ; style = Render.Styles.(colour white_on_black).values
@@ -41,32 +150,43 @@ module Values_window = struct
   ;;
 
   let draw ~ctx ~bounds t =
-    let offset = t.waves.cfg.value_scroll in
-    (t.waves.cfg).value_scroll
+    let offset = t.hierarchy.cfg.value_scroll in
+    (t.hierarchy.cfg).value_scroll
     <- max 0 (min (t.max_value_width - 1) (t.max_value_width - offset));
-    t.max_value_width <- R.draw_values ~style:t.style ~ctx ~bounds t.waves;
-    (t.waves.cfg).value_scroll <- offset
+    t.max_value_width
+    <- R.draw_values
+         ~style:t.style
+         ~ctx
+         ~bounds
+         (Hierarchy.get_currently_rendered_waves t.hierarchy);
+    (t.hierarchy.cfg).value_scroll <- offset
   ;;
 end
 
 module Waves_window = struct
   type t =
-    { waves : Waves.t
+    { hierarchy : Hierarchy.t
     ; mutable num_cycles : int
     ; num_waves : int
     ; style : (Draw_notty.style[@sexp.opaque])
     }
   [@@deriving sexp_of]
 
-  let create (waves : Waves.t) =
-    { waves
+  let create ~(waves : Waves.t) ~hierarchy =
+    { hierarchy
     ; num_cycles = 0
     ; num_waves = R.get_max_signals waves
     ; style = Render.Styles.(colour white_on_black).waves
     }
   ;;
 
-  let draw ~ctx ~bounds t = R.draw_wave ~style:t.style ~ctx ~bounds t.waves
+  let draw ~ctx ~bounds t =
+    R.draw_wave
+      ~style:t.style
+      ~ctx
+      ~bounds
+      (Hierarchy.get_currently_rendered_waves t.hierarchy)
+  ;;
 end
 
 module With_bounds = struct
@@ -99,34 +219,36 @@ module Waveform_window = struct
     }
   [@@deriving sexp_of]
 
-  let get_signal_offset (t : t) = t.waves_window.window.waves.cfg.start_signal
+  let get_signal_offset (t : t) = t.waves_window.window.hierarchy.cfg.start_signal
 
   let set_signal_offset (t : t) offset =
-    (t.waves_window.window.waves.cfg).start_signal
+    (t.waves_window.window.hierarchy.cfg).start_signal
     <- max 0 (min (t.max_signal_offset - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_vert.scrollable offset
   ;;
 
-  let get_cycle_offset (t : t) = t.waves_window.window.waves.cfg.start_cycle
+  let get_cycle_offset (t : t) = t.waves_window.window.hierarchy.cfg.start_cycle
 
   let set_cycle_offset (t : t) offset =
-    (t.waves_window.window.waves.cfg).start_cycle
+    (t.waves_window.window.hierarchy.cfg).start_cycle
     <- max 0 (min (t.max_cycle_offset - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_waves.scrollable offset
   ;;
 
-  let _get_signal_name_offset (t : t) = t.signals_window.window.waves.cfg.signal_scroll
+  let _get_signal_name_offset (t : t) =
+    t.signals_window.window.hierarchy.cfg.signal_scroll
+  ;;
 
   let set_signal_name_offset (t : t) offset =
-    (t.signals_window.window.waves.cfg).signal_scroll
+    (t.signals_window.window.hierarchy.cfg).signal_scroll
     <- max 0 (min (t.signals_window.window.max_signal_name_width - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_signals.scrollable offset
   ;;
 
-  let _get_value_offset (t : t) = t.values_window.window.waves.cfg.value_scroll
+  let _get_value_offset (t : t) = t.values_window.window.hierarchy.cfg.value_scroll
 
   let set_value_offset (t : t) offset =
-    (t.values_window.window.waves.cfg).value_scroll
+    (t.values_window.window.hierarchy.cfg).value_scroll
     <- max 0 (min (t.values_window.window.max_value_width - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_values.scrollable offset
   ;;
@@ -134,20 +256,21 @@ module Waveform_window = struct
   let create ~signals_width ~values_width ~rows ~cols waves =
     let hbarheight = 1 in
     let vbarwidth = 2 in
+    let hierarchy = Hierarchy.of_waves waves in
     let signals_window : Signals_window.t With_bounds.t =
       { bounds = { r = 0; c = 0; w = signals_width; h = rows - hbarheight }
-      ; window = Signals_window.create waves
+      ; window = Signals_window.create ~waves ~hierarchy
       }
     in
     let values_window : Values_window.t With_bounds.t =
       { bounds = { r = 0; c = signals_width; w = values_width; h = rows - hbarheight }
-      ; window = Values_window.create waves
+      ; window = Values_window.create ~waves ~hierarchy
       }
     in
     let waves_window : Waves_window.t With_bounds.t =
       let sum = signals_width + values_width in
       { bounds = { r = 0; c = sum; w = cols - sum - vbarwidth; h = rows - hbarheight }
-      ; window = Waves_window.create waves
+      ; window = Waves_window.create ~waves ~hierarchy
       }
     in
     let scroll_vert =
@@ -231,7 +354,7 @@ module Waveform_window = struct
   ;;
 
   let scale_key_handler (t : t) key =
-    let cfg = t.waves_window.window.waves.cfg in
+    let cfg = t.waves_window.window.hierarchy.cfg in
     match key with
     | `ASCII '=', [] ->
       cfg.wave_width <- cfg.wave_width + 1;
@@ -272,7 +395,7 @@ module Waveform_window = struct
   ;;
 
   let mouse_handler (t : t) ((button, (col, row), mods) as mouse : Notty.Unescape.mouse) =
-    let cfg = t.waves_window.window.waves.cfg in
+    let cfg = t.waves_window.window.hierarchy.cfg in
     let pick f =
       match
         R.pick
@@ -284,7 +407,7 @@ module Waveform_window = struct
             }
           ~r:row
           ~c:col
-          t.waves_window.window.waves
+          (Hierarchy.get_currently_rendered_waves t.waves_window.window.hierarchy)
       with
       | R.Wave (cycle, signal) ->
         f cycle signal;
@@ -296,6 +419,43 @@ module Waveform_window = struct
       && col >= bounds.c
       && row < bounds.r + bounds.h
       && col < bounds.c + bounds.w
+    in
+    let toggle_module button =
+      if in_bounds t.signals_window.bounds && Poly.equal button (Some (`Left, []))
+      then (
+        let offset = get_signal_offset t in
+        let hierarchy = t.signals_window.window.hierarchy in
+        let wave_height = hierarchy.cfg.wave_height in
+        let waves = Hierarchy.get_currently_rendered_waves hierarchy in
+        let selected_index =
+          let current_position = ref (row - 1) in
+          let rec loop i lower =
+            if i = Array.length waves.waves
+            then None
+            else (
+              let delta = snd (R.get_wave_height (wave_height, waves.waves.(i))) in
+              if i < offset
+              then (
+                current_position := !current_position + delta;
+                loop (i + 1) (lower + delta))
+              else if lower <= !current_position && !current_position < lower + delta
+              then Some i
+              else loop (i + 1) (lower + delta))
+          in
+          loop 0 0
+        in
+        match selected_index with
+        | None -> false
+        | Some selected_index ->
+          (match waves.waves.(selected_index) with
+           | Empty _ ->
+             let name =
+               Wave.get_name (Hierarchy.find_actual_wave hierarchy selected_index)
+             in
+             Hierarchy.toggle_module hierarchy name;
+             true
+           | _ -> false))
+      else false
     in
     let update_cursor button =
       if in_bounds t.waves_window.bounds && Poly.equal button (Some (`Left, []))
@@ -331,6 +491,7 @@ module Waveform_window = struct
         ; update_scroll_bar t.scroll_waves
         ; update_scroll_bar t.scroll_signals
         ; update_scroll_bar t.scroll_values
+        ; toggle_module
         ]
         ~init:false
         ~f:(fun acc f -> acc || f !last_mouse_button)

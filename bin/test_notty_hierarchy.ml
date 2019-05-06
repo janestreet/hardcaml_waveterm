@@ -19,10 +19,14 @@ let () =
          (optional_with_default 20 int)
          ~doc:"<int> values window width"
      in
+     let prefix =
+       let a = [| ""; "foo$"; "foo$bar$"; "foo$baz$"; "hello$"; "world$" |] in
+       fun i -> a.(Int.rem i (Array.length a))
+     in
      fun () ->
        Widget.run_waves
          ~signals_width
          ~values_width
-         Test_data.(create ~prefix:(fun _ -> "") ~length:1000 ~num_signals:100))
+         Test_data.(create ~prefix ~length:1000 ~num_signals:100))
   |> Command.run
 ;;

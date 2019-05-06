@@ -26,7 +26,7 @@ let apply_wave_format
        (* special case - promote [Binary] to [Data] for single bits, if required. *)
        Data (name, data, to_str, alignment))
   | Data (name, data, _, _) -> Data (name, data, to_str, alignment)
-  | Clock _ -> t
+  | Empty _ | Clock _ -> t
 ;;
 
 type t =
