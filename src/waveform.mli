@@ -42,6 +42,7 @@ type 'a with_options =
   -> ?display_values:bool
   -> ?wave_width:int
   -> ?wave_height:int
+  -> ?start_cycle:int
   -> 'a
 
 val sort_ports_and_formats : t -> Display_rules.t option -> Wave.t array

@@ -91,6 +91,7 @@ type 'a with_options =
   -> ?display_values:bool
   -> ?wave_width:int
   -> ?wave_height:int
+  -> ?start_cycle:int
   -> 'a
 
 let to_ctx
@@ -99,6 +100,7 @@ let to_ctx
       ?(display_height = 20)
       ?(wave_width = 3)
       ?(wave_height = 1)
+      ?(start_cycle = 0)
       ?(display_values = false)
       t
   =
@@ -113,7 +115,7 @@ let to_ctx
     ~style:Render.Styles.black_on_white
     ~rows:display_height
     ~cols:display_width
-    { cfg = { Waves.Config.default with wave_width; wave_height }
+    { cfg = { Waves.Config.default with wave_width; wave_height; start_cycle }
     ; waves = sort_ports_and_formats t display_rules
     }
 ;;
@@ -125,6 +127,7 @@ let to_buffer
       ?display_values
       ?wave_width
       ?wave_height
+      ?start_cycle
       t
   =
   let buffer = Buffer.create 1024 in
@@ -136,6 +139,7 @@ let to_buffer
       ?display_values
       ?wave_width
       ?wave_height
+      ?start_cycle
       t
   in
   Write.utf8 (Buffer.add_string buffer) ctx;
@@ -149,6 +153,7 @@ let to_string
       ?display_values
       ?wave_width
       ?wave_height
+      ?start_cycle
       t
   =
   to_buffer
@@ -158,6 +163,7 @@ let to_string
     ?display_values
     ?wave_width
     ?wave_height
+    ?start_cycle
     t
   |> Buffer.contents
 ;;
@@ -169,6 +175,7 @@ let print
       ?display_values
       ?wave_width
       ?wave_height
+      ?start_cycle
       ?(channel = Out_channel.stdout)
       t
   =
@@ -180,6 +187,7 @@ let print
       ?display_values
       ?wave_width
       ?wave_height
+      ?start_cycle
       t
   in
   Write.utf8 (Out_channel.output_string channel) ctx
