@@ -128,8 +128,7 @@ let term_styler =
            set_style style os
          in
          match !prev with
-         | Some prev'
-           when Draw.Style.compare style prev' <> 0 -> set_style ()
+         | Some prev' when Draw.Style.compare style prev' <> 0 -> set_style ()
          | None -> set_style ()
          | _ -> ())
   ; eol =

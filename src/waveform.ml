@@ -4,7 +4,8 @@ let apply_wave_format
       (t : Wave.t)
       (format : Wave_format.t)
       (alignment : Wave_format.alignment)
-  : Wave.t =
+  : Wave.t
+  =
   let width =
     try
       let t = Wave.get_data t in

@@ -2,10 +2,10 @@ open! Import
 
 (** stylting functions *)
 type styler =
-  { start : (string -> unit) -> unit  (** called at start *)
-  ; set : (string -> unit) -> Draw.Style.t -> unit  (** called for each element *)
-  ; eol : (string -> unit) -> unit  (** called at end of each line *)
-  ; finish : (string -> unit) -> unit  (** called at end *)
+  { start : (string -> unit) -> unit (** called at start *)
+  ; set : (string -> unit) -> Draw.Style.t -> unit (** called for each element *)
+  ; eol : (string -> unit) -> unit (** called at end of each line *)
+  ; finish : (string -> unit) -> unit (** called at end *)
   }
 
 (** not styling information inserted *)

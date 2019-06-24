@@ -9,6 +9,7 @@ type t [@@deriving sexp_of]
 (** Create waveform.  Returns a new simulation object that side effects the waveform. *)
 val create : ('i, 'o) Cyclesim.t -> t * ('i, 'o) Cyclesim.t
 
+
 (** Waveform configuration options.
 
     [display_rules] see [Display_rules].  A waveform may be constructed once and

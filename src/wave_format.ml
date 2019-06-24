@@ -18,11 +18,7 @@ type t =
 
 let rec equal a b =
   match a, b with
-  | Binary, Binary
-  | Bit, Bit
-  | Hex, Hex
-  | Int, Int
-  | Unsigned_int, Unsigned_int -> true
+  | Binary, Binary | Bit, Bit | Hex, Hex | Int, Int | Unsigned_int, Unsigned_int -> true
   | Bit_or a, Bit_or b -> equal a b
   | Index a, Index b -> [%compare.equal: string list] a b
   | Custom f, Custom g -> phys_equal f g

@@ -107,8 +107,8 @@ module Make (G : Draw.S) = struct
   let get_wave_width (w, d) =
     if w < 0
     then (
-      match (* subcycle rendering *)
-        d with
+      (* subcycle rendering *)
+      match d with
       | Empty _ | Clock _ -> w, 1
       | Binary _ | Data _ -> w, 1)
     else (
@@ -118,16 +118,13 @@ module Make (G : Draw.S) = struct
   ;;
 
   let get_wave_height = function
-    | 0, Empty _
-    | 0, Clock _ -> 0, 2
+    | 0, Empty _ | 0, Clock _ -> 0, 2
     | 0, Data _ -> 0, 2
     | 0, Binary _ -> 0, 2
-    | 1, Empty _
-    | 1, Clock _ -> 0, 2
+    | 1, Empty _ | 1, Clock _ -> 0, 2
     | 1, Data _ -> 1, 3
     | 1, Binary _ -> 0, 2
-    | h, Empty _
-    | h, Clock _ -> h - 1, h + 1
+    | h, Empty _ | h, Clock _ -> h - 1, h + 1
     | h, Data _ -> h - 1, h + 1
     | h, Binary _ -> h - 1, h + 1
   ;;
@@ -433,8 +430,7 @@ module Make (G : Draw.S) = struct
         let fuzzy p = Option.is_none p in
         let same a b =
           match a, b with
-          | Some a, Some b
-            when Bits.equal a b -> true
+          | Some a, Some b when Bits.equal a b -> true
           | _ -> false
         in
         let transn () =
@@ -501,7 +497,8 @@ module Make (G : Draw.S) = struct
     ?style:Draw.Style.t -> ctx:G.ctx -> bounds:Draw.rect -> Waves.t -> 'a
 
   let with_border
-    : draw:'a draw_item -> label:string -> ?border:Draw.Style.t -> 'a draw_item =
+    : draw:'a draw_item -> label:string -> ?border:Draw.Style.t -> 'a draw_item
+    =
     fun ~(draw : 'a draw_item)
       ~label
       ?border
@@ -511,8 +508,7 @@ module Make (G : Draw.S) = struct
       state ->
       let r = draw ~style ~ctx ~bounds state in
       match border with
-      | Some border
-        when bounds.Draw.w > 0 && bounds.Draw.h > 0 ->
+      | Some border when bounds.Draw.w > 0 && bounds.Draw.h > 0 ->
         G.draw_box
           ~ctx
           ~style:(get_style border)
@@ -694,15 +690,15 @@ module Make (G : Draw.S) = struct
       ~bounds:bounds.signals
       state;
     ignore
-      ( with_border
-          ~draw:draw_values
-          ~label:"Values"
-          ~style:style.values
-          ?border:style.border
-          ~ctx
-          ~bounds:bounds.values
-          state
-        : int );
+      (with_border
+         ~draw:draw_values
+         ~label:"Values"
+         ~style:style.values
+         ?border:style.border
+         ~ctx
+         ~bounds:bounds.values
+         state
+       : int);
     with_border
       ~draw:draw_wave
       ~label:"Waves"

@@ -23,7 +23,9 @@ module Hierarchy = struct
     }
   [@@deriving sexp_of]
 
-  let empty_node = { visible = false; signals = []; children = Map.empty (module String) }
+  let empty_node =
+    { visible = false; signals = []; children = Map.empty (module String) }
+  ;;
 
   let rec update ~path ~wave t =
     match path with
@@ -151,7 +153,7 @@ module Values_window = struct
 
   let draw ~ctx ~bounds t =
     let offset = t.hierarchy.cfg.value_scroll in
-    (t.hierarchy.cfg).value_scroll
+    t.hierarchy.cfg.value_scroll
     <- max 0 (min (t.max_value_width - 1) (t.max_value_width - offset));
     t.max_value_width
     <- R.draw_values
@@ -159,7 +161,7 @@ module Values_window = struct
          ~ctx
          ~bounds
          (Hierarchy.get_currently_rendered_waves t.hierarchy);
-    (t.hierarchy.cfg).value_scroll <- offset
+    t.hierarchy.cfg.value_scroll <- offset
   ;;
 end
 
@@ -198,7 +200,9 @@ module With_bounds = struct
 end
 
 module Border = struct
-  let adjust (x : Draw.rect) = { Draw.r = x.r + 1; c = x.c + 1; w = x.w - 2; h = x.h - 2 }
+  let adjust (x : Draw.rect) =
+    { Draw.r = x.r + 1; c = x.c + 1; w = x.w - 2; h = x.h - 2 }
+  ;;
 
   let draw ~ctx ~bounds label =
     Draw_notty.draw_box ~ctx ~bounds ~style:Draw.Style.default label
@@ -222,7 +226,7 @@ module Waveform_window = struct
   let get_signal_offset (t : t) = t.waves_window.window.hierarchy.cfg.start_signal
 
   let set_signal_offset (t : t) offset =
-    (t.waves_window.window.hierarchy.cfg).start_signal
+    t.waves_window.window.hierarchy.cfg.start_signal
     <- max 0 (min (t.max_signal_offset - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_vert.scrollable offset
   ;;
@@ -230,7 +234,7 @@ module Waveform_window = struct
   let get_cycle_offset (t : t) = t.waves_window.window.hierarchy.cfg.start_cycle
 
   let set_cycle_offset (t : t) offset =
-    (t.waves_window.window.hierarchy.cfg).start_cycle
+    t.waves_window.window.hierarchy.cfg.start_cycle
     <- max 0 (min (t.max_cycle_offset - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_waves.scrollable offset
   ;;
@@ -240,7 +244,7 @@ module Waveform_window = struct
   ;;
 
   let set_signal_name_offset (t : t) offset =
-    (t.signals_window.window.hierarchy.cfg).signal_scroll
+    t.signals_window.window.hierarchy.cfg.signal_scroll
     <- max 0 (min (t.signals_window.window.max_signal_name_width - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_signals.scrollable offset
   ;;
@@ -248,7 +252,7 @@ module Waveform_window = struct
   let _get_value_offset (t : t) = t.values_window.window.hierarchy.cfg.value_scroll
 
   let set_value_offset (t : t) offset =
-    (t.values_window.window.hierarchy.cfg).value_scroll
+    t.values_window.window.hierarchy.cfg.value_scroll
     <- max 0 (min (t.values_window.window.max_value_width - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_values.scrollable offset
   ;;
@@ -283,13 +287,19 @@ module Waveform_window = struct
     in
     let scroll_values =
       Scroll.HScrollbar.create
-        { Draw.r = rows - hbarheight; c = signals_width; w = values_width; h = hbarheight
+        { Draw.r = rows - hbarheight
+        ; c = signals_width
+        ; w = values_width
+        ; h = hbarheight
         }
     in
     let scroll_waves =
       let sum = signals_width + values_width in
       Scroll.HScrollbar.create
-        { Draw.r = rows - hbarheight; c = sum; w = cols - sum - vbarwidth; h = hbarheight
+        { Draw.r = rows - hbarheight
+        ; c = sum
+        ; w = cols - sum - vbarwidth
+        ; h = hbarheight
         }
     in
     let max_signal_offset = R.get_max_signals waves in
@@ -307,20 +317,20 @@ module Waveform_window = struct
       }
     in
     Scroll.Scrollable.set_range scroll_vert.scrollable signals_window.window.num_waves;
-    (scroll_vert.scrollable.adj).on_offset_change <- set_signal_offset waveform;
+    scroll_vert.scrollable.adj.on_offset_change <- set_signal_offset waveform;
     Scroll.Scrollable.set_range scroll_waves.scrollable max_cycle_offset;
-    (scroll_waves.scrollable.adj).on_offset_change <- set_cycle_offset waveform;
+    scroll_waves.scrollable.adj.on_offset_change <- set_cycle_offset waveform;
     Scroll.Scrollable.set_range
       scroll_signals.scrollable
       signals_window.window.max_signal_name_width;
-    (scroll_signals.scrollable.adj).on_offset_change <- set_signal_name_offset waveform;
+    scroll_signals.scrollable.adj.on_offset_change <- set_signal_name_offset waveform;
     Scroll.Scrollable.set_range
       scroll_values.scrollable
       values_window.window.max_value_width;
     Scroll.Scrollable.set_offset
       scroll_values.scrollable
       (values_window.window.max_value_width - 1);
-    (scroll_values.scrollable.adj).on_offset_change <- set_value_offset waveform;
+    scroll_values.scrollable.adj.on_offset_change <- set_value_offset waveform;
     waveform
   ;;
 
@@ -522,7 +532,7 @@ module Context = struct
     ; mutable cols : int
     ; waves : Waves.t
     ; mutable waveform : Waveform_window.t
-    ; events : [Notty.Unescape.event | `Resize of int * int] Pipe.Reader.t
+    ; events : [ Notty.Unescape.event | `Resize of int * int ] Pipe.Reader.t
     ; stop : unit Deferred.t
     ; mutable draw_ctx : Draw_notty.ctx
     ; signals_width : int
@@ -581,8 +591,7 @@ module Context = struct
     | `Mouse _ -> handler event
     | `Key key ->
       (match key with
-       | `ASCII 'q', []
-       | `Escape, [] ->
+       | `ASCII 'q', [] | `Escape, [] ->
          Pipe.close_read ctx.events;
          false
        | _ -> handler event)
@@ -628,6 +637,7 @@ let run_interactive_viewer ?signals_width ?values_width ?display_rules t =
   run_and_close
     ?signals_width
     ?values_width
-    { cfg = Waves.Config.default; waves = Waveform.sort_ports_and_formats t display_rules
+    { cfg = Waves.Config.default
+    ; waves = Waveform.sort_ports_and_formats t display_rules
     }
 ;;

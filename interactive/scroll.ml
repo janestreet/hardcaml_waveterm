@@ -264,8 +264,8 @@ module Scrollbar = struct
 
   let set_bounds t (bounds : Draw.rect) =
     (match t.orientation with
-     | Horz -> (t.scrollable).scroll_window_size <- bounds.w
-     | Vert -> (t.scrollable).scroll_window_size <- bounds.h);
+     | Horz -> t.scrollable.scroll_window_size <- bounds.w
+     | Vert -> t.scrollable.scroll_window_size <- bounds.h);
     t.bounds <- bounds
   ;;
 

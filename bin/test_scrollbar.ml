@@ -29,12 +29,12 @@ let run_scrollable () =
     | `Mouse _ -> handler event
     | `Key key ->
       (match key with
-       | `ASCII 'q', []
-       | `Escape, [] ->
+       | `ASCII 'q', [] | `Escape, [] ->
          Pipe.close_read events;
          false
        | _ -> handler event)
-    | `Resize (_cols, _rows) -> (* Resizing crashes *)
+    | `Resize (_cols, _rows) ->
+      (* Resizing crashes *)
       true
     | `Paste _ -> false
   in

@@ -11,7 +11,7 @@ let output ctx =
 
 let create_hscroll ~width ~height ~range =
   let hscroll = Scroll.HScrollbar.create { Draw.r = 0; c = 0; w = width; h = height } in
-  (hscroll.scrollable).scroll_window_size <- width;
+  hscroll.scrollable.scroll_window_size <- width;
   Scroll.Scrollable.set_range hscroll.scrollable range;
   ( hscroll
   , fun ~ctx ~xloc ~yloc ~offset ->
@@ -100,11 +100,11 @@ let%expect_test "big scroll bar area" =
 let%expect_test "dynamic scroll bar widths" =
   let ctx = Draw_notty.init ~rows:3 ~cols:60 in
   let hscroll, draw = create_hscroll ~width:60 ~height:1 ~range:200 in
-  (hscroll.scrollable).scroll_bar_mode <- Dynamic 30;
+  hscroll.scrollable.scroll_bar_mode <- Dynamic 30;
   draw ~ctx ~xloc:0 ~yloc:0 ~offset:0;
-  (hscroll.scrollable).scroll_bar_mode <- Dynamic 60;
+  hscroll.scrollable.scroll_bar_mode <- Dynamic 60;
   draw ~ctx ~xloc:0 ~yloc:1 ~offset:100;
-  (hscroll.scrollable).scroll_bar_mode <- Dynamic 160;
+  hscroll.scrollable.scroll_bar_mode <- Dynamic 160;
   draw ~ctx ~xloc:0 ~yloc:2 ~offset:140;
   output ctx;
   [%expect
@@ -120,7 +120,7 @@ let%expect_test "dynamic scroll bar widths" =
 let%expect_test "should not raise" =
   let ctx = Draw_notty.init ~rows:3 ~cols:60 in
   let hscroll, draw = create_hscroll ~width:60 ~height:1 ~range:200 in
-  (hscroll.scrollable).scroll_bar_mode <- Dynamic 160;
+  hscroll.scrollable.scroll_bar_mode <- Dynamic 160;
   require_does_not_raise ~cr:CR_someday ~hide_positions:true [%here] (fun () ->
     draw ~ctx ~xloc:0 ~yloc:2 ~offset:160);
   [%expect

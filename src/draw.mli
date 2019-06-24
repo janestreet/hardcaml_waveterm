@@ -28,10 +28,10 @@ end
 
 (** A rectangle (no really) *)
 type rect =
-  { r : int  (** rows *)
-  ; c : int  (** cols *)
-  ; w : int  (** width *)
-  ; h : int  (** height *)
+  { r : int (** rows *)
+  ; c : int (** cols *)
+  ; w : int (** width *)
+  ; h : int (** height *)
   }
 [@@deriving sexp_of]
 
