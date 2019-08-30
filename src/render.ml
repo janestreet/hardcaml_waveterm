@@ -166,9 +166,7 @@ module Make (G : Draw.S) = struct
           then 1
           else
             Bits.one i
-            |> Bits.bits
-            |> List.rev
-            |> Bits.concat
+            |> Bits.reverse
             |> Bits.to_int64
             |> Int64.to_string
             |> String.length)
