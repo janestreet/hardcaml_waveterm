@@ -67,3 +67,9 @@ val sort_ports_and_formats
   :  t
   -> Port.t list
   -> (Port.t * Wave_format.t * Wave_format.alignment) list
+
+(** Check if a given port is displayed by any of the rules. *)
+val is_displayed : t -> Port.t -> bool
+
+(** Check if a given signal (treated as an internal port) is displayed by any of the rules. *)
+val is_signal_displayed : t -> Hardcaml.Signal.t -> bool

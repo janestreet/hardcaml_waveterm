@@ -79,4 +79,41 @@ let rec sort (t : Rule.t list) ~unmatched =
     matched :: sort t ~unmatched
 ;;
 
+let is_displayed (t : Rule.t list) =
+  let has_default_rule =
+    List.find t ~f:(function
+      | Rule.Default -> true
+      | _ -> false)
+    |> Option.is_some
+  in
+  if has_default_rule
+  then fun _ -> true
+  else
+    fun port ->
+      let rec helper = function
+        | [] -> false
+        | rule :: rest ->
+          (match Rule.run rule port with
+           | Some _ -> true
+           | None -> helper rest)
+      in
+      helper t
+;;
+
+let is_signal_displayed t signal =
+  let is_displayed = is_displayed t in
+  List.filter
+    ~f:(fun name ->
+      let port =
+        { Port.type_ = Port.Type.Internal
+        ; width = Hardcaml.Signal.width signal
+        ; port_name = Port_name.of_string name
+        }
+      in
+      is_displayed port)
+    (Hardcaml.Signal.names signal)
+  |> List.is_empty
+  |> not
+;;
+
 let sort_ports_and_formats t ports = sort t ~unmatched:ports |> List.concat
