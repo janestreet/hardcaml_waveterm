@@ -76,7 +76,7 @@ let rec sort (t : Rule.t list) ~unmatched =
         | Some (fmt, alignment) -> `Fst (port, fmt, alignment)
         | None -> `Snd port)
     in
-    matched :: sort t ~unmatched
+    List.sort matched ~compare:[%compare: Port.t * _ * _] :: sort t ~unmatched
 ;;
 
 let is_displayed (t : Rule.t list) =
