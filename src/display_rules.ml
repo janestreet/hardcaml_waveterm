@@ -73,8 +73,8 @@ let rec sort (t : Rule.t list) ~unmatched =
     let matched, unmatched =
       List.partition_map unmatched ~f:(fun port ->
         match Rule.run rule port with
-        | Some (fmt, alignment) -> `Fst (port, fmt, alignment)
-        | None -> `Snd port)
+        | Some (fmt, alignment) -> First (port, fmt, alignment)
+        | None -> Second port)
     in
     List.sort matched ~compare:[%compare: Port.t * _ * _] :: sort t ~unmatched
 ;;
