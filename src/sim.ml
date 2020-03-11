@@ -62,7 +62,9 @@ let wrap ?cfg sim =
     Int.incr cycle
   in
   let sim =
-    Cyclesim.Private.modify sim [ After, Reset, tasks true; After, Seq, tasks false ]
+    Cyclesim.Private.modify
+      sim
+      [ After, Reset, tasks true; After, At_clock_edge, tasks false ]
   in
   sim, waves
 ;;
