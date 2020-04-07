@@ -1,4 +1,4 @@
-include Base
+include Base (** @inline *)
 
 module Bits = struct
   include Hardcaml.Bits

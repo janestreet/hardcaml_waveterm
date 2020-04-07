@@ -1,3 +1,5 @@
+(** A dynamically-sized array, similar to std::vector in C++. *)
+
 open! Import
 
 type t =

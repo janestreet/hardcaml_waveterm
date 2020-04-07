@@ -1,4 +1,3 @@
-(* connect to simulator *)
 open! Import
 module Bits = Hardcaml.Bits
 module Cyclesim = Hardcaml.Cyclesim

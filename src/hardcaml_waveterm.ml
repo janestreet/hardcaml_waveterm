@@ -1,3 +1,7 @@
+(** {!Hardcaml_waveterm} is a library for displaying terminal-based waveforms from
+    hardcaml simulations.
+*)
+
 module Data = Data
 module Display_rules = Display_rules
 module Draw = Draw

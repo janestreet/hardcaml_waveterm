@@ -2,7 +2,6 @@ open! Import
 
 (** Styling information *)
 module Style : sig
-  (** colour *)
   type colour =
     | Black
     | Red
