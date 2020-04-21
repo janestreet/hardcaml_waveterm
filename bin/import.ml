@@ -1,5 +1,5 @@
 include Base
-include Expect_test_helpers_kernel
+include Expect_test_helpers_core
 include Hardcaml_waveterm
 include Hardcaml_waveterm_interactive
 module Test_data = Hardcaml_waveterm_test.Test_data
