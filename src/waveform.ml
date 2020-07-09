@@ -34,7 +34,7 @@ type t =
   { waves : Wave.t array
   ; ports : Port.t list
   }
-[@@deriving sexp_of]
+[@@deriving sexp_of, equal]
 
 (* A simple heuristic to put the standard clock and reset related signals
    at the top of the waveform, then everything else in sorted order. *)
@@ -193,3 +193,54 @@ let print
   in
   Write.utf8 (Out_channel.output_string channel) ctx
 ;;
+
+(* Serialization of waveform into disk. While we can in theory write a better
+   serialization format with bit-packing, gzip is a quick-and-easy way to get
+   them reasonably compressed.
+
+   On waveforms of 300s of cycles and 200s of ports, we see a 10x decrease in file
+   size.
+*)
+module Serialize = struct
+  let sanitize (t : t) =
+    let waves =
+      Array.map t.waves ~f:(fun wave ->
+        match wave with
+        | Empty _ | Clock _ | Binary _ -> wave
+        | Data (name, data, wave_format, alignment) ->
+          (match wave_format with
+           | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ -> wave
+           | Custom _ -> Data (name, data, Bit_or Hex, alignment)))
+    in
+    { t with waves }
+  ;;
+
+  let marshall (t : t) filename =
+    let t = sanitize t in
+    let oc = Unix.open_process_out (Printf.sprintf "gzip -c >%s" filename) in
+    Caml.Marshal.to_channel oc t [];
+    match Unix.close_process_out oc with
+    | WEXITED 0 -> ()
+    | WEXITED exit_code ->
+      raise_s [%message "[gzip -c] terminated with non 0 exit code" (exit_code : int)]
+    | WSIGNALED signal ->
+      raise_s [%message "[gzip -c] terminated due to signal" (signal : int)]
+    | WSTOPPED signal ->
+      raise_s [%message "[gzip -c] stopped due to signal" (signal : int)]
+  ;;
+
+  let unmarshall filename : t =
+    let ic = Unix.open_process_in (Printf.sprintf "zcat %s" filename) in
+    let ret = Caml.Marshal.from_channel ic in
+    match Unix.close_process_in ic with
+    | WEXITED 0 -> ret
+    | WEXITED exit_code ->
+      raise_s
+        [%message
+          "Unix.close_process_in terminated with non zero exit code" (exit_code : int)]
+    | WSIGNALED signal ->
+      raise_s [%message "Unix.close_process_in terminated due to signal" (signal : int)]
+    | WSTOPPED signal ->
+      raise_s [%message "Unix.close_process_in stopped due to signal" (signal : int)]
+  ;;
+end

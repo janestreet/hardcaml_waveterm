@@ -53,3 +53,11 @@ val to_string : (t -> string) with_options
 
 (** Print waveform to channel [default stdout]. *)
 val print : (?channel:Out_channel.t -> t -> unit) with_options
+
+(** For testing marshalling functions. *)
+val equal : t -> t -> bool
+
+module Serialize : sig
+  val marshall : t -> string -> unit
+  val unmarshall : string -> t
+end

@@ -120,9 +120,7 @@ let%expect_test "display rules" =
         (Re.Posix.compile (Re.Posix.re ".d.*"))
         ~wave_format:Unsigned_int
     ; Rule.port_name_is_one_of [ "b"; "a" ] ~wave_format:Int
-    ; Rule.port_name_is
-        "clr"
-        ~wave_format:(Custom (fun b -> if Bits.to_int b = 1 then "clear" else "run"))
+    ; Rule.port_name_is "clr" ~wave_format:(Index [ "run"; "clear" ])
     ]
   in
   let display_rules = Display_rules.of_list display_rules in
@@ -142,7 +140,7 @@ let%expect_test "display rules" =
         (names (b a))
         (wave_format Int)
         (alignment   Left))
-      (Names (names (clr)) (wave_format (Custom <fun>)) (alignment Left)))) |}];
+      (Names (names (clr)) (wave_format (Index (run clear))) (alignment Left)))) |}];
   test () ~display_rules ~display_height:16;
   [%expect
     {|

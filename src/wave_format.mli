@@ -5,7 +5,7 @@ open! Import
 type alignment =
   | Left
   | Right
-[@@deriving sexp_of]
+[@@deriving sexp_of, equal]
 
 type t =
   | Binary (** Binary. *)

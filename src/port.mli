@@ -15,4 +15,4 @@ type t =
   ; port_name : Port_name.t
   ; width : int
   }
-[@@deriving compare, sexp_of]
+[@@deriving compare, sexp_of, equal]

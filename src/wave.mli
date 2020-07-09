@@ -5,7 +5,7 @@ type t =
   | Clock of string
   | Binary of string * Data.t
   | Data of string * Data.t * Wave_format.t * Wave_format.alignment
-[@@deriving sexp_of]
+[@@deriving sexp_of, equal]
 
 val set_name : t -> string -> t
 val get_name : t -> string

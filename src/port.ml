@@ -14,3 +14,5 @@ type t =
   ; width : int
   }
 [@@deriving compare, sexp_of]
+
+let equal a b = Int.equal (compare a b) 0

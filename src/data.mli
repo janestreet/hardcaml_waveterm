@@ -6,7 +6,7 @@ type t =
   { mutable data : Bits.t array
   ; mutable length : int
   }
-[@@deriving sexp_of, compare]
+[@@deriving sexp_of, compare, equal]
 
 val create : unit -> t
 val init : int -> (int -> Bits.t) -> t

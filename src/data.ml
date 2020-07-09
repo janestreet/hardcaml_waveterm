@@ -4,7 +4,7 @@ type t =
   { mutable data : Bits.t array
   ; mutable length : int
   }
-[@@deriving sexp_of, compare]
+[@@deriving sexp_of, compare, equal]
 
 let length d = d.length
 
