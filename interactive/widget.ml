@@ -335,6 +335,7 @@ module Waveform_window = struct
   ;;
 
   let draw ~ctx (t : t) =
+    let cfg = t.waves_window.window.hierarchy.cfg in
     let draw_with_border f ~ctx ~bounds name a =
       f ~ctx ~bounds:(Border.adjust bounds) a;
       Border.draw ~ctx ~bounds name
@@ -355,7 +356,10 @@ module Waveform_window = struct
       Waves_window.draw
       ~ctx
       ~bounds:t.waves_window.bounds
-      "waves"
+      (Printf.sprintf
+         "waves [cursor cycle=%i, window cycle=%i]"
+         cfg.wave_cursor
+         cfg.start_cycle)
       t.waves_window.window;
     Scroll.VScrollbar.draw ~ctx ~style:Draw.Style.default t.scroll_vert;
     Scroll.HScrollbar.draw ~ctx ~style:Draw.Style.default t.scroll_signals;
@@ -386,14 +390,26 @@ module Waveform_window = struct
     | `Arrow `Left, [] ->
       set_cycle_offset t (get_cycle_offset t - 1);
       true
+    | `Arrow `Left, [ `Ctrl ] ->
+      set_cycle_offset t (get_cycle_offset t - 10);
+      true
     | `Arrow `Right, [] ->
       set_cycle_offset t (get_cycle_offset t + 1);
+      true
+    | `Arrow `Right, [ `Ctrl ] ->
+      set_cycle_offset t (get_cycle_offset t + 10);
       true
     | `Arrow `Up, [] ->
       set_signal_offset t (get_signal_offset t - 1);
       true
+    | `Arrow `Up, [ `Ctrl ] | `Page `Up, [] ->
+      set_signal_offset t (get_signal_offset t - 10);
+      true
     | `Arrow `Down, [] ->
       set_signal_offset t (get_signal_offset t + 1);
+      true
+    | `Arrow `Down, [ `Ctrl ] | `Page `Down, [] ->
+      set_signal_offset t (get_signal_offset t + 10);
       true
     | _ -> false
   ;;

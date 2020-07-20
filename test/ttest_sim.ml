@@ -113,17 +113,16 @@ let%expect_test "negative wave width" =
 ;;
 
 let%expect_test "display rules" =
-  let module Rule = Display_rules.Rule in
   let display_rules =
-    [ Rule.port_name_is "clk" ~wave_format:Binary
-    ; Rule.port_name_matches
-        (Re.Posix.compile (Re.Posix.re ".d.*"))
-        ~wave_format:Unsigned_int
-    ; Rule.port_name_is_one_of [ "b"; "a" ] ~wave_format:Int
-    ; Rule.port_name_is "clr" ~wave_format:(Index [ "run"; "clear" ])
-    ]
+    Display_rule.
+      [ port_name_is "clk" ~wave_format:Binary
+      ; port_name_matches
+          (Re.Posix.compile (Re.Posix.re ".d.*"))
+          ~wave_format:Unsigned_int
+      ; port_name_is_one_of [ "b"; "a" ] ~wave_format:Int
+      ; port_name_is "clr" ~wave_format:(Index [ "run"; "clear" ])
+      ]
   in
-  let display_rules = Display_rules.of_list display_rules in
   print_s [%message "" (display_rules : Display_rules.t)];
   [%expect
     {|
@@ -165,11 +164,11 @@ let%expect_test "display rules" =
 let%expect_test "config with outputs then inputs" =
   let names (module X : Interface.S) = X.t |> X.map ~f:fst |> X.to_list in
   let map_format wave_format =
-    List.map ~f:(fun name -> Display_rules.Rule.port_name_is name ~wave_format)
+    List.map ~f:(fun name -> Display_rule.port_name_is name ~wave_format)
   in
-  let o = names (module Example.O) |> map_format Unsigned_int |> Display_rules.of_list in
-  let i = names (module Example.I) |> map_format Hex |> Display_rules.of_list in
-  let display_rules = Display_rules.combine ~above:o ~below:i in
+  let o = names (module Example.O) |> map_format Unsigned_int in
+  let i = names (module Example.I) |> map_format Hex in
+  let display_rules = o @ i in
   test () ~display_rules ~display_height:13;
   [%expect
     {|
@@ -189,9 +188,7 @@ let%expect_test "config with outputs then inputs" =
 ;;
 
 let%expect_test "single bits" =
-  let display_rules =
-    Display_rules.(of_list [ Rule.port_name_is "clr" ~wave_format:Binary ])
-  in
+  let display_rules = [ Display_rule.port_name_is "clr" ~wave_format:Binary ] in
   test () ~display_rules ~display_height:5;
   [%expect
     {|
@@ -200,9 +197,7 @@ let%expect_test "single bits" =
     │clr            ││ 1      │0                                         │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘ |}];
-  let display_rules =
-    Display_rules.(of_list [ Rule.port_name_is "clr" ~wave_format:Bit ])
-  in
+  let display_rules = [ Display_rule.port_name_is "clr" ~wave_format:Bit ] in
   test () ~display_rules ~display_height:4;
   [%expect
     {|
@@ -214,12 +209,11 @@ let%expect_test "single bits" =
 
 let%expect_test "Bit_or constructor" =
   let display_rules =
-    Display_rules.(
-      of_list
-        [ Rule.port_name_is "clr" ~wave_format:(Bit_or Hex)
-        ; Rule.port_name_is "a" ~wave_format:(Bit_or Hex)
-        ; Rule.port_name_is "b" ~wave_format:(Bit_or Unsigned_int)
-        ])
+    Display_rule.
+      [ port_name_is "clr" ~wave_format:(Bit_or Hex)
+      ; port_name_is "a" ~wave_format:(Bit_or Hex)
+      ; port_name_is "b" ~wave_format:(Bit_or Unsigned_int)
+      ]
   in
   test () ~display_rules ~display_height:10;
   [%expect
@@ -238,12 +232,11 @@ let%expect_test "Bit_or constructor" =
 
 let%expect_test "Alignment" =
   let display_rules alignment =
-    Display_rules.(
-      of_list
-        [ Rule.port_name_is "clr" ~wave_format:(Bit_or Hex)
-        ; Rule.port_name_is "a" ~wave_format:Hex ~alignment
-        ; Rule.port_name_is "b" ~wave_format:(Bit_or Unsigned_int)
-        ])
+    Display_rule.
+      [ port_name_is "clr" ~wave_format:(Bit_or Hex)
+      ; port_name_is "a" ~wave_format:Hex ~alignment
+      ; port_name_is "b" ~wave_format:(Bit_or Unsigned_int)
+      ]
   in
   test () ~display_rules:(display_rules Right) ~display_height:10 ~wave_width:1;
   [%expect

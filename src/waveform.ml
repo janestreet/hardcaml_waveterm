@@ -39,17 +39,16 @@ type t =
 (* A simple heuristic to put the standard clock and reset related signals
    at the top of the waveform, then everything else in sorted order. *)
 let default_display_rules =
-  Display_rules.(
-    of_list
-      [ Rule.port_name_is "clk" ~wave_format:Bit
-      ; Rule.port_name_is "clock" ~wave_format:Bit
-      ; Rule.port_name_is "rst" ~wave_format:Bit
-      ; Rule.port_name_is "reset" ~wave_format:Bit
-      ; Rule.port_name_is "clr" ~wave_format:Bit
-      ; Rule.port_name_is "clear" ~wave_format:Bit
-      ; Rule.port_name_is "enable" ~wave_format:Bit
-      ; Rule.default
-      ])
+  Display_rule.
+    [ port_name_is "clk" ~wave_format:Bit
+    ; port_name_is "clock" ~wave_format:Bit
+    ; port_name_is "rst" ~wave_format:Bit
+    ; port_name_is "reset" ~wave_format:Bit
+    ; port_name_is "clr" ~wave_format:Bit
+    ; port_name_is "clear" ~wave_format:Bit
+    ; port_name_is "enable" ~wave_format:Bit
+    ; default
+    ]
 ;;
 
 let sort_ports_and_formats t display_rules : Wave.t array =

@@ -30,13 +30,14 @@ let wrap ?cfg sim =
     match n with
     | "clock" | "clk" -> Wave.Clock n, fun _ -> ()
     | "reset" | "rst" ->
-      let d = Data.create () in
+      let d = Data.create 1 in
       Wave.Binary (n, d), fun v -> Data.set d !cycle (if v then Bits.vdd else Bits.gnd)
     | _ ->
       let t = get_type cfg n in
-      let d = Data.create () in
+      let width = Bits.width !v in
+      let d = Data.create width in
       let wave =
-        if Bits.width !v = 1 && Poly.equal t Wave_format.Binary
+        if width = 1 && Poly.equal t Wave_format.Binary
         then Wave.Binary (n, d)
         else Wave.Data (n, d, t, Wave_format.Left)
       in

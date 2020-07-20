@@ -12,14 +12,15 @@ build: [
 depends: [
   "ocaml" {>= "4.08.0"}
   "base"
+  "base_bigstring"
   "hardcaml"
   "notty_async"
   "ppx_jane"
   "stdio"
-  "dune"        {>= "2.0.0"}
-  "notty"       {>= "0.2.1"}
+  "dune"           {>= "2.0.0"}
+  "notty"          {>= "0.2.1"}
   "num"
-  "re"          {>= "1.8.0"}
+  "re"             {>= "1.8.0"}
 ]
 synopsis: "A terminal based digital waveform viewer for Hardcaml"
 description: "

@@ -41,8 +41,7 @@ let write ch w =
             (match d with
              | Empty _ | Clock _ -> d
              | Binary (n, d) ->
-               Binary
-                 (n, { d with Data.data = Array.init d.length ~f:(Array.get d.data) })
+               Binary (n, Data.init (Data.length d) ~width:(Data.width d) ~f:(Data.get d))
              | Data (n, d, ts, alignment) ->
                let ts =
                  match ts with
@@ -52,7 +51,7 @@ let write ch w =
                (* cant marshal functions *)
                Data
                  ( n
-                 , { d with data = Array.init d.length ~f:(Array.get d.data) }
+                 , Data.init (Data.length d) ~width:(Data.width d) ~f:(Data.get d)
                  , ts
                  , alignment )
                : Wave.t))

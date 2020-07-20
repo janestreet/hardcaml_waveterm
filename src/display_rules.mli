@@ -7,58 +7,7 @@
 
 open! Import
 
-(** A [Rule.t] is a predicate on [Port.t]s that specifies the display format of matching
-    ports. *)
-module Rule : sig
-  type t [@@deriving sexp_of]
-
-  (** Default formatting - binary for 1 bit signals, hex otherwise. *)
-  val default : t
-
-  (** Use given [format] for ports whose name match the regular expression [re]. *)
-  val port_name_matches : Re.re -> wave_format:Wave_format.t -> t
-
-  (** Use [format] for ports with given name. *)
-  val port_name_is
-    :  ?alignment:Wave_format.alignment
-    -> string
-    -> wave_format:Wave_format.t
-    -> t
-
-  (** Match any one of a list of names. *)
-  val port_name_is_one_of
-    :  ?alignment:Wave_format.alignment
-    -> wave_format:Wave_format.t
-    -> string list
-    -> t
-
-  (** In [custom f], [f] returns [None] to signify no match, or [Some format] to specify a
-      display format. *)
-  val custom : f:(Port.t -> Wave_format.t option) -> t
-
-  (** Similar tp [f], but allows the user to specify the alignment of the wave. *)
-  val custom_with_alignment
-    :  f:(Port.t -> (Wave_format.t * Wave_format.alignment) option)
-    -> t
-end
-
-type t [@@deriving sexp_of]
-
-val empty : t
-
-(** [add_above t rule] returns rules where ports matching [rule] appear above ports
-    matching the rules in [t]. *)
-val add_above : t -> Rule.t -> t
-
-(** [add_below t rule] returns rules where ports matching [rule] appear below ports
-    matching the rules in [t]. *)
-val add_below : t -> Rule.t -> t
-
-val of_list : Rule.t list -> t
-
-(** [combine ~above ~below] returns rules where ports matching the rules in [above]
-    appear above ports matching the rules in [below]. *)
-val combine : above:t -> below:t -> t
+type t = Display_rule.t list [@@deriving sexp_of]
 
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object).  Unmatched ports are not shown, unless [Rule.default]

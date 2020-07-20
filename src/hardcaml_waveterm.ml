@@ -3,6 +3,7 @@
 *)
 
 module Data = Data
+module Display_rule = Display_rule
 module Display_rules = Display_rules
 module Draw = Draw
 module Port = Port
