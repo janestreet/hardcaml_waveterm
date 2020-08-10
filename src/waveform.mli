@@ -9,6 +9,8 @@ type t [@@deriving sexp_of]
 (** Create waveform.  Returns a new simulation object that side effects the waveform. *)
 val create : ('i, 'o) Cyclesim.t -> t * ('i, 'o) Cyclesim.t
 
+val create_from_data : waves:Wave.t list -> ports:Port.t list -> t
+
 
 (** Waveform configuration options.
 

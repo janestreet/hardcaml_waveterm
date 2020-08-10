@@ -224,7 +224,7 @@ module In_memory = struct
 
     let draw_int ~ctx ~style ~bounds ~r ~c i =
       if r >= 0 && r < bounds.h && c >= 0 && c < bounds.w
-      then ctx.(bounds.r + r).(bounds.c + c) <- (i, style)
+      then ctx.(bounds.r + r).(bounds.c + c) <- i, style
     ;;
 
     let get ~ctx ~bounds ~r ~c =

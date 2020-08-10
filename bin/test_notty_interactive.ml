@@ -14,10 +14,7 @@ let () =
          (optional_with_default 20 int)
          ~doc:"<int> signals window width"
      and values_width =
-       flag
-         "-values-width"
-         (optional_with_default 20 int)
-         ~doc:"<int> values window width"
+       flag "-values-width" (optional_with_default 20 int) ~doc:"<int> values window width"
      in
      fun () ->
        Widget.run_waves

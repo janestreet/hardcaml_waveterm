@@ -19,5 +19,4 @@ type t =
 [@@deriving sexp_of]
 
 (** [Custom] constructors are compared for physical equality. *)
-include
-  Equal.S with type t := t
+include Equal.S with type t := t

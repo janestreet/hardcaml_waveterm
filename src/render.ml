@@ -670,8 +670,7 @@ module Make (G : Draw.S) = struct
          state.cfg.value_scroll)
   ;;
 
-  let draw_ui ?(style = Styles.default Draw.Style.default) ?bounds ~ctx (state : Waves.t)
-    =
+  let draw_ui ?(style = Styles.default Draw.Style.default) ?bounds ~ctx (state : Waves.t) =
     let open Styles in
     let open Bounds in
     let bounds =

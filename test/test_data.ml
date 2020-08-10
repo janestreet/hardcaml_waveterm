@@ -335,8 +335,7 @@ module Unpacked_data = struct
   [@@deriving sexp_of, compare, fields, equal]
 
   let[@cold] raise_index_out_of_bounds index length =
-    raise_s
-      [%message "Index into waveform is out of bounds" (index : int) (length : int)]
+    raise_s [%message "Index into waveform is out of bounds" (index : int) (length : int)]
   ;;
 
   let get d index =

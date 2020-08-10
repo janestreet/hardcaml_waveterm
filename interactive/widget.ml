@@ -23,9 +23,7 @@ module Hierarchy = struct
     }
   [@@deriving sexp_of]
 
-  let empty_node =
-    { visible = false; signals = []; children = Map.empty (module String) }
-  ;;
+  let empty_node = { visible = false; signals = []; children = Map.empty (module String) }
 
   let rec update ~path ~wave t =
     match path with
@@ -200,9 +198,7 @@ module With_bounds = struct
 end
 
 module Border = struct
-  let adjust (x : Draw.rect) =
-    { Draw.r = x.r + 1; c = x.c + 1; w = x.w - 2; h = x.h - 2 }
-  ;;
+  let adjust (x : Draw.rect) = { Draw.r = x.r + 1; c = x.c + 1; w = x.w - 2; h = x.h - 2 }
 
   let draw ~ctx ~bounds label =
     Draw_notty.draw_box ~ctx ~bounds ~style:Draw.Style.default label

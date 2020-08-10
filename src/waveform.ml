@@ -36,6 +36,11 @@ type t =
   }
 [@@deriving sexp_of, equal]
 
+let create_from_data ~waves ~ports =
+  let waves = Array.of_list waves in
+  { waves; ports }
+;;
+
 (* A simple heuristic to put the standard clock and reset related signals
    at the top of the waveform, then everything else in sorted order. *)
 let default_display_rules =
