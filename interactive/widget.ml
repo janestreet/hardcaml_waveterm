@@ -521,7 +521,16 @@ module Waveform_window = struct
       let button = !last_mouse_button in
       last_mouse_button := None;
       update_cursor button
-    | `Drag -> update_cursor !last_mouse_button
+    | `Drag ->
+      List.fold_left
+        [ update_cursor
+        ; update_scroll_bar t.scroll_vert
+        ; update_scroll_bar t.scroll_waves
+        ; update_scroll_bar t.scroll_signals
+        ; update_scroll_bar t.scroll_values
+        ]
+        ~init:false
+        ~f:(fun acc f -> acc || f !last_mouse_button)
   ;;
 
   (* return true to redraw *)

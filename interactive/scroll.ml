@@ -297,7 +297,7 @@ module Scrollbar = struct
 
   let mouse_event t ((ev, (col, row), mods) : Notty.Unescape.mouse) =
     match ev, mods with
-    | `Press `Left, [] ->
+    | `Press `Left, [] | `Drag, [] ->
       let scroll = mouse_offset t ~row ~col in
       Scrollable.set_offset t.scrollable (Scrollable.mouse_scroll t.scrollable scroll);
       true
