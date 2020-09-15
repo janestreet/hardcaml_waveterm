@@ -9,13 +9,15 @@ open! Import
 
 type t = Display_rule.t list [@@deriving sexp_of]
 
+val run_rule : Display_rule.t -> Port.t -> (Wave_format.t * Wave_format.alignment) option
+
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object).  Unmatched ports are not shown, unless [Rule.default]
     (or a similar custom rule) is included as the last display rule. *)
 val sort_ports_and_formats
   :  t
   -> Port.t list
-  -> (Port.t * Wave_format.t * Wave_format.alignment) list
+  -> (Port.t * (Wave_format.t * Wave_format.alignment) option) list
 
 (** Check if a given port is displayed by any of the rules. *)
 val is_displayed : t -> Port.t -> bool

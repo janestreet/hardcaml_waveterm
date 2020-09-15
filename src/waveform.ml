@@ -41,6 +41,8 @@ let create_from_data ~waves ~ports =
   { waves; ports }
 ;;
 
+let combine a b = { waves = Array.append a.waves b.waves; ports = a.ports @ b.ports }
+
 (* A simple heuristic to put the standard clock and reset related signals
    at the top of the waveform, then everything else in sorted order. *)
 let default_display_rules =
@@ -68,9 +70,19 @@ let sort_ports_and_formats t display_rules : Wave.t array =
   (* Associate ports in display order with waves in [t.waves].  We make no assumptions
      about what [hardcaml_waveterm] is actually doing and do our best to construct the
      requested display.  In fact, [t.waves] should match [t.ports]. *)
-  |> List.filter_map ~f:(fun ((port : Port.t), format, alignment) ->
+  |> List.filter_map ~f:(fun ((port : Port.t), fmt_align_opt) ->
     Map.find waves port.port_name
-    |> Option.map ~f:(fun wave -> apply_wave_format wave format alignment))
+    |> Option.map ~f:(fun wave ->
+      match fmt_align_opt, wave with
+      | Some (format, alignment), _ -> apply_wave_format wave format alignment
+      (* None represents default format. Don't apply default to Index and Custom *)
+      | None, Data (_, _, Wave_format.Index _, _)
+      | None, Data (_, _, Wave_format.Custom _, _) -> wave
+      | None, _ ->
+        Display_rules.run_rule Display_rule.Default port
+        |> Option.map ~f:(fun (format, alignment) ->
+          apply_wave_format wave format alignment)
+        |> Option.value ~default:wave))
   |> Array.of_list
 ;;
 

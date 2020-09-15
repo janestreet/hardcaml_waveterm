@@ -33,7 +33,7 @@ module Or_with_enable = struct
 end
 
 let%expect_test "scope with assertions" =
-  let scope = Scope.create ~flatten_design:true () in
+  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
   let sim =
     Or_with_enable.Sim.create
       ~is_internal_port:(Fn.const true)
@@ -139,7 +139,7 @@ module Operator_operation = struct
 end
 
 let%expect_test "scope always with assertions" =
-  let scope = Scope.create ~flatten_design:true () in
+  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
   let sim =
     Operator_operation.Sim.create
       ~assertions:(Scope.assertion_manager scope)
@@ -212,7 +212,7 @@ let%expect_test "scope always with assertions" =
 ;;
 
 let%expect_test "assertions checked to be 1 bit" =
-  let scope = Scope.create ~flatten_design:true () in
+  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
   require_does_raise [%here] (fun () ->
     Always.(compile [ assert_signal scope "oops - 2 bit assertion" (Signal.zero 2) ]));
   [%expect

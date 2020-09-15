@@ -24,20 +24,17 @@ let rec sort (t : Display_rule.t list) ~unmatched =
   | [] -> []
   | Default :: _ ->
     let defaults =
-      List.sort unmatched ~compare:Port.compare
-      |> List.filter_map ~f:(fun port ->
-        run_rule Display_rule.Default port
-        |> Option.map ~f:(fun (fmt, allgn) -> port, fmt, allgn))
+      List.sort unmatched ~compare:Port.compare |> List.map ~f:(fun port -> port, None)
     in
     [ defaults ]
   | rule :: t ->
     let matched, unmatched =
       List.partition_map unmatched ~f:(fun port ->
         match run_rule rule port with
-        | Some (fmt, alignment) -> First (port, fmt, alignment)
+        | Some (fmt, alignment) -> First (port, Some (fmt, alignment))
         | None -> Second port)
     in
-    List.sort matched ~compare:[%compare: Port.t * _ * _] :: sort t ~unmatched
+    List.sort matched ~compare:[%compare: Port.t * (_ * _) option] :: sort t ~unmatched
 ;;
 
 let is_displayed (t : Display_rule.t list) =

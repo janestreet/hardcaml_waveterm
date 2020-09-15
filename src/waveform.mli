@@ -11,6 +11,9 @@ val create : ('i, 'o) Cyclesim.t -> t * ('i, 'o) Cyclesim.t
 
 val create_from_data : waves:Wave.t list -> ports:Port.t list -> t
 
+(** Combine two waveforms into one waveform *)
+val combine : t -> t -> t
+
 
 (** Waveform configuration options.
 
