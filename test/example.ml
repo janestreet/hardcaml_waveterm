@@ -21,7 +21,7 @@ let create (i : Signal.t I.t) =
 
 let testbench () =
   let module Sim = Cyclesim.With_interface (I) (O) in
-  let sim = Sim.create ~is_internal_port:Signal.has_name create in
+  let sim = Sim.create ~config:Cyclesim.Config.trace_all create in
   let i = Cyclesim.inputs sim in
   let waveform, sim = Waveform.create sim in
   i.clr := Bits.vdd;
