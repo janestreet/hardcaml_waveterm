@@ -67,7 +67,7 @@ let total_length t = total_length (Bytes.length t.data) t.rounded_width
 
 (* >= 64 bits *)
 let set_multi_word t index bits =
-  let bytes = Bits.to_constant bits |> Constant.unsafe_to_bytes in
+  let bytes = Bits.to_constant bits |> Constant.Raw.unsafe_to_bytes in
   let bytes_per_word = Bytes.length bytes in
   Bytes.blit
     ~src:bytes
@@ -85,7 +85,7 @@ let set_sub_word t index bits =
   let shift = 6 - t.log2_rounded_width in
   let byte_offset = (index lsr shift) lsl 3 in
   let part_offset = (index land ((1 lsl shift) - 1)) lsl t.log2_rounded_width in
-  let new_bits = get64 (Bits.to_constant bits |> Constant.unsafe_to_bytes) 0 in
+  let new_bits = get64 (Bits.to_constant bits |> Constant.Raw.unsafe_to_bytes) 0 in
   let cur_bits = get64 t.data byte_offset in
   let bits =
     Int64.(cur_bits land lnot (mask lsl part_offset) lor (new_bits lsl part_offset))
@@ -133,7 +133,7 @@ let get_multi_word t index =
       ~dst:t.cached_multi_word
       ~dst_pos:0
       ~len:bytes_per_word;
-    let bits = Constant.unsafe_of_bytes ~width:t.width bytes |> Bits.of_constant in
+    let bits = Constant.Raw.unsafe_of_bytes ~width:t.width bytes |> Bits.of_constant in
     t.non_cache_hits <- t.non_cache_hits + 1;
     t.cached_bits <- bits;
     bits)
