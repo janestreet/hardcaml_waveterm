@@ -5,7 +5,7 @@
     wave format.  Ports matching rules earlier in the list are displayed above ports
     matching rules later in the list. *)
 
-open! Import
+open Base
 
 type t = Display_rule.t list [@@deriving sexp_of]
 

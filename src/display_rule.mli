@@ -1,7 +1,7 @@
 (** A [Rule.t] is a predicate on [Port.t]s that specifies the display format of matching
     ports. *)
 
-open! Import
+open Base
 
 type t =
   | Default

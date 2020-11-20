@@ -1,4 +1,5 @@
-open! Import
+open Base
+open Hardcaml
 
 module Styles = struct
   type t =

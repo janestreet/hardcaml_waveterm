@@ -1,4 +1,6 @@
-open! Import
+open Base
+open Hardcaml
+open Stdio
 
 let apply_wave_format
       (t : Wave.t)
@@ -34,7 +36,7 @@ type t =
   { waves : Wave.t array
   ; ports : Port.t list
   }
-[@@deriving sexp_of, equal]
+[@@deriving sexp_of, equal, fields]
 
 let create_from_data ~waves ~ports =
   let waves = Array.of_list waves in
@@ -210,12 +212,11 @@ let print
   Write.utf8 (Out_channel.output_string channel) ctx
 ;;
 
-(* Serialization of waveform into disk. While we can in theory write a better
+(* Serialization of waveform onto disk. While we can in theory write a better
    serialization format with bit-packing, gzip is a quick-and-easy way to get
    them reasonably compressed.
 
-   On waveforms of 300s of cycles and 200s of ports, we see a 10x decrease in file
-   size.
+   On waveforms with 300 cycles and 200 ports, we see a 10x decrease in file size.
 *)
 module Serialize = struct
   let sanitize (t : t) =
@@ -260,3 +261,44 @@ module Serialize = struct
       raise_s [%message "Unix.close_process_in stopped due to signal" (signal : int)]
   ;;
 end
+
+let serialize_expect_test_output =
+  lazy
+    (match Sys.getenv "EXPECT_TEST_WAVEFORM" with
+     | None -> false
+     | Some "1" -> true
+     | Some "true" -> true
+     | _ -> false)
+;;
+
+let expect
+      ?display_rules
+      ?display_width
+      ?display_height
+      ?display_values
+      ?wave_width
+      ?wave_height
+      ?start_cycle
+      ?serialize_to
+      t
+  =
+  let extension = "hardcamlwaveform" in
+  print
+    ?display_rules
+    ?display_width
+    ?display_height
+    ?display_values
+    ?wave_width
+    ?wave_height
+    ?start_cycle
+    t;
+  match serialize_to with
+  | None -> ()
+  | Some serialize_to ->
+    let serialize_to =
+      if String.equal (Caml.Filename.extension serialize_to) extension
+      then serialize_to
+      else Printf.sprintf "%s.%s" serialize_to extension
+    in
+    if Lazy.force serialize_expect_test_output then Serialize.marshall t serialize_to
+;;

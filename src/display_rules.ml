@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 type t = Display_rule.t list [@@deriving sexp_of]
 

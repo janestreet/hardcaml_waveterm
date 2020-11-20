@@ -1,4 +1,6 @@
-open! Import
+open Base
+open Hardcaml_waveterm
+open Hardcaml_waveterm.Expert
 open! Async
 module R = Render.Make (Draw_notty)
 
@@ -64,11 +66,11 @@ module Hierarchy = struct
     let rec loop ~depth ~rev_path node =
       if node.visible
       then (
-        List.iter ~f:(fun node -> f ~depth node) node.signals;
         Map.iteri node.children ~f:(fun ~key ~data:node ->
           let module_name = String.concat ~sep:"$" (List.rev (key :: rev_path)) in
           f ~depth (Wave.Empty module_name);
-          loop ~rev_path:(key :: rev_path) ~depth:(depth + 1) node))
+          loop ~rev_path:(key :: rev_path) ~depth:(depth + 1) node);
+        List.iter ~f:(fun node -> f ~depth node) node.signals)
     in
     loop ~depth:0 ~rev_path:[] t.node
   ;;
@@ -654,11 +656,18 @@ let run_and_close ?signals_width ?values_width waves =
   Core.never_returns (Scheduler.go ())
 ;;
 
-let run_interactive_viewer ?signals_width ?values_width ?display_rules t =
+let run_interactive_viewer
+      ?signals_width
+      ?values_width
+      ?(start_cycle = 0)
+      ?(wave_width = 3)
+      ?display_rules
+      t
+  =
   run_and_close
     ?signals_width
     ?values_width
-    { cfg = Waves.Config.default
+    { cfg = { Waves.Config.default with start_cycle; wave_width }
     ; waves = Waveform.sort_ports_and_formats t display_rules
     }
 ;;

@@ -50,7 +50,7 @@ let%expect_test "scope with assertions" =
   Cyclesim.cycle sim;
   inputs.b := Bits.of_int ~width:1 0;
   Cyclesim.cycle sim;
-  Expect_test_waveform.print ~dump_file:"scope_with_assertions" waveform;
+  Waveform.expect ~serialize_to:"scope_with_assertions" waveform;
   Stdio.print_s
     [%message
       (Cyclesim.results_of_assertions sim : Cyclesim.Violated_or_not.t Map.M(String).t)];
@@ -115,21 +115,29 @@ module Operator_operation = struct
                 i.op
                 [ ( Signal.of_int ~width:2 0
                   , [ result <-- (i.a |: i.b)
-                    ; assert_signal scope "assert (nested false)" Signal.gnd
+                    ; Scope.assert_signal_in_always
+                        scope
+                        "assert (nested false)"
+                        Signal.gnd
                     ] )
                 ; Signal.of_int ~width:2 1, [ result <-- (i.a &: i.b) ]
                 ; Signal.of_int ~width:2 2, [ result <-- i.a ^: i.b ]
                 ; ( Signal.of_int ~width:2 3
                   , [ result <-- ~:(i.a &: i.b)
-                    ; assert_signal scope "assert (nested true)" Signal.vdd
+                    ; Scope.assert_signal_in_always
+                        scope
+                        "assert (nested true)"
+                        Signal.vdd
                     ] )
                 ]
-            ; assert_signal scope "enable -> ~foo" ~:(i.foo)
+            ; Scope.assert_signal_in_always scope "enable -> ~foo" ~:(i.foo)
             ]
-            [ result <-- i.foo; assert_signal scope "~enable -> foo" i.foo ]
+            [ result <-- i.foo
+            ; Scope.assert_signal_in_always scope "~enable -> foo" i.foo
+            ]
         ; enable_passthrough <-- i.enable
-        ; assert_signal scope "assert enable" i.enable
-        ; assert_signal scope "assert false" Signal.gnd
+        ; Scope.assert_signal_in_always scope "assert enable" i.enable
+        ; Scope.assert_signal_in_always scope "assert false" Signal.gnd
         ]);
     { O.enable_passthrough = Always.Variable.value enable_passthrough
     ; result = Always.Variable.value result
@@ -162,10 +170,10 @@ let%expect_test "scope always with assertions" =
   inputs.enable := Bits.of_int ~width:1 0;
   inputs.foo := Bits.of_int ~width:1 1;
   Cyclesim.cycle sim;
-  Expect_test_waveform.print
+  Waveform.expect
     ~display_width:70
     ~display_height:34
-    ~dump_file:"scope_with_assertions_using_always_api"
+    ~serialize_to:"scope_with_assertions_using_always_api"
     waveform;
   Stdio.print_s
     [%message
@@ -216,7 +224,9 @@ let%expect_test "scope always with assertions" =
 let%expect_test "assertions checked to be 1 bit" =
   let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
   require_does_raise [%here] (fun () ->
-    Always.(compile [ assert_signal scope "oops - 2 bit assertion" (Signal.zero 2) ]));
+    Always.(
+      compile
+        [ Scope.assert_signal_in_always scope "oops - 2 bit assertion" (Signal.zero 2) ]));
   [%expect
     {|
     ("attempt to assign expression to [Always.variable] of different width"

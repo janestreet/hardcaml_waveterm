@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 module Style = struct
   type colour =

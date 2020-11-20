@@ -13,14 +13,16 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "base"
   "base_bigstring"
+  "expect_test_helpers_core"
   "hardcaml"
   "notty_async"
+  "ppx_deriving_hardcaml"
   "ppx_jane"
   "stdio"
-  "dune"           {>= "2.0.0"}
-  "notty"          {>= "0.2.1"}
+  "dune"                     {>= "2.0.0"}
+  "notty"                    {>= "0.2.1"}
   "num"
-  "re"             {>= "1.8.0"}
+  "re"                       {>= "1.8.0"}
 ]
 synopsis: "A terminal based digital waveform viewer for Hardcaml"
 description: "

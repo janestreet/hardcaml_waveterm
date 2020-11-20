@@ -1,2 +1,1 @@
-open! Import
-include String
+include Base.String

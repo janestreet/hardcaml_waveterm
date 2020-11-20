@@ -1,4 +1,5 @@
-open! Import
+open! Base
+open Hardcaml_waveterm.Expert
 
 (** Notty based gfx API. We need to use an intermediate in memory representation for
     notty.

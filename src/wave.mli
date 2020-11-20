@@ -1,4 +1,5 @@
-open! Import
+open Base
+open Hardcaml
 
 type t =
   | Empty of string

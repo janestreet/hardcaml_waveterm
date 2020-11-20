@@ -1,6 +1,6 @@
 (** Simulation port description. *)
 
-open! Import
+open Base
 
 module Type : sig
   type t =

@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 module Config = struct
   type t =

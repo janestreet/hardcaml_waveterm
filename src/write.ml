@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 type styler =
   { start : (string -> unit) -> unit

@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 module Config : sig
   type t =
@@ -22,5 +22,5 @@ type t =
   }
 [@@deriving sexp_of]
 
-val write : Out_channel.t -> t -> unit
-val read : In_channel.t -> t
+val write : Stdio.Out_channel.t -> t -> unit
+val read : Stdio.In_channel.t -> t

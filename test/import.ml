@@ -2,4 +2,5 @@ include Base
 include Hardcaml
 include Expect_test_helpers_core
 include Hardcaml_waveterm
+include Hardcaml_waveterm.Expert
 include Hardcaml_waveterm_interactive

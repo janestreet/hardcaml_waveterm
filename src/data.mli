@@ -1,6 +1,7 @@
 (** A dynamically-sized array, similar to std::vector in C++. *)
 
-open! Import
+open Base
+open Hardcaml
 
 type t [@@deriving sexp_of, compare, equal]
 

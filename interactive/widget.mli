@@ -1,4 +1,6 @@
-open! Import
+open Base
+open Hardcaml_waveterm
+open Hardcaml_waveterm.Expert
 
 val run_waves
   :  ?signals_width:int
@@ -17,6 +19,8 @@ val run_and_close : ?signals_width:int -> ?values_width:int -> Waves.t -> unit
 val run_interactive_viewer
   :  ?signals_width:int
   -> ?values_width:int
+  -> ?start_cycle:int
+  -> ?wave_width:int
   -> ?display_rules:Display_rules.t
   -> Waveform.t
   -> unit

@@ -1,6 +1,5 @@
-open! Import
-module Bits = Hardcaml.Bits
-module Cyclesim = Hardcaml.Cyclesim
+open Base
+open Hardcaml
 
 let wrap ?cfg sim =
   let cycle = ref 0 in

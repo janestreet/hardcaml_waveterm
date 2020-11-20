@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 (** stylting functions *)
 type styler =

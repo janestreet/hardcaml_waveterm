@@ -1,6 +1,5 @@
-open! Import
-module Bits = Hardcaml.Bits
-module Constant = Hardcaml.Constant
+open Base
+open Hardcaml
 module Bigstring = Base_bigstring
 
 let check_cache = true

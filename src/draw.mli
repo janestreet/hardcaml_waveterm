@@ -1,4 +1,4 @@
-open! Import
+open Base
 
 (** Styling information *)
 module Style : sig

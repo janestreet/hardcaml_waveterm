@@ -2,7 +2,8 @@
     time series of values for a number of ports.  The waveform is updated by running the
     simulation. *)
 
-open! Import
+open Base
+open Hardcaml
 
 type t [@@deriving sexp_of]
 
@@ -10,6 +11,7 @@ type t [@@deriving sexp_of]
 val create : ('i, 'o) Cyclesim.t -> t * ('i, 'o) Cyclesim.t
 
 val create_from_data : waves:Wave.t list -> ports:Port.t list -> t
+val waves : t -> Wave.t array
 
 (** Combine two waveforms into one waveform *)
 val combine : t -> t -> t
@@ -56,8 +58,15 @@ val sort_ports_and_formats : t -> Display_rules.t option -> Wave.t array
 (** Convert waveform to a string. *)
 val to_string : (t -> string) with_options
 
-(** Print waveform to channel [default stdout]. *)
-val print : (?channel:Out_channel.t -> t -> unit) with_options
+(** Print waveform to [channel] *)
+val print
+  : (?channel:Stdio.Out_channel.t (** default is [stdout] *) -> t -> unit) with_options
+
+(** Print waveforms in expect tests. This is very similar to [print] except it always
+    outputs to [stdout] and will optionally serialize the waveform to disk for offline
+    viewing if the environment variable [EXPECT_TEST_WAVEFORM=1] and the [serialize_to]
+    filename is set. *)
+val expect : (?serialize_to:string -> t -> unit) with_options
 
 (** For testing marshalling functions. *)
 val equal : t -> t -> bool

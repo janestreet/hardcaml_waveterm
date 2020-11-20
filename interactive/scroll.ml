@@ -1,4 +1,5 @@
-open! Import
+open Base
+open Hardcaml_waveterm.Expert
 
 module Adjustment = struct
   type t =

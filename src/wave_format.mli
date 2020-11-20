@@ -1,6 +1,7 @@
 (** Display format for a single wave (a row in the complete waveform). *)
 
-open! Import
+open Base
+open Hardcaml
 
 type alignment =
   | Left
