@@ -21,7 +21,6 @@ module Or_with_enable = struct
   end
 
   let create scope (i : _ I.t) =
-    let ( -->: ) a b = ~:a |: b in
     Scope.add_assertion scope "enabled means it is being used" (i.enable -->: (i.a |: i.b));
     let o = { O.enable_passthrough = i.enable; result = i.enable &: (i.a |: i.b) } in
     Scope.add_assertion scope "enable passthrough" (i.enable ==: o.enable_passthrough);
