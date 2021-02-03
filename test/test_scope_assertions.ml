@@ -75,6 +75,7 @@ let%expect_test "scope with assertions" =
     │               ││                                                   │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
+    2566b737c917e3e75e1471ad3443df93
     ("Cyclesim.results_of_assertions sim"
      (("enable passthrough" Not_violated)
       ("enabled means it is being used" (Violated (2)))
@@ -213,6 +214,7 @@ let%expect_test "scope always with assertions" =
     │               ││                                                   │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
+    2e164e77e11658e1d5f15740141feb1d
     ("Cyclesim.results_of_assertions sim"
      (("assert (nested false)" (Violated (1)))
       ("assert (nested true)" Not_violated) ("assert enable" (Violated (0 4)))

@@ -28,9 +28,6 @@ module Styles = struct
 end
 
 module Bounds = struct
-  (* XXX Some stuff would be much simplified if the rects excluded the border
-     and we just adjusted for it here.  If the border is drawn it is on
-     the outside of the rendering window *)
 
   type t =
     { signals : Draw.rect

@@ -60,13 +60,20 @@ val to_string : (t -> string) with_options
 
 (** Print waveform to [channel] *)
 val print
-  : (?channel:Stdio.Out_channel.t (** default is [stdout] *) -> t -> unit) with_options
+  : (?show_digest:bool
+     -> ?channel:Stdio.Out_channel.t (** default is [stdout] *)
+     -> t
+     -> unit)
+      with_options
 
 (** Print waveforms in expect tests. This is very similar to [print] except it always
     outputs to [stdout] and will optionally serialize the waveform to disk for offline
     viewing if the environment variable [EXPECT_TEST_WAVEFORM=1] and the [serialize_to]
-    filename is set. *)
-val expect : (?serialize_to:string -> t -> unit) with_options
+    filename is set.
+
+    Simulation digests are shown by default.
+*)
+val expect : (?show_digest:bool -> ?serialize_to:string -> t -> unit) with_options
 
 (** For testing marshalling functions. *)
 val equal : t -> t -> bool

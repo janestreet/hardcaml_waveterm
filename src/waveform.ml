@@ -35,15 +35,18 @@ let apply_wave_format
 type t =
   { waves : Wave.t array
   ; ports : Port.t list
+  ; digest : Hardcaml.Cyclesim.Digest.t ref
   }
 [@@deriving sexp_of, equal, fields]
 
 let create_from_data ~waves ~ports =
   let waves = Array.of_list waves in
-  { waves; ports }
+  { waves; ports; digest = ref Hardcaml.Cyclesim.Digest.none }
 ;;
 
-let combine a b = { waves = Array.append a.waves b.waves; ports = a.ports @ b.ports }
+let combine a b =
+  { waves = Array.append a.waves b.waves; ports = a.ports @ b.ports; digest = a.digest }
+;;
 
 (* A simple heuristic to put the standard clock and reset related signals
    at the top of the waveform, then everything else in sorted order. *)
@@ -100,7 +103,7 @@ let create sim =
       ]
   in
   let sim, waves = Sim.wrap sim in
-  { waves; ports }, sim
+  { waves; ports; digest = Cyclesim.digest sim }, sim
 ;;
 
 type 'a with_options =
@@ -195,6 +198,7 @@ let print
       ?wave_width
       ?wave_height
       ?start_cycle
+      ?(show_digest = false)
       ?(channel = Out_channel.stdout)
       t
   =
@@ -209,7 +213,11 @@ let print
       ?start_cycle
       t
   in
-  Write.utf8 (Out_channel.output_string channel) ctx
+  Write.utf8 (Out_channel.output_string channel) ctx;
+  if show_digest
+  then
+    Out_channel.print_endline
+      (Sexp.to_string_mach (Hardcaml.Cyclesim.Digest.sexp_of_t !(t.digest)))
 ;;
 
 (* Serialization of waveform onto disk. While we can in theory write a better
@@ -279,6 +287,7 @@ let expect
       ?wave_width
       ?wave_height
       ?start_cycle
+      ?(show_digest = true)
       ?serialize_to
       t
   =
@@ -291,6 +300,7 @@ let expect
     ?wave_width
     ?wave_height
     ?start_cycle
+    ~show_digest
     t;
   match serialize_to with
   | None -> ()
