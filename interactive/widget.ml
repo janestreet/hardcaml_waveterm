@@ -4,6 +4,8 @@ open Hardcaml_waveterm.Expert
 open! Async
 module R = Render.Make (Draw_notty)
 
+
+
 module Hierarchy = struct
   type node =
     { mutable visible : bool
@@ -15,12 +17,13 @@ module Hierarchy = struct
   type currently_rendered =
     { actual_wave : Wave.t array
     ; for_rendering : Wave.t array
+    ; mutable selected_wave_index : int option
     }
   [@@deriving sexp_of]
 
   type t =
     { cfg : Waves.Config.t
-    ; node : node
+    ; root : node
     ; mutable currently_rendered : currently_rendered option
     }
   [@@deriving sexp_of]
@@ -40,17 +43,6 @@ module Hierarchy = struct
       { t with children }
   ;;
 
-  let toggle_module t name =
-    let rec loop path (node : node) =
-      match path with
-      | [] -> node.visible <- not node.visible
-      | hd :: tl -> loop tl (Map.find_exn node.children hd)
-    in
-    (try loop (String.split name ~on:'$') t.node with
-     | Not_found_s _ -> raise_s [%message "Cannot resolve key in module" name]);
-    t.currently_rendered <- None
-  ;;
-
   let of_waves (waves : Waves.t) =
     let init = empty_node in
     let ret =
@@ -59,7 +51,46 @@ module Hierarchy = struct
         update ~path ~wave acc)
     in
     ret.visible <- true;
-    { cfg = waves.cfg; node = ret; currently_rendered = None }
+    { cfg = waves.cfg; root = ret; currently_rendered = None }
+  ;;
+
+  let move_to_delta_on_active_node ~start_cycle ~search_forwards_or_backwards (t : t) =
+    let%bind.Option c = t.currently_rendered in
+    let%bind.Option selected_wave_index = c.selected_wave_index in
+    match c.actual_wave.(selected_wave_index) with
+    | Clock _ | Empty _ -> None
+    | Binary (_, data) | Data (_, data, _, _) ->
+      let len = Data.length data in
+      let start_cycle =
+        match search_forwards_or_backwards with
+        | `Forwards -> start_cycle
+        | `Backwards -> start_cycle - 1
+      in
+      let%bind.Option initial =
+        if 0 <= start_cycle && start_cycle < len
+        then Some (Data.get data start_cycle)
+        else None
+      in
+      let inc_or_dec i =
+        match search_forwards_or_backwards with
+        | `Forwards -> i + 1
+        | `Backwards -> i - 1
+      in
+      let rec loop i =
+        let[@inline always] mismatch_with_original () =
+          Hardcaml.Bits.(is_gnd (Data.get data i ==: initial))
+        in
+        if i < 0 || i >= len
+        then None
+        else if mismatch_with_original ()
+        then
+          Some
+            (match search_forwards_or_backwards with
+             | `Forwards -> i
+             | `Backwards -> i + 1)
+        else loop (inc_or_dec i)
+      in
+      loop (inc_or_dec start_cycle)
   ;;
 
   let iter_wave ~f t =
@@ -72,7 +103,7 @@ module Hierarchy = struct
           loop ~rev_path:(key :: rev_path) ~depth:(depth + 1) node);
         List.iter ~f:(fun node -> f ~depth node) node.signals)
     in
-    loop ~depth:0 ~rev_path:[] t.node
+    loop ~depth:0 ~rev_path:[] t.root
   ;;
 
   let set_currently_rendered t =
@@ -92,18 +123,73 @@ module Hierarchy = struct
     in
     let for_rendering = Array.of_list_rev !for_rendering in
     let actual_wave = Array.of_list_rev !actual_wave in
-    t.currently_rendered <- Some { for_rendering; actual_wave }
+    let selected_wave_index =
+      match t.currently_rendered with
+      | None -> None
+      | Some currently_rendered ->
+        (match currently_rendered.selected_wave_index with
+         | None -> None
+         | Some selected_wave_index ->
+           let wave = currently_rendered.actual_wave.(selected_wave_index) in
+           Array.find_mapi actual_wave ~f:(fun i wave' ->
+             if String.equal (Wave.get_name wave') (Wave.get_name wave)
+             then Some i
+             else None))
+    in
+    t.currently_rendered <- Some { for_rendering; actual_wave; selected_wave_index }
+  ;;
+
+  let toggle_module t name =
+    let rec loop path (node : node) =
+      match path with
+      | [] -> node.visible <- not node.visible
+      | hd :: tl -> loop tl (Map.find_exn node.children hd)
+    in
+    (try loop (String.split name ~on:'$') t.root with
+     | Not_found_s _ -> raise_s [%message "Cannot resolve key in module" name]);
+    set_currently_rendered t
+  ;;
+
+  let set_currently_rendered__if_none t =
+    match t.currently_rendered with
+    | None -> set_currently_rendered t
+    | Some _ -> ()
   ;;
 
   let find_actual_wave t i =
-    set_currently_rendered t;
+    set_currently_rendered__if_none t;
     (Option.value_exn t.currently_rendered).actual_wave.(i)
   ;;
 
   let get_currently_rendered_waves t =
-    set_currently_rendered t;
+    set_currently_rendered__if_none t;
     let currently_rendered = (Option.value_exn t.currently_rendered).for_rendering in
     { Waves.cfg = t.cfg; waves = currently_rendered }
+  ;;
+
+  let change_selected_wave_index ~delta t =
+    Option.iter t.currently_rendered ~f:(fun c ->
+      Option.iter c.selected_wave_index ~f:(fun selected_wave_index ->
+        let next =
+          selected_wave_index + delta
+          |> Int.min (Array.length c.for_rendering - 1)
+          |> Int.max 0
+        in
+        c.selected_wave_index <- Some next))
+  ;;
+
+  let toggle_selected_module_if_present t =
+    match t.currently_rendered with
+    | None -> false
+    | Some c ->
+      (match c.selected_wave_index with
+       | None -> false
+       | Some selected_wave_index ->
+         (match c.actual_wave.(selected_wave_index) with
+          | Empty name ->
+            toggle_module t name;
+            true
+          | Clock _ | Data _ | Binary _ -> false))
   ;;
 end
 
@@ -333,13 +419,16 @@ module Waveform_window = struct
   ;;
 
   let draw ~ctx (t : t) =
-    let cfg = t.waves_window.window.hierarchy.cfg in
+    let hierarchy = t.waves_window.window.hierarchy in
+    let cfg = hierarchy.cfg in
     let draw_with_border f ~ctx ~bounds name a =
       f ~ctx ~bounds:(Border.adjust bounds) a;
       Border.draw ~ctx ~bounds name
     in
     draw_with_border
-      Signals_window.draw
+      (Signals_window.draw
+         ~selected_wave_index:
+           (Option.bind hierarchy.currently_rendered ~f:(fun c -> c.selected_wave_index)))
       ~ctx
       ~bounds:t.signals_window.bounds
       "signals"
@@ -355,7 +444,7 @@ module Waveform_window = struct
       ~ctx
       ~bounds:t.waves_window.bounds
       (Printf.sprintf
-         "waves [cursor cycle=%i, window cycle=%i]"
+         "waves [cursor cycle=%i, window cycle=%i"
          cfg.wave_cursor
          cfg.start_cycle)
       t.waves_window.window;
@@ -367,12 +456,37 @@ module Waveform_window = struct
 
   let scale_key_handler (t : t) key =
     let cfg = t.waves_window.window.hierarchy.cfg in
+    (* We want to zoom in or out with the cursor location as the target, so calculate the
+       displayed ratios and make sure after updating the wave width they are the same. *)
+    let cursor_centered_zoom t ~new_wave_width =
+      let cycles_displayed t =
+        let w =
+          let wave_width = Int.to_float t.waves_window.window.hierarchy.cfg.wave_width in
+          if Float.is_negative wave_width
+          then 1. /. (wave_width *. -1.0)
+          else (wave_width +. 1.) *. 2.
+        in
+        Int.(to_float t.waves_window.bounds.w /. w |> of_float)
+      in
+      let old_cycles_displayed = cycles_displayed t in
+      let old_cursor_ratio =
+        Int.(
+          to_float (cfg.wave_cursor - cfg.start_cycle) /. to_float old_cycles_displayed)
+      in
+      cfg.wave_width <- new_wave_width;
+      let new_cycles_displayed = cycles_displayed t in
+      let new_start_cycle =
+        cfg.wave_cursor
+        - Int.(to_float new_cycles_displayed *. old_cursor_ratio |> of_float)
+      in
+      cfg.start_cycle <- new_start_cycle
+    in
     match key with
     | `ASCII '=', [] ->
-      cfg.wave_width <- cfg.wave_width + 1;
+      cursor_centered_zoom t ~new_wave_width:(cfg.wave_width + 1);
       true
     | `ASCII '-', [] ->
-      cfg.wave_width <- cfg.wave_width - 1;
+      cursor_centered_zoom t ~new_wave_width:(cfg.wave_width - 1);
       true
     | `ASCII '+', [] ->
       cfg.wave_height <- cfg.wave_height + 1;
@@ -384,6 +498,7 @@ module Waveform_window = struct
   ;;
 
   let scroll_key_handler (t : t) key =
+    let hierarchy = t.signals_window.window.hierarchy in
     match key with
     | `Arrow `Left, [] ->
       set_cycle_offset t (get_cycle_offset t - 1);
@@ -409,6 +524,33 @@ module Waveform_window = struct
     | `Arrow `Down, [ `Ctrl ] | `Page `Down, [] ->
       set_signal_offset t (get_signal_offset t + 10);
       true
+    | `ASCII 'j', [] ->
+      set_signal_offset t (get_signal_offset t + 1);
+      Hierarchy.change_selected_wave_index ~delta:1 hierarchy;
+      true
+    | `ASCII 'k', [] ->
+      set_signal_offset t (get_signal_offset t - 1);
+      Hierarchy.change_selected_wave_index ~delta:(-1) hierarchy;
+      true
+    | `Enter, [] -> Hierarchy.toggle_selected_module_if_present hierarchy
+    | `ASCII ('e' as c), [] | `ASCII ('b' as c), [] ->
+      let cfg = hierarchy.cfg in
+      let new_cycle_offset =
+        Hierarchy.move_to_delta_on_active_node
+          ~start_cycle:(Int.max 0 cfg.wave_cursor)
+          ~search_forwards_or_backwards:
+            (if Char.equal 'e' c then `Forwards else `Backwards)
+          hierarchy
+      in
+      (match new_cycle_offset with
+       | None -> false
+       | Some new_cycle_offset ->
+         let distance = new_cycle_offset - hierarchy.cfg.wave_cursor in
+         hierarchy.cfg.wave_cursor <- new_cycle_offset;
+         (* If the wave we are trying to select is going to be out of bounds, we move the
+            window just enough so we can see it. *)
+         set_cycle_offset t (get_cycle_offset t + distance);
+         true)
     | _ -> false
   ;;
 
@@ -445,19 +587,21 @@ module Waveform_window = struct
       && col < bounds.c + bounds.w
     in
     let toggle_module button =
-      if in_bounds t.signals_window.bounds && Poly.equal button (Some (`Left, []))
+      if Poly.equal button (Some (`Left, []))
       then (
         let offset = get_signal_offset t in
         let hierarchy = t.signals_window.window.hierarchy in
         let wave_height = hierarchy.cfg.wave_height in
-        let waves = Hierarchy.get_currently_rendered_waves hierarchy in
+        let rendered_waves = Hierarchy.get_currently_rendered_waves hierarchy in
         let selected_index =
           let current_position = ref (row - 1) in
           let rec loop i lower =
-            if i = Array.length waves.waves
+            if i = Array.length rendered_waves.waves
             then None
             else (
-              let delta = snd (R.get_wave_height (wave_height, waves.waves.(i))) in
+              let delta =
+                snd (R.get_wave_height (wave_height, rendered_waves.waves.(i)))
+              in
               if i < offset
               then (
                 current_position := !current_position + delta;
@@ -471,14 +615,25 @@ module Waveform_window = struct
         match selected_index with
         | None -> false
         | Some selected_index ->
-          (match waves.waves.(selected_index) with
+          let actual_wave = Hierarchy.find_actual_wave hierarchy selected_index in
+          let select_wave () =
+            let hierarchy = t.signals_window.window.hierarchy in
+            Option.iter hierarchy.currently_rendered ~f:(fun c ->
+              c.selected_wave_index <- Some selected_index)
+          in
+          (match rendered_waves.waves.(selected_index) with
            | Empty _ ->
-             let name =
-               Wave.get_name (Hierarchy.find_actual_wave hierarchy selected_index)
-             in
-             Hierarchy.toggle_module hierarchy name;
-             true
-           | _ -> false))
+             select_wave ();
+             if in_bounds t.signals_window.bounds
+             then (
+               let name = Wave.get_name actual_wave in
+               Hierarchy.toggle_module hierarchy name;
+               true)
+             else true
+           | Clock _ -> false
+           | _ ->
+             select_wave ();
+             true))
       else false
     in
     let update_cursor button =
@@ -505,6 +660,7 @@ module Waveform_window = struct
     let update_scroll_bar (scroll : Scroll.Scrollbar.t) _ =
       in_bounds scroll.bounds && Scroll.Scrollbar.mouse_event scroll mouse
     in
+    let or_no_short_circuit a b = a || b in
     match button with
     | `Press b ->
       last_mouse_button := Some (b, mods);
@@ -518,7 +674,7 @@ module Waveform_window = struct
         ; toggle_module
         ]
         ~init:false
-        ~f:(fun acc f -> acc || f !last_mouse_button)
+        ~f:(fun acc f -> or_no_short_circuit acc (f !last_mouse_button))
     | `Release ->
       let button = !last_mouse_button in
       last_mouse_button := None;
@@ -532,7 +688,7 @@ module Waveform_window = struct
         ; update_scroll_bar t.scroll_values
         ]
         ~init:false
-        ~f:(fun acc f -> acc || f !last_mouse_button)
+        ~f:(fun acc f -> or_no_short_circuit acc (f !last_mouse_button))
   ;;
 
   (* return true to redraw *)

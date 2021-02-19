@@ -131,7 +131,13 @@ module Make (G : Draw.S) : sig
   val draw_wave : unit draw_item
 
   (** draw signal names *)
-  val draw_signals : unit draw_item
+  val draw_signals
+    :  ?style:Draw.Style.t
+    -> selected_wave_index:int option
+    -> ctx:G.ctx
+    -> bounds:Draw.rect
+    -> Waves.t
+    -> unit
 
   (** draw signal values *)
   val draw_values : int draw_item

@@ -600,7 +600,13 @@ module Make (G : Draw.S) = struct
       draw_string_right ~ctx ~style ~bounds ~r (sub_right str c w))
   ;;
 
-  let draw_signals ?(style = Draw.Style.default) ~ctx ~bounds (state : Waves.t) =
+  let draw_signals
+        ?(style = Draw.Style.default)
+        ~selected_wave_index
+        ~ctx
+        ~bounds
+        (state : Waves.t)
+    =
     let style = get_style style in
     fill ~ctx ~bounds ~style ' ';
     draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
@@ -613,7 +619,12 @@ module Make (G : Draw.S) = struct
         ~r
         ~c:state.cfg.signal_scroll
         (Wave.get_name wave);
-      draw_highlight ~ctx ~bounds ~r (i = state.cfg.signal_cursor))
+      let is_selected =
+        match selected_wave_index with
+        | None -> false
+        | Some selected_wave_index -> i = selected_wave_index
+      in
+      draw_highlight ~ctx ~bounds ~r (is_selected || i = state.cfg.signal_cursor))
   ;;
 
   let draw_values ?(style = Draw.Style.default) ~ctx ~bounds (state : Waves.t) =
@@ -677,7 +688,7 @@ module Make (G : Draw.S) = struct
       | Some b -> b
     in
     with_border
-      ~draw:draw_signals
+      ~draw:(draw_signals ~selected_wave_index:None)
       ~label:"Signals"
       ~style:style.signals
       ?border:style.border
@@ -813,7 +824,7 @@ module Static = struct
     in
     let b, sctx = get_ctx bounds.signals in
     R.with_border
-      ~draw:R.draw_signals
+      ~draw:(R.draw_signals ~selected_wave_index:None)
       ?border:style.border
       ~label:"Signals"
       ~style:style.signals
