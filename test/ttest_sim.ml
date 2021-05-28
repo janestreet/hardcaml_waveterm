@@ -2,7 +2,15 @@ open! Import
 
 let testbench = lazy (Example.testbench ())
 
-let test ?display_rules ?display_width ?display_height ?wave_width ?wave_height () =
+let test
+      ?display_rules
+      ?display_width
+      ?display_height
+      ?wave_width
+      ?wave_height
+      ?signals_width
+      ()
+  =
   Waveform.expect
     (Lazy.force testbench)
     ?display_rules
@@ -10,6 +18,7 @@ let test ?display_rules ?display_width ?display_height ?wave_width ?wave_height 
     ?display_height
     ?wave_width
     ?wave_height
+    ?signals_width
 ;;
 
 let%expect_test "default" =
@@ -288,11 +297,69 @@ let%expect_test "minimum display size" =
     505b7a8b7a37e3b9a477a12c1df3c708 |}]
 ;;
 
+let%expect_test "Custom signals width" =
+  test () ~signals_width:10;
+  [%expect
+    {|
+    ┌Signals─┐┌Waves─────────────────────────────────────────────────────┐
+    │clk     ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌─│
+    │        ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘ │
+    │clr     ││────────┐                                                 │
+    │        ││        └───────────────────────────────                  │
+    │        ││────────┬───────┬───────────────────────                  │
+    │a       ││ 0000   │0017   │002D                                     │
+    │        ││────────┴───────┴───────────────────────                  │
+    │        ││────────────────┬───────┬───────────────                  │
+    │b       ││ 0000           │0018   │002E                             │
+    │        ││────────────────┴───────┴───────────────                  │
+    │vdd     ││────────────────────────────────────────                  │
+    │        ││                                                          │
+    │        ││                                                          │
+    │        ││                                                          │
+    │        ││                                                          │
+    │        ││                                                          │
+    │        ││                                                          │
+    │        ││                                                          │
+    └────────┘└──────────────────────────────────────────────────────────┘
+    505b7a8b7a37e3b9a477a12c1df3c708 |}];
+  test () ~signals_width:25;
+  [%expect
+    {|
+    ┌Signals────────────────┐┌Waves──────────────────────────────────────┐
+    │clk                    ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
+    │                       ││    └───┘   └───┘   └───┘   └───┘   └───┘  │
+    │clr                    ││────────┐                                  │
+    │                       ││        └───────────────────────────────   │
+    │                       ││────────┬───────┬───────────────────────   │
+    │a                      ││ 0000   │0017   │002D                      │
+    │                       ││────────┴───────┴───────────────────────   │
+    │                       ││────────────────┬───────┬───────────────   │
+    │b                      ││ 0000           │0018   │002E              │
+    │                       ││────────────────┴───────┴───────────────   │
+    │vdd                    ││────────────────────────────────────────   │
+    │                       ││                                           │
+    │                       ││                                           │
+    │                       ││                                           │
+    │                       ││                                           │
+    │                       ││                                           │
+    │                       ││                                           │
+    │                       ││                                           │
+    └───────────────────────┘└───────────────────────────────────────────┘
+    505b7a8b7a37e3b9a477a12c1df3c708 |}]
+;;
+
 let%expect_test "configuration exceptions" =
   show_raise (fun () -> test () ~wave_height:(-1));
   [%expect {| (raised ("Invalid wave height.  Must be >= 0." (wave_height -1))) |}];
   show_raise (fun () -> test () ~display_height:2);
   [%expect {| (raised ("Invalid display height.  Must be >= 3." (display_height 2))) |}];
   show_raise (fun () -> test () ~display_width:6);
-  [%expect {| (raised ("Invalid display width.  Must be >= 7." (display_width 6))) |}]
+  [%expect {| (raised ("Invalid display width.  Must be >= 7." (display_width 6))) |}];
+  show_raise (fun () -> test () ~signals_width:28 ~display_width:28);
+  [%expect
+    {|
+    (raised (
+      "Invalid signals_width. Require signals_width < display_width."
+      (signals_width 28)
+      (display_width 28))) |}]
 ;;

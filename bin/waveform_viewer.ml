@@ -134,6 +134,6 @@ let command_convert =
 ;;
 
 let () =
-  Command.run
+  Command_unix.run
     (Command.group ~summary:"" [ "show", command_show; "convert", command_convert ])
 ;;

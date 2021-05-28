@@ -50,6 +50,7 @@ type 'a with_options =
   -> ?display_values:bool
   -> ?wave_width:int
   -> ?wave_height:int
+  -> ?signals_width:int
   -> ?start_cycle:int
   -> 'a
 

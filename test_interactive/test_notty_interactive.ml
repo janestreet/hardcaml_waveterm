@@ -21,5 +21,5 @@ let () =
          ~signals_width
          ~values_width
          Test_data.(create ~prefix:(fun _ -> "") ~length:1000 ~num_signals:100))
-  |> Command.run
+  |> Command_unix.run
 ;;

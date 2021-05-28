@@ -35,6 +35,7 @@ module Bounds : sig
     -> ?waves:bool
     -> ?status:bool
     -> ?border:bool
+    -> ?signals_width:int
     -> Draw.rect
     -> t
 end
@@ -167,6 +168,7 @@ module Static : sig
     -> ?style:Styles.t
     -> ?rows:int
     -> ?cols:int
+    -> ?signals_width:int
     -> Waves.t
     -> Draw.In_memory.ctx
 

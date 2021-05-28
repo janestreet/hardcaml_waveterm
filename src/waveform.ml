@@ -113,6 +113,7 @@ type 'a with_options =
   -> ?display_values:bool
   -> ?wave_width:int
   -> ?wave_height:int
+  -> ?signals_width:int
   -> ?start_cycle:int
   -> 'a
 
@@ -124,6 +125,7 @@ let to_ctx
       ?(wave_height = 1)
       ?(start_cycle = 0)
       ?(display_values = false)
+      ?signals_width
       t
   =
   if display_height < 3
@@ -132,7 +134,16 @@ let to_ctx
   then raise_s [%message "Invalid display width.  Must be >= 7." (display_width : int)];
   if wave_height < 0
   then raise_s [%message "Invalid wave height.  Must be >= 0." (wave_height : int)];
+  Option.iter signals_width ~f:(fun signals_width ->
+    if signals_width >= display_width
+    then
+      raise_s
+        [%message
+          "Invalid signals_width. Require signals_width < display_width."
+            (signals_width : int)
+            (display_width : int)]);
   Render.Static.draw
+    ?signals_width
     ~values:display_values
     ~style:Render.Styles.black_on_white
     ~rows:display_height
@@ -149,6 +160,7 @@ let to_buffer
       ?display_values
       ?wave_width
       ?wave_height
+      ?signals_width
       ?start_cycle
       t
   =
@@ -161,6 +173,7 @@ let to_buffer
       ?display_values
       ?wave_width
       ?wave_height
+      ?signals_width
       ?start_cycle
       t
   in
@@ -175,6 +188,7 @@ let to_string
       ?display_values
       ?wave_width
       ?wave_height
+      ?signals_width
       ?start_cycle
       t
   =
@@ -185,6 +199,7 @@ let to_string
     ?display_values
     ?wave_width
     ?wave_height
+    ?signals_width
     ?start_cycle
     t
   |> Buffer.contents
@@ -197,6 +212,7 @@ let print
       ?display_values
       ?wave_width
       ?wave_height
+      ?signals_width
       ?start_cycle
       ?(show_digest = false)
       ?(channel = Out_channel.stdout)
@@ -210,6 +226,7 @@ let print
       ?display_values
       ?wave_width
       ?wave_height
+      ?signals_width
       ?start_cycle
       t
   in
@@ -286,6 +303,7 @@ let expect
       ?display_values
       ?wave_width
       ?wave_height
+      ?signals_width
       ?start_cycle
       ?(show_digest = true)
       ?serialize_to
@@ -299,6 +317,7 @@ let expect
     ?display_values
     ?wave_width
     ?wave_height
+    ?signals_width
     ?start_cycle
     ~show_digest
     t;

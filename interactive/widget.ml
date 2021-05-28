@@ -341,25 +341,36 @@ module Waveform_window = struct
     Scroll.Scrollable.set_offset t.scroll_values.scrollable offset
   ;;
 
-  let create ~signals_width ~values_width ~rows ~cols waves =
+  (* We optionally take in an existing [Waveform_window.t] to use in constructing the new
+     [t]. This is useful for when we want to resize an existing window. *)
+  let create ?(waveform : t option) ~signals_width ~values_width ~rows ~cols waves =
     let hbarheight = 1 in
     let vbarwidth = 2 in
     let hierarchy = Hierarchy.of_waves waves in
     let signals_window : Signals_window.t With_bounds.t =
-      { bounds = { r = 0; c = 0; w = signals_width; h = rows - hbarheight }
-      ; window = Signals_window.create ~waves ~hierarchy
-      }
+      let bounds : Draw.rect =
+        { r = 0; c = 0; w = signals_width; h = rows - hbarheight }
+      in
+      match waveform with
+      | None -> { bounds; window = Signals_window.create ~waves ~hierarchy }
+      | Some waveform -> { waveform.signals_window with bounds }
     in
     let values_window : Values_window.t With_bounds.t =
-      { bounds = { r = 0; c = signals_width; w = values_width; h = rows - hbarheight }
-      ; window = Values_window.create ~waves ~hierarchy
-      }
+      let bounds : Draw.rect =
+        { r = 0; c = signals_width; w = values_width; h = rows - hbarheight }
+      in
+      match waveform with
+      | None -> { bounds; window = Values_window.create ~waves ~hierarchy }
+      | Some waveform -> { waveform.values_window with bounds }
     in
     let waves_window : Waves_window.t With_bounds.t =
       let sum = signals_width + values_width in
-      { bounds = { r = 0; c = sum; w = cols - sum - vbarwidth; h = rows - hbarheight }
-      ; window = Waves_window.create ~waves ~hierarchy
-      }
+      let bounds : Draw.rect =
+        { r = 0; c = sum; w = cols - sum - vbarwidth; h = rows - hbarheight }
+      in
+      match waveform with
+      | None -> { bounds; window = Waves_window.create ~waves ~hierarchy }
+      | Some waveform -> { waveform.waves_window with bounds }
     in
     let scroll_vert =
       Scroll.VScrollbar.create
@@ -745,6 +756,7 @@ module Context = struct
   let resize ~rows ~cols t =
     let waveform =
       Waveform_window.create
+        ~waveform:t.waveform
         ~signals_width:t.signals_width
         ~values_width:t.values_width
         ~cols

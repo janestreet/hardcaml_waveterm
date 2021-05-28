@@ -56,6 +56,7 @@ module Bounds = struct
         ?(waves = true)
         ?(status = false)
         ?(border = true)
+        ?signals_width
         bounds
     =
     let open Draw in
@@ -66,6 +67,11 @@ module Bounds = struct
     let iw4 = max minb (min 20 (cols / 4)) in
     (* approx 1/4 of width, >minb and < 20 *)
     let z = { r = 0; c = 0; w = 0; h = (rows - if status then 3 else 0) } in
+    let signals_width default =
+      match signals_width with
+      | None -> default
+      | Some w -> w
+    in
     let get_bounds w0 w1 w2 =
       if w2 <= 0 && waves
       then failwith "windows wont fit (sorry, should be more graceful!)"
@@ -84,13 +90,19 @@ module Bounds = struct
     in
     match signals, values, waves with
     (* all *)
-    | true, true, true -> get_bounds iw6 iw6 (cols - iw6 - iw6)
+    | true, true, true ->
+      let signals_width = signals_width iw6 in
+      get_bounds signals_width iw6 (cols - signals_width - iw6)
     (* 2 *)
-    | true, true, false -> get_bounds (cols / 2) ((cols + 1) / 2) 0
-    | true, false, true -> get_bounds iw4 0 (cols - iw4)
+    | true, true, false ->
+      let signals_width = signals_width (cols / 2) in
+      get_bounds signals_width (cols - signals_width) 0
+    | true, false, true ->
+      let signals_width = signals_width iw4 in
+      get_bounds signals_width 0 (cols - signals_width)
     | false, true, true -> get_bounds 0 iw4 (cols - iw4)
     (* 1 *)
-    | true, false, false -> get_bounds cols 0 0
+    | true, false, false -> get_bounds (signals_width cols) 0 0
     | false, true, false -> get_bounds 0 cols 0
     | false, false, true -> get_bounds 0 0 cols
     (* 0 *)
@@ -783,6 +795,7 @@ module Static = struct
         ?(style = Styles.default Draw.Style.default)
         ?rows
         ?cols
+        ?signals_width
         state
     =
     (* inferred width and height *)
@@ -800,6 +813,7 @@ module Static = struct
     let ctx = Draw.In_memory.init ~rows ~cols in
     let bounds =
       Bounds.fit_to_window
+        ?signals_width
         ?signals
         ?values
         ?waves
