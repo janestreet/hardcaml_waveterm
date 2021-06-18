@@ -43,7 +43,7 @@ let run_scrollable () =
        behaves much better - especially over a ssh connection. *)
     (Pipe.iter' events ~f:(fun q ->
        let redraw =
-         Core_kernel.Queue.fold q ~init:false ~f:(fun redraw event ->
+         Core.Queue.fold q ~init:false ~f:(fun redraw event ->
            if handle_event event then true else redraw)
        in
        if redraw then draw !ctx else return ()));

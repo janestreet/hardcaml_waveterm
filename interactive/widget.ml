@@ -797,7 +797,7 @@ module Context = struct
        behaves much better - especially over a ssh connection. *)
     Pipe.iter' ctx.events ~f:(fun q ->
       let redraw =
-        Core_kernel.Queue.fold q ~init:false ~f:(fun redraw event ->
+        Core.Queue.fold q ~init:false ~f:(fun redraw event ->
           if handle_event ctx event then true else redraw)
       in
       if redraw then draw ctx else return ())

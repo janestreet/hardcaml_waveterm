@@ -37,7 +37,10 @@ let%expect_test "scope with assertions" =
     Or_with_enable.Sim.create
       ~config:Cyclesim.Config.trace_all
       ~circuit_config:
-        { Circuit.Config.default with assertions = Some (Scope.assertion_manager scope) }
+        { Circuit.Config.default with
+          assertions = Some (Scope.assertion_manager scope)
+        ; port_checks = Relaxed
+        }
       (Or_with_enable.create scope)
   in
   let inputs = Cyclesim.inputs sim in
@@ -152,7 +155,10 @@ let%expect_test "scope always with assertions" =
   let sim =
     Operator_operation.Sim.create
       ~circuit_config:
-        { Circuit.Config.default with assertions = Some (Scope.assertion_manager scope) }
+        { Circuit.Config.default with
+          assertions = Some (Scope.assertion_manager scope)
+        ; port_checks = Relaxed
+        }
       (Operator_operation.create_with_always scope)
   in
   let inputs = Cyclesim.inputs sim in
