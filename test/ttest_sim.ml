@@ -289,8 +289,7 @@ let%expect_test "Alignment" =
 
 let%expect_test "minimum display size" =
   test () ~display_width:7 ~display_height:3;
-  [%expect
-    {|
+  [%expect {|
     ┌S┐┌Wa┐
     │c││┌─│
     └─┘└──┘
