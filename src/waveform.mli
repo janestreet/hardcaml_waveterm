@@ -42,7 +42,10 @@ val combine : t -> t -> t
     [display_width] and [display_height] simply set the overall size of the displayed
     waveform.  An auto scaling routine assigns approximately [1/3] of the display for the
     signals and values windows.  The default size is 70 character wide and 20 high.  The
-    minimum size is 7 characters wide and 3 high and an exception is raise otherwise. *)
+    minimum size is 7 characters wide and 3 high and an exception is raise otherwise.
+
+    [signals_alignment] changes the text alignment of the displayed signals names. By
+    default this is Wave_format.Left. *)
 type 'a with_options =
   ?display_rules:Display_rules.t
   -> ?display_width:int
@@ -52,6 +55,7 @@ type 'a with_options =
   -> ?wave_height:int
   -> ?signals_width:int
   -> ?start_cycle:int
+  -> ?signals_alignment:Text_alignment.t
   -> 'a
 
 val sort_ports_and_formats : t -> Display_rules.t option -> Wave.t array

@@ -2,10 +2,7 @@ open Base
 open Hardcaml
 open Stdio
 
-let apply_wave_format
-      (t : Wave.t)
-      (format : Wave_format.t)
-      (alignment : Wave_format.alignment)
+let apply_wave_format (t : Wave.t) (format : Wave_format.t) (alignment : Text_alignment.t)
   : Wave.t
   =
   let width =
@@ -115,10 +112,12 @@ type 'a with_options =
   -> ?wave_height:int
   -> ?signals_width:int
   -> ?start_cycle:int
+  -> ?signals_alignment:Text_alignment.t
   -> 'a
 
 let to_ctx
       ?display_rules
+      ?signals_alignment
       ?(display_width = 70)
       ?(display_height = 20)
       ?(wave_width = 3)
@@ -143,6 +142,7 @@ let to_ctx
             (signals_width : int)
             (display_width : int)]);
   Render.Static.draw
+    ?signals_alignment
     ?signals_width
     ~values:display_values
     ~style:Render.Styles.black_on_white
@@ -162,6 +162,7 @@ let to_buffer
       ?wave_height
       ?signals_width
       ?start_cycle
+      ?signals_alignment
       t
   =
   let buffer = Buffer.create 1024 in
@@ -175,6 +176,7 @@ let to_buffer
       ?wave_height
       ?signals_width
       ?start_cycle
+      ?signals_alignment
       t
   in
   Write.utf8 (Buffer.add_string buffer) ctx;
@@ -190,6 +192,7 @@ let to_string
       ?wave_height
       ?signals_width
       ?start_cycle
+      ?signals_alignment
       t
   =
   to_buffer
@@ -201,6 +204,7 @@ let to_string
     ?wave_height
     ?signals_width
     ?start_cycle
+    ?signals_alignment
     t
   |> Buffer.contents
 ;;
@@ -214,6 +218,7 @@ let print
       ?wave_height
       ?signals_width
       ?start_cycle
+      ?signals_alignment
       ?(show_digest = false)
       ?(channel = Out_channel.stdout)
       t
@@ -228,6 +233,7 @@ let print
       ?wave_height
       ?signals_width
       ?start_cycle
+      ?signals_alignment
       t
   in
   Write.utf8 (Out_channel.output_string channel) ctx;
@@ -305,6 +311,7 @@ let expect
       ?wave_height
       ?signals_width
       ?start_cycle
+      ?signals_alignment
       ?(show_digest = true)
       ?serialize_to
       t
@@ -319,6 +326,7 @@ let expect
     ?wave_height
     ?signals_width
     ?start_cycle
+    ?signals_alignment
     ~show_digest
     t;
   match serialize_to with

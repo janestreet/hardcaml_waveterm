@@ -12,7 +12,11 @@ module I : sig
 end
 
 module O : sig
-  type 'a t = { b : 'a } [@@deriving sexp_of, hardcaml]
+  type 'a t =
+    { b : 'a
+    ; output_c_with_a_long_name : 'a
+    }
+  [@@deriving sexp_of, hardcaml]
 end
 
 val create : Signal.t I.t -> Signal.t O.t

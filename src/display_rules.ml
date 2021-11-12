@@ -3,7 +3,7 @@ open Base
 type t = Display_rule.t list [@@deriving sexp_of]
 
 let run_rule (t : Display_rule.t) (port : Port.t)
-  : (Wave_format.t * Wave_format.alignment) option
+  : (Wave_format.t * Text_alignment.t) option
   =
   match t with
   | Default -> if port.width = 1 then Some (Bit, Left) else Some (Hex, Left)
@@ -15,7 +15,7 @@ let run_rule (t : Display_rule.t) (port : Port.t)
     if List.mem names port.port_name ~equal:Port_name.equal
     then Some (wave_format, alignment)
     else None
-  | Custom f -> Option.map (f port) ~f:(fun a -> a, Wave_format.Left)
+  | Custom f -> Option.map (f port) ~f:(fun a -> a, Text_alignment.Left)
   | Custom_with_alignment f -> f port
 ;;
 

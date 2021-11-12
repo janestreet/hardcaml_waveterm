@@ -109,7 +109,7 @@ module Make (G : Draw.S) : sig
     -> style:G.style
     -> bounds:Draw.rect
     -> to_str:(Bits.t -> string)
-    -> alignment:Wave_format.alignment
+    -> alignment:Text_alignment.t
     -> w:int
     -> h:int
     -> data:Data.t
@@ -133,7 +133,8 @@ module Make (G : Draw.S) : sig
 
   (** draw signal names *)
   val draw_signals
-    :  ?style:Draw.Style.t
+    :  ?alignment:Text_alignment.t
+    -> ?style:Draw.Style.t
     -> selected_wave_index:int option
     -> ctx:G.ctx
     -> bounds:Draw.rect
@@ -146,7 +147,13 @@ module Make (G : Draw.S) : sig
   val draw_status : unit draw_item
 
   (** draw standard user inferface (names, values, waveforms left to right *)
-  val draw_ui : ?style:Styles.t -> ?bounds:Bounds.t -> ctx:G.ctx -> Waves.t -> unit
+  val draw_ui
+    :  ?signals_alignment:Text_alignment.t
+    -> ?style:Styles.t
+    -> ?bounds:Bounds.t
+    -> ctx:G.ctx
+    -> Waves.t
+    -> unit
 
   type pick =
     | Wave of int * int
@@ -162,7 +169,8 @@ module Static : sig
   module R : module type of Make (Draw.In_memory)
 
   val draw
-    :  ?signals:bool
+    :  ?signals_alignment:Text_alignment.t
+    -> ?signals:bool
     -> ?values:bool
     -> ?waves:bool
     -> ?style:Styles.t
@@ -173,7 +181,8 @@ module Static : sig
     -> Draw.In_memory.ctx
 
   val draw_full
-    :  ?style:Styles.t
+    :  ?signals_alignment:Text_alignment.t
+    -> ?style:Styles.t
     -> Waves.t
     -> Draw.In_memory.ctx * Draw.In_memory.ctx * Draw.In_memory.ctx
 end

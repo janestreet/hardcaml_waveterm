@@ -8,33 +8,33 @@ type t =
   | Regexp of
       { re : Re.re
       ; wave_format : Wave_format.t
-      ; alignment : Wave_format.alignment
+      ; alignment : Text_alignment.t
       }
   | Names of
       { names : Port_name.t list
       ; wave_format : Wave_format.t
-      ; alignment : Wave_format.alignment
+      ; alignment : Text_alignment.t
       }
   | Custom of (Port.t -> Wave_format.t option)
-  | Custom_with_alignment of (Port.t -> (Wave_format.t * Wave_format.alignment) option)
+  | Custom_with_alignment of (Port.t -> (Wave_format.t * Text_alignment.t) option)
 [@@deriving sexp_of]
 
 (** Default formatting - binary for 1 bit signals, hex otherwise. *)
 val default : t
 
 (** Use given [format] for ports whose name match the regular expression [re]. *)
-val port_name_matches : Re.re -> wave_format:Wave_format.t -> t
-
-(** Use [format] for ports with given name. *)
-val port_name_is
-  :  ?alignment:Wave_format.alignment
-  -> string
+val port_name_matches
+  :  ?alignment:Text_alignment.t
+  -> Re.re
   -> wave_format:Wave_format.t
   -> t
 
+(** Use [format] for ports with given name. *)
+val port_name_is : ?alignment:Text_alignment.t -> string -> wave_format:Wave_format.t -> t
+
 (** Match any one of a list of names. *)
 val port_name_is_one_of
-  :  ?alignment:Wave_format.alignment
+  :  ?alignment:Text_alignment.t
   -> wave_format:Wave_format.t
   -> string list
   -> t
@@ -44,6 +44,4 @@ val port_name_is_one_of
 val custom : f:(Port.t -> Wave_format.t option) -> t
 
 (** Similar tp [f], but allows the user to specify the alignment of the wave. *)
-val custom_with_alignment
-  :  f:(Port.t -> (Wave_format.t * Wave_format.alignment) option)
-  -> t
+val custom_with_alignment : f:(Port.t -> (Wave_format.t * Text_alignment.t) option) -> t

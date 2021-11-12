@@ -403,7 +403,17 @@ module Make (G : Draw.S) = struct
     | _ -> ()
   ;;
 
-  let draw_data ~ctx ~style ~bounds ~to_str ~alignment ~w ~h ~data ~off =
+  let draw_data
+        ~ctx
+        ~style
+        ~bounds
+        ~to_str
+        ~(alignment : Text_alignment.t)
+        ~w
+        ~h
+        ~data
+        ~off
+    =
     let w_scale, w = w, max 0 w in
     let draw_text r c cnt data =
       match data with
@@ -419,7 +429,7 @@ module Make (G : Draw.S) = struct
           done
         else (
           match alignment with
-          | Wave_format.Left ->
+          | Left ->
             for i = 0 to cnt - 1 do
               putc i (if i = cnt - 1 then '.' else str.[i])
             done
@@ -613,6 +623,7 @@ module Make (G : Draw.S) = struct
   ;;
 
   let draw_signals
+        ?(alignment = Text_alignment.Left)
         ?(style = Draw.Style.default)
         ~selected_wave_index
         ~ctx
@@ -624,13 +635,23 @@ module Make (G : Draw.S) = struct
     draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
       let _, wah = get_wave_height (state.cfg.wave_height, wave) in
       let r = (wah - 1) / 2 in
-      draw_scroll_string
-        ~ctx
-        ~style
-        ~bounds
-        ~r
-        ~c:state.cfg.signal_scroll
-        (Wave.get_name wave);
+      (match alignment with
+       | Left ->
+         draw_scroll_string
+           ~ctx
+           ~style
+           ~bounds
+           ~r
+           ~c:state.cfg.signal_scroll
+           (Wave.get_name wave)
+       | Right ->
+         draw_scroll_string_right
+           ~ctx
+           ~style
+           ~bounds
+           ~r
+           ~c:state.cfg.signal_scroll
+           (Wave.get_name wave));
       let is_selected =
         match selected_wave_index with
         | None -> false
@@ -691,7 +712,13 @@ module Make (G : Draw.S) = struct
          state.cfg.value_scroll)
   ;;
 
-  let draw_ui ?(style = Styles.default Draw.Style.default) ?bounds ~ctx (state : Waves.t) =
+  let draw_ui
+        ?signals_alignment
+        ?(style = Styles.default Draw.Style.default)
+        ?bounds
+        ~ctx
+        (state : Waves.t)
+    =
     let open Styles in
     let open Bounds in
     let bounds =
@@ -700,7 +727,7 @@ module Make (G : Draw.S) = struct
       | Some b -> b
     in
     with_border
-      ~draw:(draw_signals ~selected_wave_index:None)
+      ~draw:(draw_signals ?alignment:signals_alignment ~selected_wave_index:None)
       ~label:"Signals"
       ~style:style.signals
       ?border:style.border
@@ -789,6 +816,7 @@ module Static = struct
   ;;
 
   let draw
+        ?signals_alignment
         ?signals
         ?values
         ?waves
@@ -819,12 +847,12 @@ module Static = struct
         ?waves
         Draw.{ r = 0; c = 0; h = rows; w = cols }
     in
-    R.draw_ui ~style ~ctx ~bounds state;
+    R.draw_ui ?signals_alignment ~style ~ctx ~bounds state;
     (* return context *)
     ctx
   ;;
 
-  let draw_full ?(style = Styles.default Draw.Style.default) state =
+  let draw_full ?signals_alignment ?(style = Styles.default Draw.Style.default) state =
     let open Bounds in
     let open Styles in
     let bounds = R.get_max_bounds state in
@@ -838,7 +866,7 @@ module Static = struct
     in
     let b, sctx = get_ctx bounds.signals in
     R.with_border
-      ~draw:(R.draw_signals ~selected_wave_index:None)
+      ~draw:(R.draw_signals ?alignment:signals_alignment ~selected_wave_index:None)
       ?border:style.border
       ~label:"Signals"
       ~style:style.signals

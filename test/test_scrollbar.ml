@@ -1,5 +1,6 @@
 open! Import
-module Ui = Render.Make (Draw_notty)
+
+module _ = Render.Make (Draw_notty)
 
 (* Draw the image within a border.  This forces notty to output the whole thing. *)
 let output ctx =

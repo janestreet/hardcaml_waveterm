@@ -1,11 +1,6 @@
 open Base
 open Hardcaml
 
-type alignment =
-  | Left
-  | Right
-[@@deriving sexp_of, equal]
-
 type t =
   | Binary
   | Bit

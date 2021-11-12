@@ -1,7 +1,7 @@
 (* Quick test of notty rendering to the terminal *)
 open! Import
-module Ui = Render.Make (Draw_notty)
-module Bits = Hardcaml.Bits
+
+module _ = Render.Make (Draw_notty)
 
 let ctx =
   Render.Static.draw

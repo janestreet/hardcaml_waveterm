@@ -5,7 +5,7 @@ type t =
   | Empty of string
   | Clock of string
   | Binary of string * Data.t
-  | Data of string * Data.t * Wave_format.t * Wave_format.alignment
+  | Data of string * Data.t * Wave_format.t * Text_alignment.t
 [@@deriving sexp_of, equal]
 
 module Bits_conv = struct

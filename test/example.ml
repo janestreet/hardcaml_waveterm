@@ -10,13 +10,19 @@ module I = struct
 end
 
 module O = struct
-  type 'a t = { b : 'a [@bits 16] } [@@deriving sexp_of, hardcaml]
+  type 'a t =
+    { b : 'a [@bits 16]
+    ; output_c_with_a_long_name : 'a
+    }
+  [@@deriving sexp_of, hardcaml]
 end
 
 let create (i : Signal.t I.t) =
   let open Signal in
   let reg_spec = Reg_spec.create () ~clock:i.clk ~clear:i.clr in
-  { O.b = reg reg_spec ~enable:vdd (i.a +:. 1) }
+  { O.b = reg reg_spec ~enable:vdd (i.a +:. 1)
+  ; output_c_with_a_long_name = reg reg_spec ~:(sel_bottom i.a 1)
+  }
 ;;
 
 let testbench () =

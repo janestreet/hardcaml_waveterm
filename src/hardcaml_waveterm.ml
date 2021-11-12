@@ -4,6 +4,7 @@
 
 module Display_rule = Display_rule
 module Display_rules = Display_rules
+module Text_alignment = Text_alignment
 module Wave_format = Wave_format
 module Waveform = Waveform
 

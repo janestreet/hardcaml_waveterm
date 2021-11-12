@@ -9,7 +9,7 @@ open Base
 
 type t = Display_rule.t list [@@deriving sexp_of]
 
-val run_rule : Display_rule.t -> Port.t -> (Wave_format.t * Wave_format.alignment) option
+val run_rule : Display_rule.t -> Port.t -> (Wave_format.t * Text_alignment.t) option
 
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object).  Unmatched ports are not shown, unless [Rule.default]
@@ -17,7 +17,7 @@ val run_rule : Display_rule.t -> Port.t -> (Wave_format.t * Wave_format.alignmen
 val sort_ports_and_formats
   :  t
   -> Port.t list
-  -> (Port.t * (Wave_format.t * Wave_format.alignment) option) list
+  -> (Port.t * (Wave_format.t * Text_alignment.t) option) list
 
 (** Check if a given port is displayed by any of the rules. *)
 val is_displayed : t -> Port.t -> bool

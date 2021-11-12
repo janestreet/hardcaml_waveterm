@@ -1,6 +1,7 @@
 open! Import
 open Async
-module R = Render.Make (Draw_notty)
+
+module _ = Render.Make (Draw_notty)
 
 let run_scrollable () =
   let%bind term = Notty_async.Term.create () in
