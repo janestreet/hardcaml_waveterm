@@ -265,9 +265,7 @@ module Serialize = struct
 
   let marshall (t : t) filename =
     let t = sanitize t in
-    let oc =
-      Unix.open_process_out (Printf.sprintf "unset GZIP && gzip -c >%s" filename)
-    in
+    let oc = Unix.open_process_out (Printf.sprintf "gzip -c >%s" filename) in
     Caml.Marshal.to_channel oc t [];
     match Unix.close_process_out oc with
     | WEXITED 0 -> ()
@@ -280,7 +278,7 @@ module Serialize = struct
   ;;
 
   let unmarshall filename : t =
-    let ic = Unix.open_process_in (Printf.sprintf "unset GZIP && zcat %s" filename) in
+    let ic = Unix.open_process_in (Printf.sprintf "zcat %s" filename) in
     let ret = Caml.Marshal.from_channel ic in
     match Unix.close_process_in ic with
     | WEXITED 0 -> ret

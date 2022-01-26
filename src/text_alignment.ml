@@ -1,4 +1,4 @@
-open Base
+open! Base
 
 type t =
   | Left

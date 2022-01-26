@@ -45,3 +45,18 @@ val custom : f:(Port.t -> Wave_format.t option) -> t
 
 (** Similar tp [f], but allows the user to specify the alignment of the wave. *)
 val custom_with_alignment : f:(Port.t -> (Wave_format.t * Text_alignment.t) option) -> t
+
+module type States = sig
+  type t [@@deriving sexp_of, enumerate]
+end
+
+(** For use with statemachines. Derives state names from the variant describing the states
+    of the state machine. *)
+val states
+  :  ?onehot:bool
+  (** Default is [false]. State is onehot encoded. Otherwise binary encoded.
+      (Note; the uncommon grey coded case is not supported). *)
+  -> ?alignment:Text_alignment.t
+  -> (module States)
+  -> string
+  -> t

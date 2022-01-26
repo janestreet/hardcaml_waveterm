@@ -32,3 +32,33 @@ let port_name_matches ?(alignment = Text_alignment.Left) re ~wave_format =
 
 let custom ~f = Custom f
 let custom_with_alignment ~f = Custom_with_alignment f
+
+module type States = sig
+  type t [@@deriving sexp_of, enumerate]
+end
+
+let states_binary ?alignment (module States : States) name =
+  let states =
+    List.map States.all ~f:(fun state -> Sexp.to_string_hum (States.sexp_of_t state))
+  in
+  port_name_is ?alignment name ~wave_format:(Index states)
+;;
+
+let states_onehot ?alignment (module States : States) name =
+  let states =
+    Array.of_list_map States.all ~f:(fun state ->
+      Sexp.to_string_hum (States.sexp_of_t state))
+  in
+  let open Hardcaml in
+  port_name_is
+    ?alignment
+    name
+    ~wave_format:
+      (Custom (fun b -> Bits.onehot_to_binary b |> Bits.to_int |> Array.get states))
+;;
+
+let states ?(onehot = false) ?alignment (module States : States) name =
+  if onehot
+  then states_onehot ?alignment (module States) name
+  else states_binary ?alignment (module States) name
+;;

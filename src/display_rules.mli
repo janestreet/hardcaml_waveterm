@@ -24,3 +24,9 @@ val is_displayed : t -> Port.t -> bool
 
 (** Check if a given signal (treated as an internal port) is displayed by any of the rules. *)
 val is_signal_displayed : t -> Hardcaml.Signal.t -> bool
+
+(** Create rules for each signal in the interface. *)
+module With_interface (I : Hardcaml.Interface.S) : sig
+  val default : ?alignment:Text_alignment.t -> ?wave_format:Wave_format.t -> unit -> t
+  val with_format : ?alignment:Text_alignment.t -> Wave_format.t I.t -> t
+end

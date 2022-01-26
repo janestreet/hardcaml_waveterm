@@ -455,7 +455,7 @@ module Waveform_window = struct
       ~ctx
       ~bounds:t.waves_window.bounds
       (Printf.sprintf
-         "waves [cursor cycle=%i, window cycle=%i"
+         "waves [cursor cycle=%i, window cycle=%i]"
          cfg.wave_cursor
          cfg.start_cycle)
       t.waves_window.window;
