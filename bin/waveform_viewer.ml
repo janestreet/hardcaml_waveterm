@@ -116,9 +116,10 @@ let command_convert =
             ~cycle_before_clock_edge:Fn.id
             ~cycle_at_clock_edge:Fn.id
             ~cycle_after_clock_edge:Fn.id
-            ~lookup_signal:(fun _ -> ref Bits.gnd)
-            ~lookup_reg:(fun _ -> ref Bits.gnd)
+            ~lookup_reg:(Fn.const None)
+            ~lookup_mem:(Fn.const None)
             ~assertions:(Map.empty (module String))
+            ()
         in
         let file_out = Out_channel.create filename_out in
         let sim = Vcd.wrap (Out_channel.output_string file_out) sim in
