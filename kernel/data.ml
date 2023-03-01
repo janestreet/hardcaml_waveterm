@@ -20,8 +20,8 @@ type t =
   }
 [@@deriving sexp_of, compare, fields, equal]
 
-let get64 = Caml.Bytes.get_int64_ne
-let set64 = Caml.Bytes.set_int64_ne
+let get64 = Stdlib.Bytes.get_int64_ne
+let set64 = Stdlib.Bytes.set_int64_ne
 
 let total_length length_in_bytes rounded_width =
   if rounded_width < 8

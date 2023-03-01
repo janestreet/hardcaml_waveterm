@@ -57,7 +57,7 @@ let write ch w =
           w.waves
     }
   in
-  Caml.Marshal.to_channel ch w []
+  Stdlib.Marshal.to_channel ch w []
 ;;
 
-let read ch : t = Caml.Marshal.from_channel ch
+let read ch : t = Stdlib.Marshal.from_channel ch

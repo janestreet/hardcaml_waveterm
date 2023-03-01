@@ -25,5 +25,6 @@ let () =
          ~signals_width
          ~values_width
          Test_data.(create ~prefix ~length:1000 ~num_signals:100))
+    ~behave_nicely_in_pipeline:false
   |> Command_unix.run
 ;;

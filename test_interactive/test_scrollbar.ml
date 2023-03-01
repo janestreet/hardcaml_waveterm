@@ -57,5 +57,6 @@ let () =
     (let open Command.Let_syntax in
      let%map_open () = return () in
      run_scrollable)
+    ~behave_nicely_in_pipeline:false
   |> Command_unix.run
 ;;

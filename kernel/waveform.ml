@@ -36,6 +36,8 @@ type t =
   }
 [@@deriving sexp_of, equal, fields]
 
+let update_waves t waves = { t with waves }
+
 let create_from_data ~waves ~ports =
   let waves = Array.of_list waves in
   { waves; ports; digest = ref Hardcaml.Cyclesim.Digest.none }
@@ -241,101 +243,4 @@ let print
   then
     Out_channel.print_endline
       (Sexp.to_string_mach (Hardcaml.Cyclesim.Digest.sexp_of_t !(t.digest)))
-;;
-
-(* Serialization of waveform onto disk. While we can in theory write a better
-   serialization format with bit-packing, gzip is a quick-and-easy way to get
-   them reasonably compressed.
-
-   On waveforms with 300 cycles and 200 ports, we see a 10x decrease in file size.
-*)
-module Serialize = struct
-  let sanitize (t : t) =
-    let waves =
-      Array.map t.waves ~f:(fun wave ->
-        match wave with
-        | Empty _ | Clock _ | Binary _ -> wave
-        | Data (name, data, wave_format, alignment) ->
-          (match wave_format with
-           | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ -> wave
-           | Custom _ -> Data (name, data, Bit_or Hex, alignment)))
-    in
-    { t with waves }
-  ;;
-
-  let marshall (t : t) filename =
-    let t = sanitize t in
-    let oc = Unix.open_process_out (Printf.sprintf "gzip -c >%s" filename) in
-    Caml.Marshal.to_channel oc t [];
-    match Unix.close_process_out oc with
-    | WEXITED 0 -> ()
-    | WEXITED exit_code ->
-      raise_s [%message "[gzip -c] terminated with non 0 exit code" (exit_code : int)]
-    | WSIGNALED signal ->
-      raise_s [%message "[gzip -c] terminated due to signal" (signal : int)]
-    | WSTOPPED signal ->
-      raise_s [%message "[gzip -c] stopped due to signal" (signal : int)]
-  ;;
-
-  let unmarshall filename : t =
-    let ic = Unix.open_process_in (Printf.sprintf "zcat %s" filename) in
-    let ret = Caml.Marshal.from_channel ic in
-    match Unix.close_process_in ic with
-    | WEXITED 0 -> ret
-    | WEXITED exit_code ->
-      raise_s
-        [%message
-          "Unix.close_process_in terminated with non zero exit code" (exit_code : int)]
-    | WSIGNALED signal ->
-      raise_s [%message "Unix.close_process_in terminated due to signal" (signal : int)]
-    | WSTOPPED signal ->
-      raise_s [%message "Unix.close_process_in stopped due to signal" (signal : int)]
-  ;;
-end
-
-let serialize_expect_test_output =
-  lazy
-    (match Sys.getenv "EXPECT_TEST_WAVEFORM" with
-     | None -> false
-     | Some "1" -> true
-     | Some "true" -> true
-     | _ -> false)
-;;
-
-let expect
-      ?display_rules
-      ?display_width
-      ?display_height
-      ?display_values
-      ?wave_width
-      ?wave_height
-      ?signals_width
-      ?start_cycle
-      ?signals_alignment
-      ?(show_digest = true)
-      ?serialize_to
-      t
-  =
-  let extension = "hardcamlwaveform" in
-  print
-    ?display_rules
-    ?display_width
-    ?display_height
-    ?display_values
-    ?wave_width
-    ?wave_height
-    ?signals_width
-    ?start_cycle
-    ?signals_alignment
-    ~show_digest
-    t;
-  match serialize_to with
-  | None -> ()
-  | Some serialize_to ->
-    let serialize_to =
-      if String.equal (Caml.Filename.extension serialize_to) extension
-      then serialize_to
-      else Printf.sprintf "%s.%s" serialize_to extension
-    in
-    if Lazy.force serialize_expect_test_output then Serialize.marshall t serialize_to
 ;;
