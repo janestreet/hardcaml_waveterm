@@ -83,9 +83,7 @@ module Bounds = struct
         ; values = border { z with c = w0; w = w1 }
         ; waves = border { z with c = w0 + w1; w = w2 }
         ; status =
-            (if status
-             then border { r = bounds.h - 3; c = 0; h = 3; w = bounds.w }
-             else z)
+            (if status then border { r = bounds.h - 3; c = 0; h = 3; w = bounds.w } else z)
         })
     in
     match signals, values, waves with

@@ -38,22 +38,22 @@ let write ch w =
       waves =
         Array.map
           ~f:(fun (d : Wave.t) : Wave.t ->
-            match d with
-            | Empty _ | Clock _ -> d
-            | Binary (n, d) ->
-              Binary (n, Data.init (Data.length d) ~width:(Data.width d) ~f:(Data.get d))
-            | Data (n, d, ts, alignment) ->
-              let ts =
-                match ts with
-                | Custom _ -> Wave_format.Binary
-                | _ -> ts
-              in
-              (* cant marshal functions *)
-              Data
-                ( n
-                , Data.init (Data.length d) ~width:(Data.width d) ~f:(Data.get d)
-                , ts
-                , alignment ))
+            (match d with
+             | Empty _ | Clock _ -> d
+             | Binary (n, d) ->
+               Binary (n, Data.init (Data.length d) ~width:(Data.width d) ~f:(Data.get d))
+             | Data (n, d, ts, alignment) ->
+               let ts =
+                 match ts with
+                 | Custom _ -> Wave_format.Binary
+                 | _ -> ts
+               in
+               (* cant marshal functions *)
+               Data
+                 ( n
+                 , Data.init (Data.length d) ~width:(Data.width d) ~f:(Data.get d)
+                 , ts
+                 , alignment )))
           w.waves
     }
   in

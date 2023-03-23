@@ -179,7 +179,7 @@ let%expect_test "display rules" =
 ;;
 
 let%expect_test "config with outputs then inputs" =
-  let names (module X : Interface.S) = X.t |> X.map ~f:fst |> X.to_list in
+  let names (module X : Interface.S) = X.to_list X.port_names in
   let map_format wave_format =
     List.map ~f:(fun name -> Display_rule.port_name_is name ~wave_format)
   in
