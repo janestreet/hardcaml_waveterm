@@ -33,7 +33,7 @@ module Hierarchy = struct
   let rec update ~path ~wave t =
     match path with
     | [] -> assert false
-    | [ _ ] -> { t with signals = wave :: t.signals }
+    | [ _ ] -> { t with signals = (* The list is built backwards *) wave :: t.signals }
     | hd :: tl ->
       let children =
         Map.update t.children hd ~f:(function
@@ -41,6 +41,14 @@ module Hierarchy = struct
           | Some x -> update ~path:tl ~wave x)
       in
       { t with children }
+  ;;
+
+  (* Restore order of signals relative to the input order. *)
+  let rec put_back_into_display_order (node : node) =
+    { node with
+      signals = List.rev node.signals
+    ; children = Base.Map.map node.children ~f:put_back_into_display_order
+    }
   ;;
 
   let of_waves (waves : Waves.t) =
@@ -51,7 +59,7 @@ module Hierarchy = struct
         update ~path ~wave acc)
     in
     ret.visible <- true;
-    { cfg = waves.cfg; root = ret; currently_rendered = None }
+    { cfg = waves.cfg; root = put_back_into_display_order ret; currently_rendered = None }
   ;;
 
   let move_to_delta_on_active_node ~start_cycle ~search_forwards_or_backwards (t : t) =
