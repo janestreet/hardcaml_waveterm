@@ -18,7 +18,7 @@ type t =
      [Bytes.compare] at arbitrary offsets within a buffer. *)
   ; mutable non_cache_hits : int
   }
-[@@deriving sexp_of, compare, fields, equal]
+[@@deriving sexp_of, compare, fields ~getters, equal]
 
 let get64 = Stdlib.Bytes.get_int64_ne
 let set64 = Stdlib.Bytes.set_int64_ne

@@ -121,17 +121,16 @@ let command_convert =
             ~assertions:(Map.empty (module String))
             ()
         in
-        let file_out = Out_channel.create filename_out in
-        let sim = Vcd.wrap (Out_channel.output_string file_out) sim in
-        let num_cycles =
-          let _, data, _ = in_ports.(0) in
-          Data.length data
-        in
-        for cycle = 0 to num_cycles - 1 do
-          Array.iter in_ports ~f:(fun (_, data, port) -> port := Data.get data cycle);
-          Cyclesim.cycle sim
-        done;
-        Out_channel.close file_out]
+        Out_channel.with_file filename_out ~f:(fun file_out ->
+          let sim = Vcd.wrap file_out sim in
+          let num_cycles =
+            let _, data, _ = in_ports.(0) in
+            Data.length data
+          in
+          for cycle = 0 to num_cycles - 1 do
+            Array.iter in_ports ~f:(fun (_, data, port) -> port := Data.get data cycle);
+            Cyclesim.cycle sim
+          done)]
 ;;
 
 let () =

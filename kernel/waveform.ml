@@ -34,7 +34,7 @@ type t =
   ; ports : Port.t list
   ; digest : Hardcaml.Cyclesim.Digest.t ref
   }
-[@@deriving sexp_of, equal, fields]
+[@@deriving sexp_of, equal, fields ~getters]
 
 let update_waves t waves = { t with waves }
 
