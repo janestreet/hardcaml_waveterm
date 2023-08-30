@@ -48,14 +48,14 @@ let is_displayed (t : Display_rule.t list) =
   then fun _ -> true
   else
     fun port ->
-      let rec helper = function
-        | [] -> false
-        | rule :: rest ->
-          (match run_rule rule port with
-           | Some _ -> true
-           | None -> helper rest)
-      in
-      helper t
+    let rec helper = function
+      | [] -> false
+      | rule :: rest ->
+        (match run_rule rule port with
+         | Some _ -> true
+         | None -> helper rest)
+    in
+    helper t
 ;;
 
 let is_signal_displayed t signal =

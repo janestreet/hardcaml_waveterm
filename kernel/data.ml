@@ -8,13 +8,13 @@ type t =
   ; mutable length : int (* number of elements in array *)
   ; width : int (* bit width *)
   ; rounded_width : int
-  (* bit width rounded up to the nearest power of 2 if [width<64], or a multiple of 64. *)
+      (* bit width rounded up to the nearest power of 2 if [width<64], or a multiple of 64. *)
   ; log2_rounded_width : int
   ; mutable cached_bits : Bits.t
   ; mutable cached_sub_word : int
   ; cached_multi_word : Bytes.t
   ; cached_temp_multi_word : Bytes.t
-  (* this is needed to compare the underlying values. This is because we cannot do a
+      (* this is needed to compare the underlying values. This is because we cannot do a
      [Bytes.compare] at arbitrary offsets within a buffer. *)
   ; mutable non_cache_hits : int
   }

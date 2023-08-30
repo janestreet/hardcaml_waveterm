@@ -61,18 +61,18 @@ let serialize_expect_test_output =
 ;;
 
 let expect
-      ?display_rules
-      ?display_width
-      ?display_height
-      ?display_values
-      ?wave_width
-      ?wave_height
-      ?signals_width
-      ?start_cycle
-      ?signals_alignment
-      ?(show_digest = true)
-      ?serialize_to
-      t
+  ?display_rules
+  ?display_width
+  ?display_height
+  ?display_values
+  ?wave_width
+  ?wave_height
+  ?signals_width
+  ?start_cycle
+  ?signals_alignment
+  ?(show_digest = true)
+  ?serialize_to
+  t
   =
   let extension = "hardcamlwaveform" in
   print

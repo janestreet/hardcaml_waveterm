@@ -1,6 +1,5 @@
 (* Quick test of notty rendering to the terminal *)
 open! Import
-
 module _ = Render.Make (Draw_notty)
 
 let ctx =

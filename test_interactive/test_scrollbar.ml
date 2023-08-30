@@ -1,6 +1,5 @@
 open! Import
 open Async
-
 module _ = Render.Make (Draw_notty)
 
 let run_scrollable () =

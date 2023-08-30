@@ -1,6 +1,5 @@
 (** An abstract type for port-name strings. *)
 
-
 open Base
 
 type t [@@deriving compare, sexp_of]

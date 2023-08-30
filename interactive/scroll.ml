@@ -271,12 +271,12 @@ module Scrollbar = struct
   ;;
 
   let create
-        ?(bar_style = Scroll_bar_style.Filled)
-        ~incr_key
-        ~decr_key
-        ~orientation
-        ~bounds
-        ()
+    ?(bar_style = Scroll_bar_style.Filled)
+    ~incr_key
+    ~decr_key
+    ~orientation
+    ~bounds
+    ()
     =
     let scrollable = Scrollable.create () in
     let scrollbar = { scrollable; bar_style; incr_key; decr_key; bounds; orientation } in

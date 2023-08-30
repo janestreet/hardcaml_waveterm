@@ -349,9 +349,9 @@ module Unpacked_data = struct
     let old_data = d.data in
     let new_len = max 1 (Array.length d.data * 2) in
     d.data
-    <- Array.init new_len ~f:(fun i ->
-      try old_data.(i) with
-      | _ -> Bits.gnd)
+      <- Array.init new_len ~f:(fun i ->
+           try old_data.(i) with
+           | _ -> Bits.gnd)
   ;;
 
   let[@cold] raise_invalid_width actual_width expected_width =

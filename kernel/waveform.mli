@@ -17,7 +17,6 @@ val update_waves : t -> Wave.t array -> t
 (** Combine two waveforms into one waveform *)
 val combine : t -> t -> t
 
-
 (** Waveform configuration options.
 
     [display_rules] see [Display_rules].  A waveform may be constructed once and
@@ -73,4 +72,4 @@ val print
      -> ?channel:Stdio.Out_channel.t (** default is [stdout] *)
      -> t
      -> unit)
-      with_options
+    with_options

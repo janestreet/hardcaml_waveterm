@@ -1,5 +1,4 @@
 open! Import
-
 module _ = Render.Make (Draw_notty)
 
 (* Draw the image within a border.  This forces notty to output the whole thing. *)
@@ -16,11 +15,11 @@ let create_hscroll ~width ~height ~range =
   Scroll.Scrollable.set_range hscroll.scrollable range;
   ( hscroll
   , fun ~ctx ~xloc ~yloc ~offset ->
-    Scroll.Scrollbar.set_bounds
-      hscroll
-      { Draw.r = yloc; c = xloc; w = width; h = height };
-    Scroll.Scrollable.set_offset hscroll.scrollable offset;
-    Scroll.HScrollbar.draw ~ctx ~style:Draw.Style.default hscroll )
+      Scroll.Scrollbar.set_bounds
+        hscroll
+        { Draw.r = yloc; c = xloc; w = width; h = height };
+      Scroll.Scrollable.set_offset hscroll.scrollable offset;
+      Scroll.HScrollbar.draw ~ctx ~style:Draw.Style.default hscroll )
 ;;
 
 let%expect_test "scroller sexp" =
@@ -124,7 +123,6 @@ let%expect_test "should not raise" =
   hscroll.scrollable.scroll_bar_mode <- Dynamic 160;
   require_does_not_raise ~cr:CR_someday ~hide_positions:true [%here] (fun () ->
     draw ~ctx ~xloc:0 ~yloc:2 ~offset:160);
-  [%expect
-    {|
+  [%expect {|
     ("unexpectedly raised" (Invalid_argument "index out of bounds")) |}]
 ;;

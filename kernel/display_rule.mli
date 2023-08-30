@@ -54,7 +54,7 @@ end
     of the state machine. *)
 val states
   :  ?onehot:bool
-  (** Default is [false]. State is onehot encoded. Otherwise binary encoded.
+       (** Default is [false]. State is onehot encoded. Otherwise binary encoded.
       (Note; the uncommon grey coded case is not supported). *)
   -> ?alignment:Text_alignment.t
   -> (module States)

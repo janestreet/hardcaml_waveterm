@@ -28,7 +28,6 @@ module Styles = struct
 end
 
 module Bounds = struct
-
   type t =
     { signals : Draw.rect
     ; values : Draw.rect
@@ -51,13 +50,13 @@ module Bounds = struct
   ;;
 
   let fit_to_window
-        ?(signals = true)
-        ?(values = true)
-        ?(waves = true)
-        ?(status = false)
-        ?(border = true)
-        ?signals_width
-        bounds
+    ?(signals = true)
+    ?(values = true)
+    ?(waves = true)
+    ?(status = false)
+    ?(border = true)
+    ?signals_width
+    bounds
     =
     let open Draw in
     let rows, cols = bounds.h, bounds.w in
@@ -402,15 +401,15 @@ module Make (G : Draw.S) = struct
   ;;
 
   let draw_data
-        ~ctx
-        ~style
-        ~bounds
-        ~to_str
-        ~(alignment : Text_alignment.t)
-        ~w
-        ~h
-        ~data
-        ~off
+    ~ctx
+    ~style
+    ~bounds
+    ~to_str
+    ~(alignment : Text_alignment.t)
+    ~w
+    ~h
+    ~data
+    ~off
     =
     let w_scale, w = w, max 0 w in
     let draw_text r c cnt data =
@@ -516,22 +515,22 @@ module Make (G : Draw.S) = struct
     : draw:'a draw_item -> label:string -> ?border:Draw.Style.t -> 'a draw_item
     =
     fun ~(draw : 'a draw_item)
-      ~label
-      ?border
-      ?(style = Draw.Style.default)
-      ~ctx
-      ~bounds
-      state ->
-      let r = draw ~style ~ctx ~bounds state in
-      match border with
-      | Some border when bounds.Draw.w > 0 && bounds.Draw.h > 0 ->
-        G.draw_box
-          ~ctx
-          ~style:(get_style border)
-          ~bounds:(Bounds.expand_for_border bounds)
-          label;
-        r
-      | _ -> r
+        ~label
+        ?border
+        ?(style = Draw.Style.default)
+        ~ctx
+        ~bounds
+        state ->
+    let r = draw ~style ~ctx ~bounds state in
+    match border with
+    | Some border when bounds.Draw.w > 0 && bounds.Draw.h > 0 ->
+      G.draw_box
+        ~ctx
+        ~style:(get_style border)
+        ~bounds:(Bounds.expand_for_border bounds)
+        label;
+      r
+    | _ -> r
   ;;
 
   let draw_cursor ~ctx ~bounds ~(state : Waves.t) =
@@ -621,12 +620,12 @@ module Make (G : Draw.S) = struct
   ;;
 
   let draw_signals
-        ?(alignment = Text_alignment.Left)
-        ?(style = Draw.Style.default)
-        ~selected_wave_index
-        ~ctx
-        ~bounds
-        (state : Waves.t)
+    ?(alignment = Text_alignment.Left)
+    ?(style = Draw.Style.default)
+    ~selected_wave_index
+    ~ctx
+    ~bounds
+    (state : Waves.t)
     =
     let style = get_style style in
     fill ~ctx ~bounds ~style ' ';
@@ -711,11 +710,11 @@ module Make (G : Draw.S) = struct
   ;;
 
   let draw_ui
-        ?signals_alignment
-        ?(style = Styles.default Draw.Style.default)
-        ?bounds
-        ~ctx
-        (state : Waves.t)
+    ?signals_alignment
+    ?(style = Styles.default Draw.Style.default)
+    ?bounds
+    ~ctx
+    (state : Waves.t)
     =
     let open Styles in
     let open Bounds in
@@ -741,7 +740,7 @@ module Make (G : Draw.S) = struct
          ~ctx
          ~bounds:bounds.values
          state
-       : int);
+        : int);
     with_border
       ~draw:draw_wave
       ~label:"Waves"
@@ -814,15 +813,15 @@ module Static = struct
   ;;
 
   let draw
-        ?signals_alignment
-        ?signals
-        ?values
-        ?waves
-        ?(style = Styles.default Draw.Style.default)
-        ?rows
-        ?cols
-        ?signals_width
-        state
+    ?signals_alignment
+    ?signals
+    ?values
+    ?waves
+    ?(style = Styles.default Draw.Style.default)
+    ?rows
+    ?cols
+    ?signals_width
+    state
     =
     (* inferred width and height *)
     let cols =

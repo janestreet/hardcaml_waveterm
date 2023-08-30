@@ -3,14 +3,14 @@ open! Import
 let testbench = lazy (Example.testbench ())
 
 let test
-      ?display_rules
-      ?display_width
-      ?display_height
-      ?wave_width
-      ?wave_height
-      ?signals_width
-      ?signals_alignment
-      ()
+  ?display_rules
+  ?display_width
+  ?display_height
+  ?wave_width
+  ?wave_height
+  ?signals_width
+  ?signals_alignment
+  ()
   =
   Waveform.expect
     (Lazy.force testbench)

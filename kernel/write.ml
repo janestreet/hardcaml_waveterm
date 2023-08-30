@@ -52,15 +52,15 @@ let html_styler =
   let close_style os = os "</span>" in
   { start =
       (fun os ->
-         prev := default;
-         set_style default os)
+        prev := default;
+        set_style default os)
   ; set =
       (fun os style ->
-         if Draw.Style.compare style !prev <> 0
-         then (
-           prev := style;
-           close_style os;
-           set_style style os))
+        if Draw.Style.compare style !prev <> 0
+        then (
+          prev := style;
+          close_style os;
+          set_style style os))
   ; eol = (fun _ -> ())
   ; finish = close_style
   }
@@ -79,15 +79,15 @@ let css_class_styler =
   let close_style os = os "</span>" in
   { start =
       (fun os ->
-         prev := default;
-         set_style default os)
+        prev := default;
+        set_style default os)
   ; set =
       (fun os style ->
-         if Draw.Style.compare style !prev <> 0
-         then (
-           prev := style;
-           close_style os;
-           set_style style os))
+        if Draw.Style.compare style !prev <> 0
+        then (
+          prev := style;
+          close_style os;
+          set_style style os))
   ; eol = (fun _ -> ())
   ; finish = close_style
   }
@@ -123,18 +123,18 @@ let term_styler =
   { start = (fun _ -> prev := None)
   ; set =
       (fun os style ->
-         let set_style () =
-           prev := Some style;
-           set_style style os
-         in
-         match !prev with
-         | Some prev' when Draw.Style.compare style prev' <> 0 -> set_style ()
-         | None -> set_style ()
-         | _ -> ())
+        let set_style () =
+          prev := Some style;
+          set_style style os
+        in
+        match !prev with
+        | Some prev' when Draw.Style.compare style prev' <> 0 -> set_style ()
+        | None -> set_style ()
+        | _ -> ())
   ; eol =
       (fun os ->
-         prev := None;
-         close_style os)
+        prev := None;
+        close_style os)
   ; finish = close_style
   }
 ;;
@@ -165,15 +165,15 @@ let utf8 ?(styler = no_styler) os ctx =
     then
       os
         (String.init 2 ~f:(function
-           | 0 -> Char.of_int_exn ((c lsr 6) lor 0b11000000)
-           | _ -> Char.of_int_exn (c land 0b00111111 lor 0b10000000)))
+          | 0 -> Char.of_int_exn ((c lsr 6) lor 0b11000000)
+          | _ -> Char.of_int_exn (c land 0b00111111 lor 0b10000000)))
     else if c <= 0xFFFF
     then
       os
         (String.init 3 ~f:(function
-           | 0 -> Char.of_int_exn ((c lsr 12) lor 0b11100000)
-           | 1 -> Char.of_int_exn ((c lsr 6) land 0b00111111 lor 0b10000000)
-           | _ -> Char.of_int_exn (c land 0b00111111 lor 0b10000000)))
+          | 0 -> Char.of_int_exn ((c lsr 12) lor 0b11100000)
+          | 1 -> Char.of_int_exn ((c lsr 6) land 0b00111111 lor 0b10000000)
+          | _ -> Char.of_int_exn (c land 0b00111111 lor 0b10000000)))
     else failwith "extend utf-8 writer!"
   in
   let bounds = get_bounds ctx in

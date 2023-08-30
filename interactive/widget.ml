@@ -4,8 +4,6 @@ open Hardcaml_waveterm.Expert
 open! Async
 module R = Render.Make (Draw_notty)
 
-
-
 module Hierarchy = struct
   type node =
     { mutable visible : bool
@@ -248,13 +246,13 @@ module Values_window = struct
   let draw ~ctx ~bounds t =
     let offset = t.hierarchy.cfg.value_scroll in
     t.hierarchy.cfg.value_scroll
-    <- max 0 (min (t.max_value_width - 1) (t.max_value_width - offset));
+      <- max 0 (min (t.max_value_width - 1) (t.max_value_width - offset));
     t.max_value_width
-    <- R.draw_values
-         ~style:t.style
-         ~ctx
-         ~bounds
-         (Hierarchy.get_currently_rendered_waves t.hierarchy);
+      <- R.draw_values
+           ~style:t.style
+           ~ctx
+           ~bounds
+           (Hierarchy.get_currently_rendered_waves t.hierarchy);
     t.hierarchy.cfg.value_scroll <- offset
   ;;
 end
@@ -319,7 +317,7 @@ module Waveform_window = struct
 
   let set_signal_offset (t : t) offset =
     t.waves_window.window.hierarchy.cfg.start_signal
-    <- max 0 (min (t.max_signal_offset - 1) offset);
+      <- max 0 (min (t.max_signal_offset - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_vert.scrollable offset
   ;;
 
@@ -327,7 +325,7 @@ module Waveform_window = struct
 
   let set_cycle_offset (t : t) offset =
     t.waves_window.window.hierarchy.cfg.start_cycle
-    <- max 0 (min (t.max_cycle_offset - 1) offset);
+      <- max 0 (min (t.max_cycle_offset - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_waves.scrollable offset
   ;;
 
@@ -337,7 +335,7 @@ module Waveform_window = struct
 
   let set_signal_name_offset (t : t) offset =
     t.signals_window.window.hierarchy.cfg.signal_scroll
-    <- max 0 (min (t.signals_window.window.max_signal_name_width - 1) offset);
+      <- max 0 (min (t.signals_window.window.max_signal_name_width - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_signals.scrollable offset
   ;;
 
@@ -345,7 +343,7 @@ module Waveform_window = struct
 
   let set_value_offset (t : t) offset =
     t.values_window.window.hierarchy.cfg.value_scroll
-    <- max 0 (min (t.values_window.window.max_value_width - 1) offset);
+      <- max 0 (min (t.values_window.window.max_value_width - 1) offset);
     Scroll.Scrollable.set_offset t.scroll_values.scrollable offset
   ;;
 
@@ -833,12 +831,12 @@ let run_and_close ?signals_width ?values_width waves =
 ;;
 
 let run_interactive_viewer
-      ?signals_width
-      ?values_width
-      ?(start_cycle = 0)
-      ?(wave_width = 3)
-      ?display_rules
-      t
+  ?signals_width
+  ?values_width
+  ?(start_cycle = 0)
+  ?(wave_width = 3)
+  ?display_rules
+  t
   =
   run_and_close
     ?signals_width

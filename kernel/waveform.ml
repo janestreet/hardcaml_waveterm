@@ -75,18 +75,18 @@ let sort_ports_and_formats t display_rules : Wave.t array =
      about what [hardcaml_waveterm] is actually doing and do our best to construct the
      requested display.  In fact, [t.waves] should match [t.ports]. *)
   |> List.filter_map ~f:(fun ((port : Port.t), fmt_align_opt) ->
-    Map.find waves port.port_name
-    |> Option.map ~f:(fun wave ->
-      match fmt_align_opt, wave with
-      | Some (format, alignment), _ -> apply_wave_format wave format alignment
-      (* None represents default format. Don't apply default to Index and Custom *)
-      | None, Data (_, _, Wave_format.Index _, _)
-      | None, Data (_, _, Wave_format.Custom _, _) -> wave
-      | None, _ ->
-        Display_rules.run_rule Display_rule.Default port
-        |> Option.map ~f:(fun (format, alignment) ->
-          apply_wave_format wave format alignment)
-        |> Option.value ~default:wave))
+       Map.find waves port.port_name
+       |> Option.map ~f:(fun wave ->
+            match fmt_align_opt, wave with
+            | Some (format, alignment), _ -> apply_wave_format wave format alignment
+            (* None represents default format. Don't apply default to Index and Custom *)
+            | None, Data (_, _, Wave_format.Index _, _)
+            | None, Data (_, _, Wave_format.Custom _, _) -> wave
+            | None, _ ->
+              Display_rules.run_rule Display_rule.Default port
+              |> Option.map ~f:(fun (format, alignment) ->
+                   apply_wave_format wave format alignment)
+              |> Option.value ~default:wave))
   |> Array.of_list
 ;;
 
@@ -118,16 +118,16 @@ type 'a with_options =
   -> 'a
 
 let to_ctx
-      ?display_rules
-      ?signals_alignment
-      ?(display_width = 70)
-      ?(display_height = 20)
-      ?(wave_width = 3)
-      ?(wave_height = 1)
-      ?(start_cycle = 0)
-      ?(display_values = false)
-      ?signals_width
-      t
+  ?display_rules
+  ?signals_alignment
+  ?(display_width = 70)
+  ?(display_height = 20)
+  ?(wave_width = 3)
+  ?(wave_height = 1)
+  ?(start_cycle = 0)
+  ?(display_values = false)
+  ?signals_width
+  t
   =
   if display_height < 3
   then raise_s [%message "Invalid display height.  Must be >= 3." (display_height : int)];
@@ -156,16 +156,16 @@ let to_ctx
 ;;
 
 let to_buffer
-      ?display_rules
-      ?display_width
-      ?display_height
-      ?display_values
-      ?wave_width
-      ?wave_height
-      ?signals_width
-      ?start_cycle
-      ?signals_alignment
-      t
+  ?display_rules
+  ?display_width
+  ?display_height
+  ?display_values
+  ?wave_width
+  ?wave_height
+  ?signals_width
+  ?start_cycle
+  ?signals_alignment
+  t
   =
   let buffer = Buffer.create 1024 in
   let ctx =
@@ -186,16 +186,16 @@ let to_buffer
 ;;
 
 let to_string
-      ?display_rules
-      ?display_width
-      ?display_height
-      ?display_values
-      ?wave_width
-      ?wave_height
-      ?signals_width
-      ?start_cycle
-      ?signals_alignment
-      t
+  ?display_rules
+  ?display_width
+  ?display_height
+  ?display_values
+  ?wave_width
+  ?wave_height
+  ?signals_width
+  ?start_cycle
+  ?signals_alignment
+  t
   =
   to_buffer
     ?display_rules
@@ -212,18 +212,18 @@ let to_string
 ;;
 
 let print
-      ?display_rules
-      ?display_width
-      ?display_height
-      ?display_values
-      ?wave_width
-      ?wave_height
-      ?signals_width
-      ?start_cycle
-      ?signals_alignment
-      ?(show_digest = false)
-      ?(channel = Out_channel.stdout)
-      t
+  ?display_rules
+  ?display_width
+  ?display_height
+  ?display_values
+  ?wave_width
+  ?wave_height
+  ?signals_width
+  ?start_cycle
+  ?signals_alignment
+  ?(show_digest = false)
+  ?(channel = Out_channel.stdout)
+  t
   =
   let ctx =
     to_ctx
