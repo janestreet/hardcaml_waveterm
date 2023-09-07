@@ -329,6 +329,13 @@ module Waveform_window = struct
     Scroll.Scrollable.set_offset t.scroll_waves.scrollable offset
   ;;
 
+  let get_cursor_offset (t : t) = t.waves_window.window.hierarchy.cfg.wave_cursor
+
+  let set_cursor_offset (t : t) offset =
+    t.waves_window.window.hierarchy.cfg.wave_cursor
+      <- max 0 (min (t.max_cycle_offset - 1) offset)
+  ;;
+
   let _get_signal_name_offset (t : t) =
     t.signals_window.window.hierarchy.cfg.signal_scroll
   ;;
@@ -517,6 +524,18 @@ module Waveform_window = struct
   let scroll_key_handler (t : t) key =
     let hierarchy = t.signals_window.window.hierarchy in
     match key with
+    | `Home, [] ->
+      set_cycle_offset t 0;
+      true
+    | `End, [] ->
+      set_cycle_offset t t.max_cycle_offset;
+      true
+    | `Home, [ `Ctrl ] ->
+      set_signal_offset t 0;
+      true
+    | `End, [ `Ctrl ] ->
+      set_signal_offset t t.max_signal_offset;
+      true
     | `Arrow `Left, [] ->
       set_cycle_offset t (get_cycle_offset t - 1);
       true
@@ -548,6 +567,36 @@ module Waveform_window = struct
     | `ASCII 'k', [] ->
       set_signal_offset t (get_signal_offset t - 1);
       Hierarchy.change_selected_wave_index ~delta:(-1) hierarchy;
+      true
+    | `ASCII 'J', [] ->
+      set_signal_offset t (get_signal_offset t + 10);
+      Hierarchy.change_selected_wave_index ~delta:10 hierarchy;
+      true
+    | `ASCII 'K', [] ->
+      set_signal_offset t (get_signal_offset t - 10);
+      Hierarchy.change_selected_wave_index ~delta:(-10) hierarchy;
+      true
+    | `ASCII 'h', [] ->
+      set_cycle_offset t (get_cycle_offset t - 1);
+      set_cursor_offset t (get_cursor_offset t - 1);
+      true
+    | `ASCII 'l', [] ->
+      set_cycle_offset t (get_cycle_offset t + 1);
+      set_cursor_offset t (get_cursor_offset t + 1);
+      true
+    | `ASCII 'H', [] ->
+      set_cycle_offset t (get_cycle_offset t - 10);
+      set_cursor_offset t (get_cursor_offset t - 10);
+      true
+    | `ASCII 'L', [] ->
+      set_cycle_offset t (get_cycle_offset t + 10);
+      set_cursor_offset t (get_cursor_offset t + 10);
+      true
+    | `ASCII 'g', [] ->
+      set_cycle_offset t (get_cursor_offset t);
+      true
+    | `ASCII 'G', [] ->
+      set_cursor_offset t (get_cycle_offset t);
       true
     | `Enter, [] -> Hierarchy.toggle_selected_module_if_present hierarchy
     | `ASCII ('e' as c), [] | `ASCII ('b' as c), [] ->
