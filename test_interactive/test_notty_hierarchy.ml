@@ -20,14 +20,24 @@ let () =
          ~doc:"<int> values window width"
      in
      let prefix =
-       let a = [| ""; "foo$"; "foo$bar$"; "foo$baz$"; "hello$"; "world$" |] in
-       fun i -> a.(Int.rem i (Array.length a))
+       (* Construct lots of randomly filled hierarchical paths *)
+       let prefix = ref "" in
+       fun _ ->
+         prefix
+           := if Random.int 2 = 0
+              then
+                String.split ~on:'$' !prefix
+                |> List.drop_last
+                |> Option.value ~default:[]
+                |> String.concat ~sep:"$"
+              else !prefix ^ Test_data.random_string ~max_length:5 ^ "$";
+         !prefix
      in
      fun () ->
+       Random.init 42;
+       let waves = Test_data.create ~prefix ~length:1000 ~num_signals:1000 in
        Widget.run_waves
-         ~signals_width
-         ~values_width
-         Test_data.(create ~prefix ~length:1000 ~num_signals:100))
+         { waves with cfg = { waves.cfg with signals_width; values_width } })
     ~behave_nicely_in_pipeline:false
   |> Command_unix.run
 ;;

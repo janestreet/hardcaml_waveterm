@@ -72,12 +72,18 @@ let command_show =
         flag "-values-width" (optional int) ~doc:" Width of values display window"
       and display_rules =
         flag "-rule" (listed string) ~doc:" Display rule regular expressions"
+      and ui_state_file =
+        flag
+          "-ui-state-file"
+          (optional string)
+          ~doc:" Location to save/load UI state file"
       and regex_engine = regex_engine_flag
       and wave_format = wave_format_flag in
       fun () ->
         let waveform = Waveform.Serialize.unmarshall filename in
         let display_rules = get_display_rules ~regex_engine ~display_rules ~wave_format in
         Hardcaml_waveterm_interactive.run
+          ?ui_state_file
           ?signals_width
           ?values_width
           ?start_cycle

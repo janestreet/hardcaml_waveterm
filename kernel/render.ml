@@ -654,7 +654,7 @@ module Make (G : Draw.S) = struct
         | None -> false
         | Some selected_wave_index -> i = selected_wave_index
       in
-      draw_highlight ~ctx ~bounds ~r (is_selected || i = state.cfg.signal_cursor))
+      draw_highlight ~ctx ~bounds ~r is_selected)
   ;;
 
   let draw_values ?(style = Draw.Style.default) ~ctx ~bounds (state : Waves.t) =
@@ -664,29 +664,28 @@ module Make (G : Draw.S) = struct
       if state.cfg.wave_cursor < 0 then state.cfg.start_cycle else state.cfg.wave_cursor
     in
     let max_string_length = ref 0 in
-    draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
+    draw_iter state.cfg.start_signal bounds state (fun _ bounds wave ->
       let _, wah = get_wave_height (state.cfg.wave_height, wave) in
       let r = (wah - 1) / 2 in
-      (match wave with
-       | Empty _ | Clock _ -> ()
-       | Binary (_, d) ->
-         let d =
-           try Data.get d off with
-           | _ -> Data.get d (Data.length d - 1)
-         in
-         let str = Bits.to_bstr d in
-         max_string_length := max !max_string_length (String.length str);
-         draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str
-       | Data (_, d, _, _alignment) ->
-         let d =
-           try Data.get d off with
-           | _ -> Data.get d (Data.length d - 1)
-         in
-         let to_str = Wave.get_to_str wave in
-         let str = to_str d in
-         max_string_length := max !max_string_length (String.length str);
-         draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str);
-      draw_highlight ~ctx ~bounds ~r (i = state.cfg.signal_cursor));
+      match wave with
+      | Empty _ | Clock _ -> ()
+      | Binary (_, d) ->
+        let d =
+          try Data.get d off with
+          | _ -> Data.get d (Data.length d - 1)
+        in
+        let str = Bits.to_bstr d in
+        max_string_length := max !max_string_length (String.length str);
+        draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str
+      | Data (_, d, _, _alignment) ->
+        let d =
+          try Data.get d off with
+          | _ -> Data.get d (Data.length d - 1)
+        in
+        let to_str = Wave.get_to_str wave in
+        let str = to_str d in
+        max_string_length := max !max_string_length (String.length str);
+        draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str);
     !max_string_length
   ;;
 
