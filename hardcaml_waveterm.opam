@@ -16,7 +16,7 @@ depends: [
   "expect_test_helpers_core"
   "hardcaml"
   "notty_async"
-  "ppx_deriving_hardcaml"
+  "ppx_hardcaml"
   "ppx_jane"
   "stdio"
   "dune"                     {>= "2.0.0"}
