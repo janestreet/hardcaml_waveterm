@@ -6,7 +6,7 @@ module I = struct
     ; clr : 'a
     ; a : 'a [@bits 16]
     }
-  [@@deriving sexp_of, hardcaml]
+  [@@deriving hardcaml]
 end
 
 module O = struct
@@ -14,7 +14,7 @@ module O = struct
     { b : 'a [@bits 16]
     ; output_c_with_a_long_name : 'a
     }
-  [@@deriving sexp_of, hardcaml]
+  [@@deriving hardcaml]
 end
 
 let create (i : Signal.t I.t) =

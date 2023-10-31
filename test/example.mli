@@ -8,7 +8,7 @@ module I : sig
     ; clr : 'a
     ; a : 'a
     }
-  [@@deriving sexp_of, hardcaml]
+  [@@deriving hardcaml]
 end
 
 module O : sig
@@ -16,7 +16,7 @@ module O : sig
     { b : 'a
     ; output_c_with_a_long_name : 'a
     }
-  [@@deriving sexp_of, hardcaml]
+  [@@deriving hardcaml]
 end
 
 val create : Signal.t I.t -> Signal.t O.t

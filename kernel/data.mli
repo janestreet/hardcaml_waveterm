@@ -11,4 +11,5 @@ val length : t -> int
 val width : t -> int
 val get : t -> int -> Bits.t
 val set : t -> int -> Bits.t -> unit
+val set_mutable_unsafe : t -> int -> Bits.Mutable.t -> unit
 val non_cache_hits : t -> int

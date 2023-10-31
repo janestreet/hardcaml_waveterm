@@ -9,7 +9,7 @@ module Or_with_enable = struct
       ; a : 'a
       ; b : 'a
       }
-    [@@deriving sexp_of, hardcaml]
+    [@@deriving hardcaml]
   end
 
   module O = struct
@@ -17,7 +17,7 @@ module Or_with_enable = struct
       { enable_passthrough : 'a
       ; result : 'a
       }
-    [@@deriving sexp_of, hardcaml]
+    [@@deriving hardcaml]
   end
 
   let create scope (i : _ I.t) =
@@ -96,7 +96,7 @@ module Operator_operation = struct
       ; b : 'a
       ; foo : 'a
       }
-    [@@deriving sexp_of, hardcaml]
+    [@@deriving hardcaml]
   end
 
   module O = struct
@@ -104,7 +104,7 @@ module Operator_operation = struct
       { enable_passthrough : 'a
       ; result : 'a
       }
-    [@@deriving sexp_of, hardcaml]
+    [@@deriving hardcaml]
   end
 
   let create_with_always scope (i : _ I.t) =

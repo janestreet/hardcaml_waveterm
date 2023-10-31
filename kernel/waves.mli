@@ -23,6 +23,3 @@ type t =
   ; waves : Wave.t array
   }
 [@@deriving sexp_of]
-
-val write : Stdio.Out_channel.t -> t -> unit
-val read : Stdio.In_channel.t -> t

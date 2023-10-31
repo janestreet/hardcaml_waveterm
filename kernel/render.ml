@@ -284,9 +284,13 @@ module Make (G : Draw.S) = struct
     done
   ;;
 
-  let wget data i =
-    try Data.get data i with
-    | _ -> Data.get data (Data.length data - 1)
+  let get_data_bounds_clipped data i =
+    let length = Data.length data in
+    if i < 0
+    then Data.get data 0
+    else if i >= length
+    then Data.get data (length - 1)
+    else Data.get data i
   ;;
 
   let get_fuzzy_data data i w_scale =
@@ -294,10 +298,10 @@ module Make (G : Draw.S) = struct
       if w_scale = 0
       then Some prev
       else (
-        let d = wget data i in
+        let d = get_data_bounds_clipped data i in
         if Bits.equal d prev then f (i + 1) (w_scale - 1) prev else None)
     in
-    let d = wget data i in
+    let d = get_data_bounds_clipped data i in
     (* if we get 1 element, then we succeed *)
     try f (i + 1) (w_scale - 1) d with
     | _ -> Some d
@@ -316,7 +320,7 @@ module Make (G : Draw.S) = struct
     then (
       let w_scale = get_w_scale w_scale in
       get_fuzzy_data data ((w_scale * i) + off) w_scale)
-    else Some (wget data (off + i))
+    else Some (get_data_bounds_clipped data (off + i))
   ;;
 
   let draw_binary_data ~ctx ~style ~bounds ~w ~h ~data ~off =
@@ -670,18 +674,12 @@ module Make (G : Draw.S) = struct
       match wave with
       | Empty _ | Clock _ -> ()
       | Binary (_, d) ->
-        let d =
-          try Data.get d off with
-          | _ -> Data.get d (Data.length d - 1)
-        in
+        let d = get_data_bounds_clipped d off in
         let str = Bits.to_bstr d in
         max_string_length := max !max_string_length (String.length str);
         draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str
       | Data (_, d, _, _alignment) ->
-        let d =
-          try Data.get d off with
-          | _ -> Data.get d (Data.length d - 1)
-        in
+        let d = get_data_bounds_clipped d off in
         let to_str = Wave.get_to_str wave in
         let str = to_str d in
         max_string_length := max !max_string_length (String.length str);

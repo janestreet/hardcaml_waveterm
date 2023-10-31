@@ -116,12 +116,13 @@ let command_convert =
               (Array.map in_ports ~f:(fun (name, _, bits) -> name, bits) |> Array.to_list)
             ~out_ports_before_clock_edge:[]
             ~out_ports_after_clock_edge:[]
-            ~internal_ports:[]
             ~reset:Fn.id
             ~cycle_check:Fn.id
             ~cycle_before_clock_edge:Fn.id
             ~cycle_at_clock_edge:Fn.id
             ~cycle_after_clock_edge:Fn.id
+            ~traced:[]
+            ~lookup:(Fn.const None)
             ~lookup_reg:(Fn.const None)
             ~lookup_mem:(Fn.const None)
             ~assertions:(Map.empty (module String))

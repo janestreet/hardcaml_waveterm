@@ -51,6 +51,7 @@ let%expect_test "1 bit cases" =
       (t (
         (data          "\255\255\255\255\000\000\000\000")
         (length        48)
+        (total_length  64)
         (width         1)
         (rounded_width 1)
         (log2_rounded_width 0)
@@ -58,10 +59,12 @@ let%expect_test "1 bit cases" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   0)))
       (t (
         (data          "\000\000\000\000\255\255\000\000")
         (length        48)
+        (total_length  64)
         (width         1)
         (rounded_width 1)
         (log2_rounded_width 0)
@@ -69,10 +72,12 @@ let%expect_test "1 bit cases" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   0)))
       (t (
         (data          "\170\170\170\170\000\000\000\000")
         (length        32)
+        (total_length  64)
         (width         1)
         (rounded_width 1)
         (log2_rounded_width 0)
@@ -80,10 +85,12 @@ let%expect_test "1 bit cases" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   0)))
       (t (
         (data "\170\170\170\170\170\170\170\170\002\000\000\000\000\000\000\000")
         (length             66)
+        (total_length       128)
         (width              1)
         (rounded_width      1)
         (log2_rounded_width 0)
@@ -91,7 +98,8 @@ let%expect_test "1 bit cases" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}]
+        (non_cache_hits 0)
+        (setter_index   0))) |}]
 ;;
 
 let%expect_test "2 bits" =
@@ -103,6 +111,7 @@ let%expect_test "2 bits" =
       (t (
         (data          "\012\000\000\000\000\000\000\000")
         (length        2)
+        (total_length  32)
         (width         2)
         (rounded_width 2)
         (log2_rounded_width 1)
@@ -110,7 +119,8 @@ let%expect_test "2 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}];
+        (non_cache_hits 0)
+        (setter_index   1))) |}];
   Data.set t 1 Bits.(of_int ~width:2 0);
   print_s [%message (t : Data.t)];
   [%expect
@@ -118,6 +128,7 @@ let%expect_test "2 bits" =
       (t (
         (data          "\000\000\000\000\000\000\000\000")
         (length        2)
+        (total_length  32)
         (width         2)
         (rounded_width 2)
         (log2_rounded_width 1)
@@ -125,7 +136,8 @@ let%expect_test "2 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}];
+        (non_cache_hits 0)
+        (setter_index   1))) |}];
   for i = 0 to 3 do
     Data.set t i Bits.(of_int ~width:2 3)
   done;
@@ -135,6 +147,7 @@ let%expect_test "2 bits" =
       (t (
         (data          "\255\000\000\000\000\000\000\000")
         (length        4)
+        (total_length  32)
         (width         2)
         (rounded_width 2)
         (log2_rounded_width 1)
@@ -142,7 +155,8 @@ let%expect_test "2 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}]
+        (non_cache_hits 0)
+        (setter_index   1))) |}]
 ;;
 
 let%expect_test "16 bits" =
@@ -156,6 +170,7 @@ let%expect_test "16 bits" =
       (t (
         (data          "\255\255\000\000\000\000\000\000")
         (length        1)
+        (total_length  4)
         (width         16)
         (rounded_width 16)
         (log2_rounded_width 4)
@@ -163,10 +178,12 @@ let%expect_test "16 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   4)))
       (t (
         (data          "\255\255\255\255\000\000\000\000")
         (length        2)
+        (total_length  4)
         (width         16)
         (rounded_width 16)
         (log2_rounded_width 4)
@@ -174,10 +191,12 @@ let%expect_test "16 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   4)))
       (t (
         (data          "\255\255\255\255\255\255\000\000")
         (length        3)
+        (total_length  4)
         (width         16)
         (rounded_width 16)
         (log2_rounded_width 4)
@@ -185,10 +204,12 @@ let%expect_test "16 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   4)))
       (t (
         (data          "\255\255\255\255\255\255\255\255")
         (length        4)
+        (total_length  4)
         (width         16)
         (rounded_width 16)
         (log2_rounded_width 4)
@@ -196,10 +217,12 @@ let%expect_test "16 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   4)))
       (t (
         (data "\255\255\255\255\255\255\255\255\255\255\000\000\000\000\000\000")
         (length             5)
+        (total_length       8)
         (width              16)
         (rounded_width      16)
         (log2_rounded_width 4)
@@ -207,10 +230,12 @@ let%expect_test "16 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   4)))
       (t (
         (data "\255\255\255\255\255\255\255\255\255\255\255\255\000\000\000\000")
         (length             6)
+        (total_length       8)
         (width              16)
         (rounded_width      16)
         (log2_rounded_width 4)
@@ -218,7 +243,8 @@ let%expect_test "16 bits" =
         (cached_sub_word    0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}]
+        (non_cache_hits 0)
+        (setter_index   4))) |}]
 ;;
 
 let%expect_test "64 bits" =
@@ -232,6 +258,7 @@ let%expect_test "64 bits" =
       (t (
         (data          "\255\255\255\255\255\255\255\255")
         (length        1)
+        (total_length  1)
         (width         64)
         (rounded_width 64)
         (log2_rounded_width 6)
@@ -240,10 +267,12 @@ let%expect_test "64 bits" =
         (cached_sub_word 0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   6)))
       (t (
         (data "\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255")
         (length             2)
+        (total_length       2)
         (width              64)
         (rounded_width      64)
         (log2_rounded_width 6)
@@ -252,11 +281,13 @@ let%expect_test "64 bits" =
         (cached_sub_word 0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   6)))
       (t (
         (data
          "\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\255\000\000\000\000\000\000\000\000")
         (length             3)
+        (total_length       4)
         (width              64)
         (rounded_width      64)
         (log2_rounded_width 6)
@@ -265,7 +296,8 @@ let%expect_test "64 bits" =
         (cached_sub_word 0)
         (cached_multi_word "\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word "\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}]
+        (non_cache_hits 0)
+        (setter_index   6))) |}]
 ;;
 
 let%expect_test "65 bits" =
@@ -279,6 +311,7 @@ let%expect_test "65 bits" =
       (t (
         (data "\255\255\255\255\255\255\255\255\001\000\000\000\000\000\000\000")
         (length             1)
+        (total_length       1)
         (width              65)
         (rounded_width      128)
         (log2_rounded_width 7)
@@ -289,11 +322,13 @@ let%expect_test "65 bits" =
          "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word
          "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   7)))
       (t (
         (data
          "\255\255\255\255\255\255\255\255\001\000\000\000\000\000\000\000\255\255\255\255\255\255\255\255\001\000\000\000\000\000\000\000")
         (length             2)
+        (total_length       2)
         (width              65)
         (rounded_width      128)
         (log2_rounded_width 7)
@@ -304,11 +339,13 @@ let%expect_test "65 bits" =
          "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word
          "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0)))
+        (non_cache_hits 0)
+        (setter_index   7)))
       (t (
         (data
          "\255\255\255\255\255\255\255\255\001\000\000\000\000\000\000\000\255\255\255\255\255\255\255\255\001\000\000\000\000\000\000\000\255\255\255\255\255\255\255\255\001\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
         (length             3)
+        (total_length       4)
         (width              65)
         (rounded_width      128)
         (log2_rounded_width 7)
@@ -319,7 +356,8 @@ let%expect_test "65 bits" =
          "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
         (cached_temp_multi_word
          "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000")
-        (non_cache_hits 0))) |}]
+        (non_cache_hits 0)
+        (setter_index   7))) |}]
 ;;
 
 (* This is the old (simple) representation of waveform data used in waveterm.
@@ -377,8 +415,8 @@ module Unpacked_data = struct
 end
 
 let%expect_test "random tests for [get] and [set]" =
-  let max_bits = 256 in
-  let length = 10 * 1024 in
+  let max_bits = 340 in
+  let length = 4 * 1024 in
   require_does_not_raise [%here] (fun () ->
     for bits = 1 to max_bits do
       let packed = Data.create bits in

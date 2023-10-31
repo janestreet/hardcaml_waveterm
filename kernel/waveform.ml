@@ -95,10 +95,17 @@ let create sim =
     let port type_ (port_name, s) =
       { Port.type_; port_name = port_name |> Port_name.of_string; width = Bits.width !s }
     in
+    let traced_port type_ { Cyclesim.Traced.signal; names } =
+      List.map names ~f:(fun name ->
+        { Port.type_
+        ; port_name = name |> Port_name.of_string
+        ; width = Signal.width signal
+        })
+    in
     List.concat
       [ List.map (Cyclesim.in_ports sim) ~f:(port Input)
       ; List.map (Cyclesim.out_ports sim) ~f:(port Output)
-      ; List.map (Cyclesim.internal_ports sim) ~f:(port Internal)
+      ; List.concat_map (Cyclesim.traced sim) ~f:(traced_port Internal)
       ]
   in
   let sim, waves = Sim.wrap sim in
