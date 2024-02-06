@@ -1,11 +1,10 @@
 open Base
 
-module type S = Waves_intf.S
+module type S = sig
+  module Data : Data.Readable
+  module Wave : Wave.M(Data).S
 
-module M = Waves_intf.M
-
-module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) = struct
-  module Config = struct
+  module Config : sig
     type t =
       { mutable signals_width : int
       ; mutable values_width : int
@@ -20,19 +19,7 @@ module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) = struct
       }
     [@@deriving sexp]
 
-    let default =
-      { signals_width = 20
-      ; values_width = 20
-      ; wave_width = 3
-      ; wave_height = 1
-      ; start_cycle = 0
-      ; start_signal = 0
-      ; selected_signal = 0
-      ; wave_cursor = 0
-      ; signal_scroll = 0
-      ; value_scroll = 0
-      }
-    ;;
+    val default : t
   end
 
   type t =
@@ -40,4 +27,15 @@ module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) = struct
     ; waves : Wave.t array
     }
   [@@deriving sexp_of]
+end
+
+module M (Data : Data.Readable) (Wave : Wave.M(Data).S) = struct
+  module type S = S with module Data := Data and module Wave := Wave
+end
+
+module type Waves = sig
+  module type S = S
+
+  module M = M
+  module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) : M(Data)(Wave).S
 end

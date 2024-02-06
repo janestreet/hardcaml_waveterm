@@ -9,7 +9,10 @@ open Base
 
 type t = Display_rule.t list [@@deriving sexp_of]
 
-val run_rule : Display_rule.t -> Port.t -> (Wave_format.t * Text_alignment.t) option
+val run_rule
+  :  Display_rule.t
+  -> Port.t
+  -> (Hardcaml.Wave_format.t option * Text_alignment.t) option
 
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object).  Unmatched ports are not shown, unless [Rule.default]
@@ -17,7 +20,7 @@ val run_rule : Display_rule.t -> Port.t -> (Wave_format.t * Text_alignment.t) op
 val sort_ports_and_formats
   :  t
   -> Port.t list
-  -> (Port.t * (Wave_format.t * Text_alignment.t) option) list
+  -> (Port.t * (Hardcaml.Wave_format.t option * Text_alignment.t) option) list
 
 (** Check if a given port is displayed by any of the rules. *)
 val is_displayed : t -> Port.t -> bool
@@ -27,6 +30,11 @@ val is_signal_displayed : t -> Hardcaml.Signal.t -> bool
 
 (** Create rules for each signal in the interface. *)
 module With_interface (I : Hardcaml.Interface.S) : sig
-  val default : ?alignment:Text_alignment.t -> ?wave_format:Wave_format.t -> unit -> t
-  val with_format : ?alignment:Text_alignment.t -> Wave_format.t I.t -> t
+  val default
+    :  ?alignment:Text_alignment.t
+    -> ?wave_format:Hardcaml.Wave_format.t
+    -> unit
+    -> t
+
+  val with_format : ?alignment:Text_alignment.t -> Hardcaml.Wave_format.t I.t -> t
 end

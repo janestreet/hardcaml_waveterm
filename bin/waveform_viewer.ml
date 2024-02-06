@@ -121,11 +121,10 @@ let command_convert =
             ~cycle_before_clock_edge:Fn.id
             ~cycle_at_clock_edge:Fn.id
             ~cycle_after_clock_edge:Fn.id
-            ~traced:[]
-            ~lookup:(Fn.const None)
+            ~traced:{ input_ports = []; output_ports = []; internal_signals = [] }
+            ~lookup_node:(Fn.const None)
             ~lookup_reg:(Fn.const None)
             ~lookup_mem:(Fn.const None)
-            ~assertions:(Map.empty (module String))
             ()
         in
         Out_channel.with_file filename_out ~f:(fun file_out ->

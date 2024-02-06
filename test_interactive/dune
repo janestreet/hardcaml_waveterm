@@ -1,7 +1,9 @@
 (executables
+ (modes byte exe)
  (names test_notty_rendering test_notty_interactive test_notty_hierarchy
-  test_scrollbar test_sim)
+   test_scrollbar test_sim)
  (libraries core_unix.command_unix expect_test_helpers_core hardcaml_waveterm
-  hardcaml_waveterm_interactive hardcaml_waveterm_test notty notty_async
-  notty.unix)
- (preprocess (pps ppx_jane)))
+   hardcaml_waveterm_interactive hardcaml_waveterm_test notty notty_async
+   notty.unix)
+ (preprocess
+  (pps ppx_jane)))

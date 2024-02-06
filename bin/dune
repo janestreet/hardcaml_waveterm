@@ -1,5 +1,9 @@
-(executables (names waveform_viewer) (public_names hardcaml-waveform-viewer)
+(executables
+ (modes byte exe)
+ (names waveform_viewer)
+ (public_names hardcaml-waveform-viewer)
  (libraries core_unix.command_unix expect_test_helpers_core hardcaml_waveterm
-  hardcaml_waveterm_interactive hardcaml_waveterm_test notty notty_async
-  notty.unix)
- (preprocess (pps ppx_jane)))
+   hardcaml_waveterm_interactive hardcaml_waveterm_test notty notty_async
+   notty.unix)
+ (preprocess
+  (pps ppx_jane)))

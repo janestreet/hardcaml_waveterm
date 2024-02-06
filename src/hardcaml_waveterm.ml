@@ -17,7 +17,7 @@ include struct
       let unmarshall = Serialize_waveform.unmarshall
     end
 
-    let expect = Serialize_waveform.expect
+    let expect = Expect.expect
   end
 
   module Expert = struct

@@ -47,7 +47,7 @@ let%expect_test "default" =
     │               ││                                                   │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "display height" =
@@ -60,7 +60,7 @@ let%expect_test "display height" =
     │clr            ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "display width" =
@@ -87,7 +87,7 @@ let%expect_test "display width" =
     │        ││                            │
     │        ││                            │
     └────────┘└────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "wave height" =
@@ -105,7 +105,7 @@ let%expect_test "wave height" =
     │               ││────────────────┴───────┴───────────────           │
     │output_c_with_a││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "negative wave width" =
@@ -125,7 +125,7 @@ let%expect_test "negative wave width" =
     │               ││──┴┴─                                              │
     │output_c_with_a││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "display rules" =
@@ -144,18 +144,12 @@ let%expect_test "display rules" =
     {|
     (display_rules (
       (Names
-        (names (clk))
-        (wave_format Binary)
-        (alignment   Left))
-      (Regexp
-        (re          <opaque>)
-        (wave_format Unsigned_int)
-        (alignment   Left))
-      (Names
-        (names (b a))
-        (wave_format Int)
-        (alignment   Left))
-      (Names (names (clr)) (wave_format (Index (run clear))) (alignment Left)))) |}];
+        (names       (clk))
+        (wave_format (Binary))
+        (alignment Left))
+      (Regexp (re <opaque>) (wave_format (Unsigned_int)) (alignment Left))
+      (Names (names (b a)) (wave_format (Int)) (alignment Left))
+      (Names (names (clr)) (wave_format ((Index (run clear)))) (alignment Left)))) |}];
   test () ~display_rules ~display_height:16;
   [%expect
     {|
@@ -175,7 +169,7 @@ let%expect_test "display rules" =
     │clr            ││ clear  │run                                       │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "config with outputs then inputs" =
@@ -202,7 +196,7 @@ let%expect_test "config with outputs then inputs" =
     │clr            ││ 1      │0                                         │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "single bits" =
@@ -215,7 +209,7 @@ let%expect_test "single bits" =
     │clr            ││ 1      │0                                         │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}];
+    1d24349f56d51db1af4fbc18827a2c68 |}];
   let display_rules = [ Display_rule.port_name_is "clr" ~wave_format:Bit ] in
   test () ~display_rules ~display_height:4;
   [%expect
@@ -224,7 +218,7 @@ let%expect_test "single bits" =
     │clr            ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "Bit_or constructor" =
@@ -248,7 +242,7 @@ let%expect_test "Bit_or constructor" =
     │b              ││ 0              │24     │46                        │
     │               ││────────────────┴───────┴───────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "Alignment" =
@@ -272,7 +266,7 @@ let%expect_test "Alignment" =
     │b              ││ 0      │24 │46                                    │
     │               ││────────┴───┴───────                               │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}];
+    1d24349f56d51db1af4fbc18827a2c68 |}];
   test () ~display_rules:(display_rules Left) ~display_height:10 ~wave_width:1;
   [%expect
     {|
@@ -286,7 +280,7 @@ let%expect_test "Alignment" =
     │b              ││ 0      │24 │46                                    │
     │               ││────────┴───┴───────                               │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "minimum display size" =
@@ -295,7 +289,7 @@ let%expect_test "minimum display size" =
     ┌S┐┌Wa┐
     │c││┌─│
     └─┘└──┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "Custom signals width" =
@@ -322,7 +316,7 @@ let%expect_test "Custom signals width" =
     │        ││                                                          │
     │        ││                                                          │
     └────────┘└──────────────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}];
+    1d24349f56d51db1af4fbc18827a2c68 |}];
   test () ~signals_width:25;
   [%expect
     {|
@@ -346,7 +340,7 @@ let%expect_test "Custom signals width" =
     │                       ││                                           │
     │                       ││                                           │
     └───────────────────────┘└───────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
 ;;
 
 let%expect_test "configuration exceptions" =
@@ -385,5 +379,36 @@ let%expect_test "right signals alignment" =
     │            vdd││────────────────────────────────────────           │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    db9a82b55a1d1235ebbf7cc4fa0ee5df |}]
+    1d24349f56d51db1af4fbc18827a2c68 |}]
+;;
+
+let%expect_test "auto wave format of input, output and internal ports" =
+  let open Signal in
+  let format = Wave_format.Index [ ":("; ":)" ] in
+  let a = input "a" 1 --$ format in
+  let a_n = ~:a -- "a_n" --$ format in
+  let b = output "b" a_n --$ format in
+  let circ = Circuit.create_exn ~name:"whimsy" [ b ] in
+  let sim = Cyclesim.create ~config:Cyclesim.Config.trace_all circ in
+  let waves, sim = Waveform.create sim in
+  let a = Cyclesim.in_port sim "a" in
+  for i = 0 to 5 do
+    a := Bits.of_int ~width:1 (i land 1);
+    Cyclesim.cycle sim
+  done;
+  Waveform.print ~display_height:12 waves;
+  [%expect
+    {|
+    ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
+    │               ││────────┬───────┬───────┬───────┬───────┬───────   │
+    │a              ││ :(     │:)     │:(     │:)     │:(     │:)        │
+    │               ││────────┴───────┴───────┴───────┴───────┴───────   │
+    │               ││────────┬───────┬───────┬───────┬───────┬───────   │
+    │b              ││ :)     │:(     │:)     │:(     │:)     │:(        │
+    │               ││────────┴───────┴───────┴───────┴───────┴───────   │
+    │               ││────────┬───────┬───────┬───────┬───────┬───────   │
+    │a_n            ││ :)     │:(     │:)     │:(     │:)     │:(        │
+    │               ││────────┴───────┴───────┴───────┴───────┴───────   │
+    │               ││                                                   │
+    └───────────────┘└───────────────────────────────────────────────────┘ |}]
 ;;

@@ -3,6 +3,8 @@
 open Base
 open Hardcaml
 
+module type Readable = Data_intf.Readable
+
 let check_cache = true
 
 type t =
@@ -27,6 +29,85 @@ type t =
 
 let get64u = Bytes.unsafe_get_int64
 let set64u = Bytes.unsafe_set_int64
+let raw_data t = t.data
+
+let number_of_bytes_used width length =
+  if width = 0 then raise_s [%message "Cannot have 0 bit data"];
+  if width >= 64
+  then 8 * length * ((width + 63) / 64)
+  else (
+    let rounded_width = 1 lsl Int.ceil_log2 width in
+    if rounded_width <= 8
+    then (length + (8 / rounded_width) - 1) / (8 / rounded_width)
+    else rounded_width / 8 * length)
+;;
+
+let%expect_test "bytes used" =
+  let open Stdio in
+  let print widths =
+    printf "    | ";
+    List.iter widths ~f:(fun width -> printf "%3i " width);
+    printf "\n";
+    printf "    --";
+    List.iter widths ~f:(fun _ -> printf "----");
+    printf "\n";
+    for length = 0 to 10 do
+      printf "%3i | " length;
+      List.iter widths ~f:(fun width -> printf "%3i " (number_of_bytes_used width length));
+      printf "\n"
+    done
+  in
+  print [ 1; 2; 3; 4; 5; 6; 7; 8 ];
+  [%expect
+    {|
+       |   1   2   3   4   5   6   7   8
+       ----------------------------------
+     0 |   0   0   0   0   0   0   0   0
+     1 |   1   1   1   1   1   1   1   1
+     2 |   1   1   1   1   2   2   2   2
+     3 |   1   1   2   2   3   3   3   3
+     4 |   1   1   2   2   4   4   4   4
+     5 |   1   2   3   3   5   5   5   5
+     6 |   1   2   3   3   6   6   6   6
+     7 |   1   2   4   4   7   7   7   7
+     8 |   1   2   4   4   8   8   8   8
+     9 |   2   3   5   5   9   9   9   9
+    10 |   2   3   5   5  10  10  10  10 |}];
+  print [ 9; 15; 16; 17; 31; 32; 33; 63; 64; 65 ];
+  [%expect
+    {|
+       |   9  15  16  17  31  32  33  63  64  65
+       ------------------------------------------
+     0 |   0   0   0   0   0   0   0   0   0   0
+     1 |   2   2   2   4   4   4   8   8   8  16
+     2 |   4   4   4   8   8   8  16  16  16  32
+     3 |   6   6   6  12  12  12  24  24  24  48
+     4 |   8   8   8  16  16  16  32  32  32  64
+     5 |  10  10  10  20  20  20  40  40  40  80
+     6 |  12  12  12  24  24  24  48  48  48  96
+     7 |  14  14  14  28  28  28  56  56  56 112
+     8 |  16  16  16  32  32  32  64  64  64 128
+     9 |  18  18  18  36  36  36  72  72  72 144
+    10 |  20  20  20  40  40  40  80  80  80 160 |}];
+  print [ 127; 128; 129; 191; 192; 193 ];
+  [%expect
+    {|
+       | 127 128 129 191 192 193
+       --------------------------
+     0 |   0   0   0   0   0   0
+     1 |  16  16  24  24  24  32
+     2 |  32  32  48  48  48  64
+     3 |  48  48  72  72  72  96
+     4 |  64  64  96  96  96 128
+     5 |  80  80 120 120 120 160
+     6 |  96  96 144 144 144 192
+     7 | 112 112 168 168 168 224
+     8 | 128 128 192 192 192 256
+     9 | 144 144 216 216 216 288
+    10 | 160 160 240 240 240 320 |}]
+;;
+
+let used_raw_data_bytes t = number_of_bytes_used t.width t.length
 
 let total_length length_in_bytes rounded_width =
   if rounded_width < 8
@@ -54,24 +135,23 @@ let[@cold] resize t =
 ;;
 
 let number_of_data_bytes b = Bytes.length b - offset_for_data
-let bytes_to_int t = Bytes.unsafe_get_int64 t offset_for_data |> Int64.to_int_trunc
 
-let set_multi_word data index bits =
+let set_multi_word data index bits base_address =
   let bytes_per = number_of_data_bytes bits in
   Bytes.unsafe_blit
     ~src:bits
-    ~src_pos:Bits.Expert.offset_for_data
+    ~src_pos:base_address
     ~dst:data
     ~dst_pos:(bytes_per * index)
     ~len:bytes_per
 ;;
 
-let set log2_rounded_width data index bits =
+let set log2_rounded_width data index bits base_address =
   let mask = Int64.((1L lsl Int.(1 lsl log2_rounded_width)) - 1L) in
   let shift = 6 - log2_rounded_width in
   let byte_offset = (index lsr shift) lsl 3 in
   let part_offset = (index land ((1 lsl shift) - 1)) lsl log2_rounded_width in
-  let new_bits = Bytes.unsafe_get_int64 bits offset_for_data in
+  let new_bits = Bytes.unsafe_get_int64 bits base_address in
   let cur_bits = get64u data byte_offset in
   let bits =
     Int64.(cur_bits land lnot (mask lsl part_offset) lor (new_bits lsl part_offset))
@@ -83,59 +163,56 @@ let set1 d i b = set 0 d i b
 let set2 d i b = set 1 d i b
 let set4 d i b = set 2 d i b
 
-let set_unsafe log2_rounded_width data index bits =
+let[@inline always] set_unsafe log2_rounded_width data index bits base_address =
   let shift = 6 - log2_rounded_width in
   let byte_offset = (index lsr shift) lsl 3 in
   let part_offset = (index land ((1 lsl shift) - 1)) lsl log2_rounded_width in
-  let new_bits = Bytes.unsafe_get_int64 bits offset_for_data in
+  let new_bits = Bytes.unsafe_get_int64 bits base_address in
   let cur_bits = get64u data byte_offset in
   let bits = Int64.(cur_bits lor (new_bits lsl part_offset)) in
   set64u data byte_offset bits
 ;;
 
-let set1_unsafe d i b = set_unsafe 0 d i b
-let set2_unsafe d i b = set_unsafe 1 d i b
-let set4_unsafe d i b = set_unsafe 2 d i b
+let[@inline always] set1_unsafe d i b a = set_unsafe 0 d i b a
+let[@inline always] set2_unsafe d i b a = set_unsafe 1 d i b a
+let[@inline always] set4_unsafe d i b a = set_unsafe 2 d i b a
 
-let set8 data index bits =
-  let bits = bytes_to_int bits in
-  Bytes.unsafe_set data index (Char.unsafe_of_int bits)
+let[@inline always] set8 data index bits base_address =
+  Bytes.unsafe_set data index (Bytes.unsafe_get bits base_address)
 ;;
 
-let set16 data index bits =
-  let bits = bytes_to_int bits in
-  Bytes.unsafe_set_int16 data (index lsl 1) bits
+let[@inline always] set16 data index bits base_address =
+  Bytes.unsafe_set_int16 data (index lsl 1) (Bytes.unsafe_get_int16 bits base_address)
 ;;
 
-let set32 data index bits =
-  let bits = bytes_to_int bits in
-  Bytes.unsafe_set_int32 data (index lsl 2) (Int32.of_int_trunc bits)
+let[@inline always] set32 data index bits base_address =
+  Bytes.unsafe_set_int32 data (index lsl 2) (Bytes.unsafe_get_int32 bits base_address)
 ;;
 
-let set64 data index bits =
+let[@inline always] set64 data index bits base_address =
   let byte_offset = index lsl 3 in
-  set64u data byte_offset (Bytes.unsafe_get_int64 bits offset_for_data)
+  set64u data byte_offset (Bytes.unsafe_get_int64 bits base_address)
 ;;
 
-let set128 data index bits =
+let[@inline always] set128 data index bits base_address =
   let byte_offset = index lsl 4 in
-  set64u data byte_offset (Bytes.unsafe_get_int64 bits offset_for_data);
-  set64u data (byte_offset + 8) (Bytes.unsafe_get_int64 bits (offset_for_data + 8))
+  set64u data byte_offset (Bytes.unsafe_get_int64 bits base_address);
+  set64u data (byte_offset + 8) (Bytes.unsafe_get_int64 bits (base_address + 8))
 ;;
 
-let set192 data index bits =
+let[@inline always] set192 data index bits base_address =
   let byte_offset = (index lsl 4) + (index lsl 3) in
-  set64u data byte_offset (Bytes.unsafe_get_int64 bits offset_for_data);
-  set64u data (byte_offset + 8) (Bytes.unsafe_get_int64 bits (offset_for_data + 8));
-  set64u data (byte_offset + 16) (Bytes.unsafe_get_int64 bits (offset_for_data + 16))
+  set64u data byte_offset (Bytes.unsafe_get_int64 bits base_address);
+  set64u data (byte_offset + 8) (Bytes.unsafe_get_int64 bits (base_address + 8));
+  set64u data (byte_offset + 16) (Bytes.unsafe_get_int64 bits (base_address + 16))
 ;;
 
-let set256 data index bits =
+let[@inline always] set256 data index bits base_address =
   let byte_offset = index lsl 5 in
-  set64u data byte_offset (Bytes.unsafe_get_int64 bits offset_for_data);
-  set64u data (byte_offset + 8) (Bytes.unsafe_get_int64 bits (offset_for_data + 8));
-  set64u data (byte_offset + 16) (Bytes.unsafe_get_int64 bits (offset_for_data + 16));
-  set64u data (byte_offset + 24) (Bytes.unsafe_get_int64 bits (offset_for_data + 24))
+  set64u data byte_offset (Bytes.unsafe_get_int64 bits base_address);
+  set64u data (byte_offset + 8) (Bytes.unsafe_get_int64 bits (base_address + 8));
+  set64u data (byte_offset + 16) (Bytes.unsafe_get_int64 bits (base_address + 16));
+  set64u data (byte_offset + 24) (Bytes.unsafe_get_int64 bits (base_address + 24))
 ;;
 
 let setters =
@@ -186,8 +263,107 @@ let rec set_mutable_unsafe t index (bits : Bits.Mutable.t) =
     resize t;
     set_mutable_unsafe t index bits)
   else (
-    setter_fn_unsafe.(t.setter_index) t.data index (bits :> Bytes.t);
+    setter_fn_unsafe.(t.setter_index) t.data index (bits :> Bytes.t) offset_for_data;
     t.length <- max t.length (index + 1))
+;;
+
+let set_from_bytes1 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set1_unsafe t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes2 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set2_unsafe t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes4 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set4_unsafe t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes8 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set8 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes16 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set16 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes32 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set32 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes64 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set64 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes128 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set128 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes192 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set192 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let set_from_bytes256 t index data byte_address =
+  if index >= t.total_length then resize t;
+  set256 t.data index data byte_address;
+  t.length <- max t.length (index + 1)
+;;
+
+let[@inline always] rec set_from_bytes_multi bytes_per_word t index bits byte_address =
+  if index >= t.total_length
+  then (
+    resize t;
+    set_from_bytes_multi bytes_per_word t index bits byte_address)
+  else (
+    Bytes.unsafe_blit
+      ~src:bits
+      ~src_pos:byte_address
+      ~dst:t.data
+      ~dst_pos:(bytes_per_word * index)
+      ~len:bytes_per_word;
+    t.length <- max t.length (index + 1))
+;;
+
+let set_from_bytes width =
+  if width <= 1
+  then set_from_bytes1
+  else if width <= 2
+  then set_from_bytes2
+  else if width <= 4
+  then set_from_bytes4
+  else if width <= 8
+  then set_from_bytes8
+  else if width <= 16
+  then set_from_bytes16
+  else if width <= 32
+  then set_from_bytes32
+  else if width <= 64
+  then set_from_bytes64
+  else if width <= 128
+  then set_from_bytes128
+  else if width <= 192
+  then set_from_bytes192
+  else if width <= 256
+  then set_from_bytes256
+  else set_from_bytes_multi (8 * (Int.round_up ~to_multiple_of:64 width / 64))
 ;;
 
 let rec set t index (bits : Bits.t) =
@@ -198,7 +374,7 @@ let rec set t index (bits : Bits.t) =
     resize t;
     set t index bits)
   else (
-    setter_fn.(t.setter_index) t.data index (bits :> Bytes.t);
+    setter_fn.(t.setter_index) t.data index (bits :> Bytes.t) offset_for_data;
     t.length <- max t.length (index + 1))
 ;;
 

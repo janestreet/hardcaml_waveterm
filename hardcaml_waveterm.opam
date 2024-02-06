@@ -19,6 +19,7 @@ depends: [
   "ppx_hardcaml"
   "ppx_jane"
   "stdio"
+  "cryptokit"                {>= "1.16" & < "1.17"}
   "dune"                     {>= "2.0.0"}
   "notty"                    {>= "0.2.1"}
   "num"

@@ -3,10 +3,10 @@ open Base
 type t = Display_rule.t list [@@deriving sexp_of]
 
 let run_rule (t : Display_rule.t) (port : Port.t)
-  : (Wave_format.t * Text_alignment.t) option
+  : (Hardcaml.Wave_format.t option * Text_alignment.t) option
   =
   match t with
-  | Default -> if port.width = 1 then Some (Bit, Left) else Some (Hex, Left)
+  | Default -> if port.width = 1 then Some (Some Bit, Left) else Some (Some Hex, Left)
   | Regexp { re; wave_format; alignment } ->
     Option.map
       (Re.exec_opt re (port.port_name |> Port_name.to_string))
@@ -15,8 +15,8 @@ let run_rule (t : Display_rule.t) (port : Port.t)
     if List.mem names port.port_name ~equal:Port_name.equal
     then Some (wave_format, alignment)
     else None
-  | Custom f -> Option.map (f port) ~f:(fun a -> a, Text_alignment.Left)
-  | Custom_with_alignment f -> f port
+  | Custom f -> Option.map (f port) ~f:(fun a -> Some a, Text_alignment.Left)
+  | Custom_with_alignment f -> Option.map (f port) ~f:(fun (f, a) -> Some f, a)
 ;;
 
 let rec sort (t : Display_rule.t list) ~unmatched =
@@ -79,7 +79,7 @@ let sort_ports_and_formats t ports = sort t ~unmatched:ports |> List.concat
 module With_interface (I : Hardcaml.Interface.S) = struct
   let map_to_list ~f = I.map I.port_names ~f:(fun name -> f name) |> I.to_list
 
-  let default ?alignment ?(wave_format = Wave_format.Bit_or Hex) () =
+  let default ?alignment ?(wave_format = Hardcaml.Wave_format.Bit_or Hex) () =
     map_to_list ~f:(fun name -> Display_rule.port_name_is name ?alignment ~wave_format)
   ;;
 

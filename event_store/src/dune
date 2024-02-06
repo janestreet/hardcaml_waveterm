@@ -1,0 +1,6 @@
+(library
+ (name hardcaml_waveterm_event_store)
+ (public_name hardcaml_waveterm.event_store)
+ (libraries base hardcaml)
+ (preprocess
+  (pps ppx_jane)))
