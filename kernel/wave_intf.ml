@@ -2,7 +2,7 @@ open Base
 open Hardcaml
 
 module type S = sig
-  module Data : Data.Readable
+  module Data : Data.S
 
   type t =
     | Empty of string
@@ -19,7 +19,7 @@ module type S = sig
   val get_format : t -> Wave_format.t
 end
 
-module M (Data : Data.Readable) = struct
+module M (Data : Data.S) = struct
   module type S = S with module Data := Data
 end
 
@@ -27,5 +27,5 @@ module type Wave = sig
   module type S = S
 
   module M = M
-  module Make (Data : Data.Readable) : M(Data).S
+  module Make (Data : Data.S) : M(Data).S
 end

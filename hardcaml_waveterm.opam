@@ -16,7 +16,6 @@ depends: [
   "expect_test_helpers_core"
   "hardcaml"
   "notty_async"
-  "ppx_hardcaml"
   "ppx_jane"
   "stdio"
   "cryptokit"                {>= "1.16" & < "1.17"}

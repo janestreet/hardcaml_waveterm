@@ -1,4 +1,5 @@
 open! Import
+module Draw = Hardcaml_waveterm_kernel.Expert.Draw
 module _ = Render.Make (Draw_notty)
 
 (* Draw the image within a border.  This forces notty to output the whole thing. *)

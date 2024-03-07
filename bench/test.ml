@@ -1,6 +1,6 @@
 open Core
 module Bits = Hardcaml.Bits
-module Data = Hardcaml_waveterm_kernel.Expert.Data
+module Data = Hardcaml_waveterm_cyclesim.Data
 
 let size = 1_000
 

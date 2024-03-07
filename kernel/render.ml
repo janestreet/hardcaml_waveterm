@@ -5,7 +5,7 @@ module type S = Render_intf.S
 
 module M = Render_intf.M
 
-module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) =
+module Make (Data : Data.S) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) =
 struct
   module Styles = struct
     type t =

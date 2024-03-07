@@ -36,8 +36,7 @@ let () =
      fun () ->
        Random.init 42;
        let waves = Test_data.create ~prefix ~length:1000 ~num_signals:1000 in
-       Widget.run_waves
-         { waves with cfg = { waves.cfg with signals_width; values_width } })
+       run_waves { waves with cfg = { waves.cfg with signals_width; values_width } })
     ~behave_nicely_in_pipeline:false
   |> Command_unix.run
 ;;

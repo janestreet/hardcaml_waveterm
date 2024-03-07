@@ -7,7 +7,7 @@ module type S = Waveform_intf.S
 module M = Waveform_intf.M
 
 module Make
-  (Data : Data.Readable)
+  (Data : Data.S)
   (Wave : Wave.M(Data).S)
   (Waves : Waves.M(Data)(Wave).S)
   (Render : Render.M(Data)(Wave)(Waves).S) =

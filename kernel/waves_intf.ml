@@ -1,7 +1,7 @@
 open Base
 
 module type S = sig
-  module Data : Data.Readable
+  module Data : Data.S
   module Wave : Wave.M(Data).S
 
   module Config : sig
@@ -29,7 +29,7 @@ module type S = sig
   [@@deriving sexp_of]
 end
 
-module M (Data : Data.Readable) (Wave : Wave.M(Data).S) = struct
+module M (Data : Data.S) (Wave : Wave.M(Data).S) = struct
   module type S = S with module Data := Data and module Wave := Wave
 end
 
@@ -37,5 +37,5 @@ module type Waves = sig
   module type S = S
 
   module M = M
-  module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) : M(Data)(Wave).S
+  module Make (Data : Data.S) (Wave : Wave.M(Data).S) : M(Data)(Wave).S
 end

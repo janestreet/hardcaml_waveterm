@@ -4,7 +4,7 @@ module type S = Waves_intf.S
 
 module M = Waves_intf.M
 
-module Make (Data : Data.Readable) (Wave : Wave.M(Data).S) = struct
+module Make (Data : Data.S) (Wave : Wave.M(Data).S) = struct
   module Config = struct
     type t =
       { mutable signals_width : int

@@ -1,5 +1,5 @@
 open Base
-open Hardcaml_waveterm.Expert
+open Hardcaml_waveterm_kernel.Expert
 
 module Adjustment : sig
   type t =

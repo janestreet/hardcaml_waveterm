@@ -1,6 +1,6 @@
 open! Import
 open Async
-module _ = Render.Make (Draw_notty)
+module Draw = Hardcaml_waveterm_kernel.Expert.Draw
 
 let run_scrollable () =
   let%bind term = Notty_async.Term.create () in

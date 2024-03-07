@@ -11,11 +11,12 @@ end
 
 module Events = Hardcaml_waveterm_event_store.Event_store.Make (Time) (Data)
 
-module Waveterm = Hardcaml_waveterm_kernel.Make (struct
+module Waveterm = Hardcaml_waveterm_kernel.Expert.Make (struct
   include Events
 
   let equal _ _ = false
   let width t = get t 0 |> Bits.width
+  let get_digestible_string _ = Bytes.of_string "", 0
 end)
 
 let create_wave d =
@@ -43,10 +44,9 @@ let%expect_test "" =
        ~waves
        ~ports:
          (List.init 5 ~f:(fun idx ->
-            { Hardcaml_waveterm_kernel.Expert.Port.type_ = Input
+            { Hardcaml_waveterm_kernel.Port.type_ = Input
             ; port_name =
-                Hardcaml_waveterm_kernel.Expert.Port_name.of_string
-                  ("w" ^ Int.to_string idx)
+                Hardcaml_waveterm_kernel.Port_name.of_string ("w" ^ Int.to_string idx)
             ; width = 1
             })));
   [%expect

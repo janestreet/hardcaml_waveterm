@@ -2,11 +2,9 @@ open Base
 open Hardcaml
 module Node = Cyclesim.Node
 module Traced = Cyclesim.Traced
-module Data = Data
-module Wave = Wave.Make (Data)
-module Waves = Waves.Make (Data) (Wave)
-module Render = Render.Make (Data) (Wave) (Waves)
-module Waveform = Waveform.Make (Data) (Wave) (Waves) (Render)
+module Data = Hardcaml.Wave_data
+open Hardcaml_waveterm_kernel
+include Expert.Make (Data)
 
 let lookup_node sim cycle (t : Traced.internal_signal) =
   let width = Signal.width t.signal in
@@ -85,46 +83,55 @@ let trace sim cycle =
     ]
 ;;
 
-let wrap sim =
-  let cycle = ref 0 in
-  let traced = trace sim cycle in
-  let waves =
-    let waves = Array.of_list_map traced ~f:fst in
-    Array.sort waves ~compare:(fun w0 w1 ->
-      String.compare (Wave.get_name w0) (Wave.get_name w1));
-    waves
-  in
-  let updates = Array.of_list_map traced ~f:snd in
-  let tasks rst () =
-    Array.iter ~f:(fun f -> f rst) updates;
-    Int.incr cycle
-  in
-  let sim =
-    Cyclesim.Private.modify
-      sim
-      [ After, Reset, tasks true; Before, At_clock_edge, tasks false ]
-  in
-  sim, waves
-;;
+module Expert = struct
+  let wrap sim =
+    let cycle = ref 0 in
+    let traced = trace sim cycle in
+    let waves =
+      let waves = Array.of_list_map traced ~f:fst in
+      Array.sort waves ~compare:(fun w0 w1 ->
+        String.compare (Wave.get_name w0) (Wave.get_name w1));
+      waves
+    in
+    let updates = Array.of_list_map traced ~f:snd in
+    let tasks rst () =
+      Array.iter ~f:(fun f -> f rst) updates;
+      Int.incr cycle
+    in
+    let sim =
+      Cyclesim.Private.modify
+        sim
+        [ After, Reset, tasks true; Before, At_clock_edge, tasks false ]
+    in
+    sim, waves
+  ;;
+end
 
-let create sim =
-  let ports =
-    let port type_ (port_name, s) =
-      { Port.type_; port_name = port_name |> Port_name.of_string; width = Bits.width !s }
-    in
-    let traced_port type_ { Cyclesim.Traced.signal; mangled_names } =
-      List.map mangled_names ~f:(fun name ->
+module Waveform = struct
+  include Waveform
+
+  let create sim =
+    let ports =
+      let port type_ (port_name, s) =
         { Port.type_
-        ; port_name = name |> Port_name.of_string
-        ; width = Signal.width signal
-        })
+        ; port_name = port_name |> Port_name.of_string
+        ; width = Bits.width !s
+        }
+      in
+      let traced_port type_ { Cyclesim.Traced.signal; mangled_names } =
+        List.map mangled_names ~f:(fun name ->
+          { Port.type_
+          ; port_name = name |> Port_name.of_string
+          ; width = Signal.width signal
+          })
+      in
+      List.concat
+        [ List.map (Cyclesim.in_ports sim) ~f:(port Input)
+        ; List.map (Cyclesim.out_ports sim) ~f:(port Output)
+        ; List.concat_map (Cyclesim.traced sim).internal_signals ~f:(traced_port Internal)
+        ]
     in
-    List.concat
-      [ List.map (Cyclesim.in_ports sim) ~f:(port Input)
-      ; List.map (Cyclesim.out_ports sim) ~f:(port Output)
-      ; List.concat_map (Cyclesim.traced sim).internal_signals ~f:(traced_port Internal)
-      ]
-  in
-  let sim, waves = wrap sim in
-  Waveform.create_from_data ~waves:(Array.to_list waves) ~ports, sim
-;;
+    let sim, waves = Expert.wrap sim in
+    Waveform.create_from_data ~waves:(Array.to_list waves) ~ports, sim
+  ;;
+end

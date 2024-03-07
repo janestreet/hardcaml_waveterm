@@ -6,7 +6,7 @@ open Base
 open! Hardcaml
 
 module type S = sig
-  module Data : Data.Readable
+  module Data : Data.S
   module Wave : Wave.M(Data).S
   module Waves : Waves.M(Data)(Wave).S
   module Render : Render.M(Data)(Wave)(Waves).S
@@ -75,7 +75,7 @@ module type S = sig
 end
 
 module M
-  (Data : Data.Readable)
+  (Data : Data.S)
   (Wave : Wave.M(Data).S)
   (Waves : Waves.M(Data)(Wave).S)
   (Render : Render.M(Data)(Wave)(Waves).S) =
@@ -94,7 +94,7 @@ module type Waveform = sig
   module M = M
 
   module Make
-    (Data : Data.Readable)
+    (Data : Data.S)
     (Wave : Wave.M(Data).S)
     (Waves : Waves.M(Data)(Wave).S)
     (Render : Render.M(Data)(Wave)(Waves).S) : M(Data)(Wave)(Waves)(Render).S

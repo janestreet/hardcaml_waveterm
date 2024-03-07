@@ -2,7 +2,7 @@ open Base
 open Hardcaml
 
 module type S = sig
-  module Data : Data.Readable
+  module Data : Data.S
   module Wave : Wave.M(Data).S
   module Waves : Waves.M(Data)(Wave).S
 
@@ -193,8 +193,7 @@ module type S = sig
   end
 end
 
-module M (Data : Data.Readable) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) =
-struct
+module M (Data : Data.S) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) = struct
   module type S =
     S with module Data := Data and module Wave := Wave and module Waves := Waves
 end
@@ -204,8 +203,6 @@ module type Render = sig
 
   module M = M
 
-  module Make
-    (Data : Data.Readable)
-    (Wave : Wave.M(Data).S)
-    (Waves : Waves.M(Data)(Wave).S) : M(Data)(Wave)(Waves).S
+  module Make (Data : Data.S) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) :
+    M(Data)(Wave)(Waves).S
 end

@@ -1,5 +1,5 @@
 open Base
-open Hardcaml_waveterm.Expert
+open Hardcaml_waveterm_kernel.Expert
 include Draw.In_memory
 
 let to_colour = function

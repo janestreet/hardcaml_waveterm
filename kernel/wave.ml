@@ -5,7 +5,7 @@ module type S = Wave_intf.S
 
 module M = Wave_intf.M
 
-module Make (Data : Data.Readable) = struct
+module Make (Data : Data.S) = struct
   type t =
     | Empty of string
     | Clock of string
