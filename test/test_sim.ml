@@ -47,7 +47,8 @@ let%expect_test "default" =
     │               ││                                                   │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "display height" =
@@ -60,7 +61,8 @@ let%expect_test "display height" =
     │clr            ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "display width" =
@@ -87,7 +89,8 @@ let%expect_test "display width" =
     │        ││                            │
     │        ││                            │
     └────────┘└────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "wave height" =
@@ -105,7 +108,8 @@ let%expect_test "wave height" =
     │               ││────────────────┴───────┴───────────────           │
     │output_c_with_a││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "negative wave width" =
@@ -125,7 +129,8 @@ let%expect_test "negative wave width" =
     │               ││──┴┴─                                              │
     │output_c_with_a││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "display rules" =
@@ -149,7 +154,8 @@ let%expect_test "display rules" =
         (alignment Left))
       (Regexp (re <opaque>) (wave_format (Unsigned_int)) (alignment Left))
       (Names (names (b a)) (wave_format (Int)) (alignment Left))
-      (Names (names (clr)) (wave_format ((Index (run clear)))) (alignment Left)))) |}];
+      (Names (names (clr)) (wave_format ((Index (run clear)))) (alignment Left))))
+    |}];
   test () ~display_rules ~display_height:16;
   [%expect
     {|
@@ -169,7 +175,8 @@ let%expect_test "display rules" =
     │clr            ││ clear  │run                                       │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "config with outputs then inputs" =
@@ -196,7 +203,8 @@ let%expect_test "config with outputs then inputs" =
     │clr            ││ 1      │0                                         │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "single bits" =
@@ -209,7 +217,8 @@ let%expect_test "single bits" =
     │clr            ││ 1      │0                                         │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}];
+    1d24349f56d51db1af4fbc18827a2c68
+    |}];
   let display_rules = [ Display_rule.port_name_is "clr" ~wave_format:Bit ] in
   test () ~display_rules ~display_height:4;
   [%expect
@@ -218,7 +227,8 @@ let%expect_test "single bits" =
     │clr            ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "Bit_or constructor" =
@@ -242,7 +252,8 @@ let%expect_test "Bit_or constructor" =
     │b              ││ 0              │24     │46                        │
     │               ││────────────────┴───────┴───────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "Alignment" =
@@ -266,7 +277,8 @@ let%expect_test "Alignment" =
     │b              ││ 0      │24 │46                                    │
     │               ││────────┴───┴───────                               │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}];
+    1d24349f56d51db1af4fbc18827a2c68
+    |}];
   test () ~display_rules:(display_rules Left) ~display_height:10 ~wave_width:1;
   [%expect
     {|
@@ -280,16 +292,19 @@ let%expect_test "Alignment" =
     │b              ││ 0      │24 │46                                    │
     │               ││────────┴───┴───────                               │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "minimum display size" =
   test () ~display_width:7 ~display_height:3;
-  [%expect {|
+  [%expect
+    {|
     ┌S┐┌Wa┐
     │c││┌─│
     └─┘└──┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "Custom signals width" =
@@ -316,7 +331,8 @@ let%expect_test "Custom signals width" =
     │        ││                                                          │
     │        ││                                                          │
     └────────┘└──────────────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}];
+    1d24349f56d51db1af4fbc18827a2c68
+    |}];
   test () ~signals_width:25;
   [%expect
     {|
@@ -340,7 +356,8 @@ let%expect_test "Custom signals width" =
     │                       ││                                           │
     │                       ││                                           │
     └───────────────────────┘└───────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "configuration exceptions" =
@@ -356,7 +373,8 @@ let%expect_test "configuration exceptions" =
     (raised (
       "Invalid signals_width. Require signals_width < display_width."
       (signals_width 28)
-      (display_width 28))) |}]
+      (display_width 28)))
+    |}]
 ;;
 
 let%expect_test "right signals alignment" =
@@ -379,7 +397,8 @@ let%expect_test "right signals alignment" =
     │            vdd││────────────────────────────────────────           │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    1d24349f56d51db1af4fbc18827a2c68 |}]
+    1d24349f56d51db1af4fbc18827a2c68
+    |}]
 ;;
 
 let%expect_test "auto wave format of input, output and internal ports" =
@@ -410,5 +429,6 @@ let%expect_test "auto wave format of input, output and internal ports" =
     │a_n            ││ :)     │:(     │:)     │:(     │:)     │:(        │
     │               ││────────┴───────┴───────┴───────┴───────┴───────   │
     │               ││                                                   │
-    └───────────────┘└───────────────────────────────────────────────────┘ |}]
+    └───────────────┘└───────────────────────────────────────────────────┘
+    |}]
 ;;

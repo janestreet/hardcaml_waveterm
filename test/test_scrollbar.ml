@@ -53,7 +53,8 @@ let%expect_test "scroller sexp" =
           (c 0)
           (w 20)
           (h 12)))
-        (orientation Horz)))) |}]
+        (orientation Horz))))
+    |}]
 ;;
 
 let%expect_test "small scrollbar area" =
@@ -79,7 +80,8 @@ let%expect_test "small scrollbar area" =
     #                                    █                       #
     #                                       █                    #
     #                                       █                    #
-    ############################################################## |}]
+    ##############################################################
+    |}]
 ;;
 
 let%expect_test "big scroll bar area" =
@@ -95,7 +97,8 @@ let%expect_test "big scroll bar area" =
     #█                                                           #
     #                              █                             #
     #                                                           █#
-    ############################################################## |}]
+    ##############################################################
+    |}]
 ;;
 
 let%expect_test "dynamic scroll bar widths" =
@@ -114,7 +117,8 @@ let%expect_test "dynamic scroll bar widths" =
     #███████                                                     #
     #                           █████████████                    #
     #                                 ██████████████████████████ #
-    ############################################################## |}]
+    ##############################################################
+    |}]
 ;;
 
 (* This is a bug.  Should be tracked down and fixed. *)
@@ -125,5 +129,6 @@ let%expect_test "should not raise" =
   require_does_not_raise ~cr:CR_someday ~hide_positions:true [%here] (fun () ->
     draw ~ctx ~xloc:0 ~yloc:2 ~offset:160);
   [%expect {|
-    ("unexpectedly raised" (Invalid_argument "index out of bounds")) |}]
+    ("unexpectedly raised" (Invalid_argument "index out of bounds"))
+    |}]
 ;;

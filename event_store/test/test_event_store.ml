@@ -29,19 +29,22 @@ let%expect_test "simple examples" =
   [%expect
     {|
     (t ((data (())) (time (0)) (length 0)))
-    (t ((data ((100))) (time (0)) (length 1))) |}];
+    (t ((data ((100))) (time (0)) (length 1)))
+    |}];
   ignore (test_insert ~verbose:true [ 0, [ 100 ]; 1, [ 200 ] ] : S.t);
   [%expect
     {|
     (t ((data (())) (time (0)) (length 0)))
     (t ((data ((100))) (time (0)) (length 1)))
-    (t ((data ((100) (200))) (time (0 1)) (length 2))) |}];
+    (t ((data ((100) (200))) (time (0 1)) (length 2)))
+    |}];
   ignore (test_insert ~verbose:true [ 10, [ 100 ]; 9, [ 200 ] ] : S.t);
   [%expect
     {|
     (t ((data (())) (time (0)) (length 0)))
     (t ((data ((100))) (time (10)) (length 1)))
-    (t ((data ((200) (100))) (time (9 10)) (length 2))) |}];
+    (t ((data ((200) (100))) (time (9 10)) (length 2)))
+    |}];
   ignore
     (test_insert ~verbose:true [ 10, [ 100 ]; 20, [ 200 ]; 30, [ 300 ]; 10, [ 150 ] ]
       : S.t);
@@ -51,7 +54,8 @@ let%expect_test "simple examples" =
     (t ((data ((100))) (time (10)) (length 1)))
     (t ((data ((100) (200))) (time (10 20)) (length 2)))
     (t ((data ((100) (200) (300) ())) (time (10 20 30 0)) (length 3)))
-    (t ((data ((100 150) (200) (300) ())) (time (10 20 30 0)) (length 3))) |}]
+    (t ((data ((100 150) (200) (300) ())) (time (10 20 30 0)) (length 3)))
+    |}]
 ;;
 
 (* Create a map of time -> data list. Merge data lists for equal keys. Finally convert to
@@ -101,14 +105,14 @@ let%expect_test "Randomised tests - packed into small time range" =
   for _ = 1 to 100 do
     random_insertions ~max_time:10 ~count:100
   done;
-  [%expect {||}]
+  [%expect {| |}]
 ;;
 
 let%expect_test "Randomised tests - sparse over time" =
   for _ = 1 to 100 do
     random_insertions ~max_time:10_000 ~count:100
   done;
-  [%expect {||}]
+  [%expect {| |}]
 ;;
 
 let%expect_test "for simulator" =
@@ -136,5 +140,6 @@ let%expect_test "for simulator" =
     (14 (4))
     (15 (4))
     (16 (4))
-    (17 (4)) |}]
+    (17 (4))
+    |}]
 ;;

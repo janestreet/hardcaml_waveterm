@@ -77,7 +77,8 @@ let%expect_test "scope with assertions" =
     (assertions
      ((("enable passthrough" Not_violated)
        ("enabled means it is being used" (Violated (2)))
-       ("result implies an input is one" Not_violated)))) |}]
+       ("result implies an input is one" Not_violated))))
+    |}]
 ;;
 
 module Operator_operation = struct
@@ -207,7 +208,8 @@ let%expect_test "scope always with assertions" =
      ((("assert (nested false)" (Violated (1)))
        ("assert (nested true)" Not_violated) ("assert enable" (Violated (0 4)))
        ("assert false" (Violated (0 1 2 3 4))) ("enable -> ~foo" Not_violated)
-       ("~enable -> foo" (Violated (0)))))) |}]
+       ("~enable -> foo" (Violated (0))))))
+    |}]
 ;;
 
 let%expect_test "assertions checked to be 1 bit" =
@@ -221,7 +223,8 @@ let%expect_test "assertions checked to be 1 bit" =
       (assertion (
         const
         (width 2)
-        (value 0b00)))) |}];
+        (value 0b00))))
+    |}];
   let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
   require_does_raise [%here] (fun () ->
     Always.(
@@ -233,5 +236,6 @@ let%expect_test "assertions checked to be 1 bit" =
       (assertion (
         const
         (width 2)
-        (value 0b00)))) |}]
+        (value 0b00))))
+    |}]
 ;;
