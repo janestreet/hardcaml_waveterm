@@ -24,13 +24,13 @@ let () =
        let prefix = ref "" in
        fun _ ->
          prefix
-           := if Random.int 2 = 0
-              then
-                String.split ~on:'$' !prefix
-                |> List.drop_last
-                |> Option.value ~default:[]
-                |> String.concat ~sep:"$"
-              else !prefix ^ Test_data.random_string ~max_length:5 ^ "$";
+         := if Random.int 2 = 0
+            then
+              String.split ~on:'$' !prefix
+              |> List.drop_last
+              |> Option.value ~default:[]
+              |> String.concat ~sep:"$"
+            else !prefix ^ Test_data.random_string ~max_length:5 ^ "$";
          !prefix
      in
      fun () ->

@@ -75,17 +75,17 @@ module type S = sig
 end
 
 module M
-  (Data : Data.S)
-  (Wave : Wave.M(Data).S)
-  (Waves : Waves.M(Data)(Wave).S)
-  (Render : Render.M(Data)(Wave)(Waves).S) =
+    (Data : Data.S)
+    (Wave : Wave.M(Data).S)
+    (Waves : Waves.M(Data)(Wave).S)
+    (Render : Render.M(Data)(Wave)(Waves).S) =
 struct
   module type S =
     S
-      with module Data := Data
-       and module Wave := Wave
-       and module Waves := Waves
-       and module Render := Render
+    with module Data := Data
+     and module Wave := Wave
+     and module Waves := Waves
+     and module Render := Render
 end
 
 module type Waveform = sig
@@ -94,8 +94,8 @@ module type Waveform = sig
   module M = M
 
   module Make
-    (Data : Data.S)
-    (Wave : Wave.M(Data).S)
-    (Waves : Waves.M(Data)(Wave).S)
-    (Render : Render.M(Data)(Wave)(Waves).S) : M(Data)(Wave)(Waves)(Render).S
+      (Data : Data.S)
+      (Wave : Wave.M(Data).S)
+      (Waves : Waves.M(Data)(Wave).S)
+      (Render : Render.M(Data)(Wave)(Waves).S) : M(Data)(Wave)(Waves)(Render).S
 end

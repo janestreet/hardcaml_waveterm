@@ -394,9 +394,9 @@ module Unpacked_data = struct
     let old_data = d.data in
     let new_len = max 1 (Array.length d.data * 2) in
     d.data
-      <- Array.init new_len ~f:(fun i ->
-           try old_data.(i) with
-           | _ -> Bits.gnd)
+    <- Array.init new_len ~f:(fun i ->
+         try old_data.(i) with
+         | _ -> Bits.gnd)
   ;;
 
   let[@cold] raise_invalid_width actual_width expected_width =
@@ -424,7 +424,7 @@ end
 let%expect_test "random tests for [get] and [set]" =
   let max_bits = 340 in
   let length = 4 * 1024 in
-  require_does_not_raise [%here] (fun () ->
+  require_does_not_raise (fun () ->
     for bits = 1 to max_bits do
       let packed = Data.create bits in
       let unpacked = Unpacked_data.create bits in

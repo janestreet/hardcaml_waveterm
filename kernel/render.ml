@@ -528,12 +528,12 @@ struct
       : draw:'a draw_item -> label:string -> ?border:Draw.Style.t -> 'a draw_item
       =
       fun ~(draw : 'a draw_item)
-          ~label
-          ?border
-          ?(style = Draw.Style.default)
-          ~ctx
-          ~bounds
-          state ->
+        ~label
+        ?border
+        ?(style = Draw.Style.default)
+        ~ctx
+        ~bounds
+        state ->
       let r = draw ~style ~ctx ~bounds state in
       match border with
       | Some border when bounds.Draw.w > 0 && bounds.Draw.h > 0 ->
@@ -746,7 +746,7 @@ struct
            ~ctx
            ~bounds:bounds.values
            state
-          : int);
+         : int);
       with_border
         ~draw:draw_wave
         ~label:"Waves"

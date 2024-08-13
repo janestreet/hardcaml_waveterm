@@ -2,7 +2,8 @@
  (modes byte exe)
  (names waveform_viewer)
  (public_names hardcaml-waveform-viewer)
- (libraries core_unix.command_unix hardcaml_waveterm
-   hardcaml_waveterm_event_store hardcaml_waveterm_interactive)
+ (libraries core_unix.command_unix core hardcaml hardcaml_waveterm
+   hardcaml_waveterm_event_store hardcaml_waveterm_interactive
+   hardcaml_waveterm_kernel re)
  (preprocess
   (pps ppx_jane)))

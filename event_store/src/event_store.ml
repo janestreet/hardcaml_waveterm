@@ -50,12 +50,13 @@ module Make (Time : Time) (Data : Data) = struct
   ;;
 
   let find_insertion_index t time =
-    Array.binary_search
-      ~len:(length t)
-      t.time
-      `Last_less_than_or_equal_to
-      ~compare:Time.compare
-      time
+    (Array.binary_search
+       ~len:(length t)
+       t.time
+       `Last_less_than_or_equal_to
+       ~compare:Time.compare
+       time
+     |> [%globalize: int option]) [@nontail]
   ;;
 
   let shuffle_up t index =

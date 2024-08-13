@@ -12,12 +12,12 @@ end
 module Events = Hardcaml_waveterm_event_store.Event_store.Make (Time) (Data)
 
 module Waveterm = Hardcaml_waveterm_kernel.Expert.Make (struct
-  include Events
+    include Events
 
-  let equal _ _ = false
-  let width t = get t 0 |> Bits.width
-  let get_digestible_string _ = Bytes.of_string "", 0
-end)
+    let equal _ _ = false
+    let width t = get t 0 |> Bits.width
+    let get_digestible_string _ = Bytes.of_string "", 0
+  end)
 
 let create_wave d =
   let t = Events.create () in

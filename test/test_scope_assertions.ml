@@ -214,7 +214,7 @@ let%expect_test "scope always with assertions" =
 
 let%expect_test "assertions checked to be 1 bit" =
   let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     Assertions.add scope "oops - 2 bit assertion" (Signal.zero 2));
   [%expect
     {|
@@ -226,7 +226,7 @@ let%expect_test "assertions checked to be 1 bit" =
         (value 0b00))))
     |}];
   let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     Always.(
       compile [ Assertions.Always.add scope "oops - 2 bit assertion" (Signal.zero 2) ]));
   [%expect

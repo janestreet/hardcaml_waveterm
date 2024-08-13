@@ -7,10 +7,10 @@ module type S = Waveform_intf.S
 module M = Waveform_intf.M
 
 module Make
-  (Data : Data.S)
-  (Wave : Wave.M(Data).S)
-  (Waves : Waves.M(Data)(Wave).S)
-  (Render : Render.M(Data)(Wave)(Waves).S) =
+    (Data : Data.S)
+    (Wave : Wave.M(Data).S)
+    (Waves : Waves.M(Data)(Wave).S)
+    (Render : Render.M(Data)(Wave)(Waves).S) =
 struct
   let apply_wave_format
     (t : Wave.t)
@@ -83,18 +83,18 @@ struct
        about what [hardcaml_waveterm] is actually doing and do our best to construct the
        requested display.  In fact, [t.waves] should match [t.ports]. *)
     |> List.filter_map ~f:(fun ((port : Port.t), fmt_align_opt) ->
-         Map.find waves port.port_name
-         |> Option.map ~f:(fun wave ->
-              match fmt_align_opt, wave with
-              | Some (format, alignment), _ -> apply_wave_format wave format alignment
-              (* None represents default format. Don't apply default to Index and Custom *)
-              | None, Data (_, _, Wave_format.Index _, _)
-              | None, Data (_, _, Wave_format.Custom _, _) -> wave
-              | None, _ ->
-                Display_rules.run_rule Display_rule.Default port
-                |> Option.map ~f:(fun (format, alignment) ->
-                     apply_wave_format wave format alignment)
-                |> Option.value ~default:wave))
+      Map.find waves port.port_name
+      |> Option.map ~f:(fun wave ->
+        match fmt_align_opt, wave with
+        | Some (format, alignment), _ -> apply_wave_format wave format alignment
+        (* None represents default format. Don't apply default to Index and Custom *)
+        | None, Data (_, _, Wave_format.Index _, _)
+        | None, Data (_, _, Wave_format.Custom _, _) -> wave
+        | None, _ ->
+          Display_rules.run_rule Display_rule.Default port
+          |> Option.map ~f:(fun (format, alignment) ->
+            apply_wave_format wave format alignment)
+          |> Option.value ~default:wave))
     |> Array.of_list
   ;;
 

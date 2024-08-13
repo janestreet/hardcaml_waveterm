@@ -2,8 +2,8 @@ open Base
 open Hardcaml_waveterm_kernel
 
 module Make
-  (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-  (M : Hardcaml_waveterm_kernel.Expert.M(Data).S) : sig
+    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
+    (M : Hardcaml_waveterm_kernel.Expert.M(Data).S) : sig
   val run_waves : ?ui_state_file:string -> M.Waves.t -> unit Async.Deferred.t
 
   (** Run the waveform viewer and return.  Calls into Async/LWT so MUST NOT BE CALLED from

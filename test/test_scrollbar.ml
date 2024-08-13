@@ -126,9 +126,10 @@ let%expect_test "should not raise" =
   let ctx = Draw_notty.init ~rows:3 ~cols:60 in
   let hscroll, draw = create_hscroll ~width:60 ~height:1 ~range:200 in
   hscroll.scrollable.scroll_bar_mode <- Dynamic 160;
-  require_does_not_raise ~cr:CR_someday ~hide_positions:true [%here] (fun () ->
+  require_does_not_raise ~cr:CR_someday ~hide_positions:true (fun () ->
     draw ~ctx ~xloc:0 ~yloc:2 ~offset:160);
-  [%expect {|
+  [%expect
+    {|
     ("unexpectedly raised" (Invalid_argument "index out of bounds"))
     |}]
 ;;

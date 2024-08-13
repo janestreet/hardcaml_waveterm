@@ -3,11 +3,11 @@ open Hardcaml_waveterm_kernel.Expert
 module M = Expect_intf.M
 
 module Make
-  (Data : Data.S)
-  (Wave : Wave.M(Data).S)
-  (Waves : Waves.M(Data)(Wave).S)
-  (Render : Render.M(Data)(Wave)(Waves).S)
-  (Waveform : Waveform.M(Data)(Wave)(Waves)(Render).S) =
+    (Data : Data.S)
+    (Wave : Wave.M(Data).S)
+    (Waves : Waves.M(Data)(Wave).S)
+    (Render : Render.M(Data)(Wave)(Waves).S)
+    (Waveform : Waveform.M(Data)(Wave)(Waves)(Render).S) =
 struct
   module Serialize_waveform =
     Serialize_waveform.Make (Data) (Wave) (Waves) (Render) (Waveform)

@@ -47,7 +47,7 @@ let%expect_test "simple examples" =
     |}];
   ignore
     (test_insert ~verbose:true [ 10, [ 100 ]; 20, [ 200 ]; 30, [ 300 ]; 10, [ 150 ] ]
-      : S.t);
+     : S.t);
   [%expect
     {|
     (t ((data (())) (time (0)) (length 0)))

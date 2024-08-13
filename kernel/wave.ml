@@ -26,7 +26,7 @@ module Make (Data : Data.S) = struct
         let i = slen - i - 1 in
         let l = i * 4 in
         let h = min blen (l + 4) - 1 in
-        to_char (to_int (select b h l)))
+        to_char (to_int b.:[h, l]))
     ;;
 
     (* convert to integer using arbitrary precision. *)
@@ -38,17 +38,17 @@ module Make (Data : Data.S) = struct
       else (
         (* convert with big ints *)
         let rec f b acc =
-          let ( +: ) = Big_int.add_big_int in
-          let ( <<: ) = Big_int.shift_left_big_int in
-          let to_big b = Big_int.big_int_of_int (to_int b) in
+          let ( +: ) = Bigint.( + ) in
+          let ( <<: ) = Bigint.shift_left in
+          let to_big b = Bigint.of_int (to_int b) in
           if width b <= max
           then (* result *)
             (acc <<: width b) +: to_big b
           else (
-            let t, b = sel_top b max, drop_top b max in
+            let t, b = sel_top b ~width:max, drop_top b ~width:max in
             f b ((acc <<: max) +: to_big t))
         in
-        Big_int.(string_of_big_int (f b zero_big_int)))
+        Bigint.(to_string (f b zero)))
     ;;
 
     (* signed conversion uses unsigned conversion with detection of sign *)
@@ -56,7 +56,7 @@ module Make (Data : Data.S) = struct
       let max = 29 in
       (* safe max positive int bits *)
       if width b <= max
-      then Int.to_string (to_sint b)
+      then Int.to_string (to_signed_int b)
       else if to_int (msb b) = 0
       then to_ustr b
       else "-" ^ to_ustr (~:b +:. 1)
