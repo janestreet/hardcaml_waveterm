@@ -10,6 +10,7 @@ module M
 struct
   module type S = sig
     val marshall : Waveform.t -> string -> unit
+    val marshall_here : ?here:Stdlib.Lexing.position -> Waveform.t -> unit
     val unmarshall : string -> Waveform.t
 
     (** For testing marshalling functions. *)

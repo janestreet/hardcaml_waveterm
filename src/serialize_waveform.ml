@@ -47,6 +47,20 @@ struct
       raise_s [%message "[gzip -c] stopped due to signal" (signal : int)]
   ;;
 
+  (* Convert a test filename to a reasonable waveform file name *)
+  let default_waveform_filename filename =
+    let name = Stdlib.Filename.basename filename |> Stdlib.Filename.chop_extension in
+    let valid_char c = Char.is_alphanum c || Char.equal c '_' || Char.equal c '$' in
+    String.map name ~f:(fun c -> if valid_char c then c else '_') ^ ".hardcamlwaveform"
+  ;;
+
+  let marshall_here ?(here = Stdlib.Lexing.dummy_pos) (t : t) =
+    if phys_equal here Lexing.dummy_pos
+    then raise_s [%message "Must provide ~here:[%here] when using [marshall_here]"];
+    let filename = default_waveform_filename here.pos_fname in
+    marshall t filename
+  ;;
+
   let unmarshall filename : t =
     let ic = Unix.open_process_in (Printf.sprintf "zcat %s" filename) in
     let ret = Stdlib.Marshal.from_channel ic in
