@@ -27,7 +27,7 @@ struct
         | Empty _ | Clock _ | Binary _ -> wave
         | Data (name, data, wave_format, alignment) ->
           (match wave_format with
-           | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ -> wave
+           | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ | Map _ -> wave
            | Custom _ -> Data (name, data, Bit_or Hex, alignment)))
     in
     update_waves t waves
@@ -45,6 +45,20 @@ struct
       raise_s [%message "[gzip -c] terminated due to signal" (signal : int)]
     | WSTOPPED signal ->
       raise_s [%message "[gzip -c] stopped due to signal" (signal : int)]
+  ;;
+
+  (* Convert a test filename to a reasonable waveform file name *)
+  let default_waveform_filename filename =
+    let name = Stdlib.Filename.basename filename |> Stdlib.Filename.chop_extension in
+    let valid_char c = Char.is_alphanum c || Char.equal c '_' || Char.equal c '$' in
+    String.map name ~f:(fun c -> if valid_char c then c else '_') ^ ".hardcamlwaveform"
+  ;;
+
+  let marshall_here ~(here : [%call_pos]) (t : t) =
+    if phys_equal here Lexing.dummy_pos
+    then raise_s [%message "Must provide ~here:[%here] when using [marshall_here]"];
+    let filename = default_waveform_filename here.pos_fname in
+    marshall t filename
   ;;
 
   let unmarshall filename : t =

@@ -202,8 +202,9 @@ struct
           | Unsigned_int -> unsigned_width bits
           | Int -> signed_width bits
           | Custom _ -> 8 (* could add a width hint *)
-          | Index s ->
-            List.fold_left s ~init:0 ~f:(fun mx str -> max mx (String.length str))
+          | Index s -> List.fold s ~init:0 ~f:(fun mx str -> max mx (String.length str))
+          | Map m ->
+            List.fold m ~init:0 ~f:(fun mx (_, str) -> max mx (String.length str))
         in
         max max_width (get_width (Wave.get_format wave)))
     ;;
