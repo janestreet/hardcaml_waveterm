@@ -87,7 +87,8 @@ struct
       |> Option.map ~f:(fun wave ->
         match fmt_align_opt, wave with
         | Some (format, alignment), _ -> apply_wave_format wave format alignment
-        (* None represents default format. Don't apply default to Index and Custom *)
+        (* None represents default format. Don't apply default to Map, Index and Custom *)
+        | None, Data (_, _, Wave_format.Map _, _)
         | None, Data (_, _, Wave_format.Index _, _)
         | None, Data (_, _, Wave_format.Custom _, _) -> wave
         | None, _ ->

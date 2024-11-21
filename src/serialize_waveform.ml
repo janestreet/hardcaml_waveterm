@@ -27,7 +27,7 @@ struct
         | Empty _ | Clock _ | Binary _ -> wave
         | Data (name, data, wave_format, alignment) ->
           (match wave_format with
-           | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ -> wave
+           | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ | Map _ -> wave
            | Custom _ -> Data (name, data, Bit_or Hex, alignment)))
     in
     update_waves t waves
