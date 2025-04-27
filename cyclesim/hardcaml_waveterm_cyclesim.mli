@@ -10,10 +10,9 @@ module Waveform : sig
 end
 
 module Expert : sig
-  (** Wraps a hardcaml simulator with a waveform tracer. This returns a simulator
-      object with waveform traced. Both simulators are interchangable (ie: calling
-      [Sim.cycle] on one cycles the other as well, but only the simulator
-      returned from the function traces waveforms.
-  *)
+  (** Wraps a hardcaml simulator with a waveform tracer. This returns a simulator object
+      with waveform traced. Both simulators are interchangable (ie: calling [Sim.cycle] on
+      one cycles the other as well, but only the simulator returned from the function
+      traces waveforms. *)
   val wrap : ('i, 'o) Hardcaml.Cyclesim.t -> ('i, 'o) Hardcaml.Cyclesim.t * Wave.t array
 end

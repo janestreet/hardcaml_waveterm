@@ -25,6 +25,5 @@ let () =
          Test_data.create ~prefix:(fun _ -> "") ~length:1000 ~num_signals:1000
        in
        run_waves { waves with cfg = { waves.cfg with signals_width; values_width } })
-    ~behave_nicely_in_pipeline:false
   |> Command_unix.run
 ;;

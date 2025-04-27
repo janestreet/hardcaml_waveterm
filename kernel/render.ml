@@ -132,16 +132,20 @@ struct
         | Data _ | Binary _ -> (w * 2) + 1, (w + 1) * 2)
     ;;
 
-    let get_wave_height = function
-      | 0, Empty _ | 0, Clock _ -> 0, 2
-      | 0, Data _ -> 0, 2
-      | 0, Binary _ -> 0, 2
-      | 1, Empty _ | 1, Clock _ -> 0, 2
-      | 1, Data _ -> 1, 3
-      | 1, Binary _ -> 0, 2
-      | h, Empty _ | h, Clock _ -> h - 1, h + 1
-      | h, Data _ -> h - 1, h + 1
-      | h, Binary _ -> h - 1, h + 1
+    let get_height_code = function
+      | 0, Empty _ | 0, Clock _ -> 0
+      | 0, Data _ -> 0
+      | 0, Binary _ -> 0
+      | 1, Empty _ | 1, Clock _ -> 0
+      | 1, Data _ -> 1
+      | 1, Binary _ -> 0
+      | h, Empty _ | h, Clock _ -> h - 1
+      | h, Data _ -> h - 1
+      | h, Binary _ -> h - 1
+    ;;
+
+    let get_wave_height (h, t) =
+      get_height_code (h, t), Wave.get_height_in_chars t ~wave_height:h
     ;;
 
     let get_max_signal_width (state : Waves.t) =
@@ -170,7 +174,7 @@ struct
           Array.init 64 ~f:(fun i ->
             if i = 0
             then 1
-            else Bits.ones i |> Bits.to_int64 |> Int64.to_string |> String.length)
+            else Bits.ones i |> Bits.to_int64_trunc |> Int64.to_string |> String.length)
         in
         fun width -> table.(min 63 width)
       in
@@ -182,7 +186,7 @@ struct
             else
               Bits.one i
               |> Bits.reverse
-              |> Bits.to_int64
+              |> Bits.to_int64_trunc
               |> Int64.to_string
               |> String.length)
         in
@@ -385,11 +389,11 @@ struct
           in
           let fuzzy p = Option.is_none p in
           let zero = function
-            | Some p -> Bits.is_gnd p
+            | Some p -> not (Bits.to_bool p)
             | _ -> false
           in
           let one = function
-            | Some p -> Bits.is_vdd p
+            | Some p -> Bits.to_bool p
             | _ -> false
           in
           if fuzzy cur

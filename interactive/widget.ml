@@ -82,7 +82,7 @@ struct
         in
         let rec loop i =
           let[@inline always] mismatch_with_original () =
-            Hardcaml.Bits.(is_gnd (Data.get data i ==: initial))
+            Hardcaml.Bits.(not (to_bool (Data.get data i ==: initial)))
           in
           if i < 0 || i >= len
           then None

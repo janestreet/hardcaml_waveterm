@@ -55,4 +55,17 @@ module Make (Data : Data.S) = struct
     | Binary _ -> Binary
     | Data (_, _, f, _) -> f
   ;;
+
+  let get_height_in_chars t ~wave_height =
+    match wave_height, t with
+    | 0, Empty _ | 0, Clock _ -> 2
+    | 0, Data _ -> 2
+    | 0, Binary _ -> 2
+    | 1, Empty _ | 1, Clock _ -> 2
+    | 1, Data _ -> 3
+    | 1, Binary _ -> 2
+    | h, Empty _ | h, Clock _ -> h + 1
+    | h, Data _ -> h + 1
+    | h, Binary _ -> h + 1
+  ;;
 end

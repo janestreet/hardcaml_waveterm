@@ -13,6 +13,10 @@ struct
     val marshall_here : here:[%call_pos] -> Waveform.t -> unit
     val unmarshall : string -> Waveform.t
 
+    (** Write to VCD using the "legacy" VCD conversion method of running the waveform
+        through a fake cyclesim instance *)
+    val marshall_vcd : Waveform.t -> filename:string -> unit
+
     (** For testing marshalling functions. *)
     val equal : Waveform.t -> Waveform.t -> bool
   end

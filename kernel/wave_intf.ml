@@ -17,6 +17,7 @@ module type S = sig
   val get_to_str : t -> Bits.t -> string
   val get_alignment : t -> Text_alignment.t
   val get_format : t -> Wave_format.t
+  val get_height_in_chars : t -> wave_height:int -> int
 end
 
 module M (Data : Data.S) = struct

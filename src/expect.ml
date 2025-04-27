@@ -66,4 +66,34 @@ struct
       in
       Serialize_waveform.marshall t serialize_to)
   ;;
+
+  let expect_exact
+    ?display_rules
+    ?(display_width = 90)
+    ?display_height
+    ?display_values
+    ?wave_width
+    ?wave_height
+    ?signals_width
+    ?start_cycle
+    ?signals_alignment
+    ?show_digest
+    ?serialize_to
+    t
+    =
+    Stdio.print_endline "";
+    expect
+      ?display_rules
+      ~display_width
+      ?display_height
+      ?display_values
+      ?wave_width
+      ?wave_height
+      ?signals_width
+      ?start_cycle
+      ?signals_alignment
+      ?show_digest
+      ?serialize_to
+      t
+  ;;
 end
