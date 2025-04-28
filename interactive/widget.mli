@@ -6,7 +6,7 @@ module Make
     (M : Hardcaml_waveterm_kernel.Expert.M(Data).S) : sig
   val run_waves : ?ui_state_file:string -> M.Waves.t -> unit Async.Deferred.t
 
-  (** Run the waveform viewer and return.  Calls into Async/LWT so MUST NOT BE CALLED from
+  (** Run the waveform viewer and return. Calls into Async/LWT so MUST NOT BE CALLED from
       within an Async or LWT deferred. *)
   val run_and_return : ?ui_state_file:string -> M.Waves.t -> unit
 

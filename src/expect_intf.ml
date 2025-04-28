@@ -20,9 +20,14 @@ struct
         - [EXPECT_TEST_WAVEFORM=digest] then the waveform file will be named by the digest
           of the waveform ([serialize_to] is not used regardless of if it is set or not).
 
-        Simulation digests are shown by default.
-    *)
+        Simulation digests are shown by default. *)
     val expect
+      : (?show_digest:bool -> ?serialize_to:string -> Waveform.t -> unit)
+          Waveform.with_options
+
+    (** Same as [expect] expect it prints a newline first, and defaults to 90 chars wide.
+        For use with [%expect_exact] in tests. *)
+    val expect_exact
       : (?show_digest:bool -> ?serialize_to:string -> Waveform.t -> unit)
           Waveform.with_options
   end

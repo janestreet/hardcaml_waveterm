@@ -57,11 +57,11 @@ module type S = sig
     (** max width of name window *)
     val get_max_signal_width : Waves.t -> int
 
-    (** max width of values window.  Needs to evaluate the entire waveform. *)
+    (** max width of values window. Needs to evaluate the entire waveform. *)
     val get_max_value_width : Waves.t -> int
 
-    (** gets an estimate fo the max with of values. Inaccruate for the constructors [U], [S]
-        and [F]. *)
+    (** gets an estimate fo the max with of values. Inaccruate for the constructors [U],
+        [S] and [F]. *)
     val get_estimated_max_value_width : Waves.t -> int
 
     (** max no of wave cycles *)

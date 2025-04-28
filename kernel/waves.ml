@@ -40,4 +40,6 @@ module Make (Data : Data.S) (Wave : Wave.M(Data).S) = struct
     ; waves : Wave.t array
     }
   [@@deriving sexp_of]
+
+  let total_rows _t = 0
 end

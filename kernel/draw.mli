@@ -76,9 +76,8 @@ end
 
 (** Main graphics drawing API.
 
-    Most functions take a [bounds] parameter which is a rectangle
-    to which drawing is clipped and also serves as an origin for
-    any coordinates. *)
+    Most functions take a [bounds] parameter which is a rectangle to which drawing is
+    clipped and also serves as an origin for any coordinates. *)
 module type S = sig
   (** drawing context *)
   type ctx

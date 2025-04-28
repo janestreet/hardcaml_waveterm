@@ -108,44 +108,8 @@ let command_convert =
       let filename_in = anon ("waveterm_in" %: string)
       and filename_out = anon ("vcd_out" %: string) in
       fun () ->
-        let waveform = Waveform.Serialize.unmarshall filename_in in
-        let waves = Waveform.waves waveform in
-        let in_ports =
-          Array.filter_map waves ~f:(function
-            | Empty _ -> None
-            | Clock _ -> None
-            | Binary (name, data) -> Some (name, data, ref (Bits.zero (Data.width data)))
-            | Data (name, data, _format, _alignment) ->
-              Some (name, data, ref (Bits.zero (Data.width data))))
-        in
-        (* replay the waveform *)
-        let sim =
-          Cyclesim.Private.create
-            ~in_ports:
-              (Array.map in_ports ~f:(fun (name, _, bits) -> name, bits) |> Array.to_list)
-            ~out_ports_before_clock_edge:[]
-            ~out_ports_after_clock_edge:[]
-            ~reset:Fn.id
-            ~cycle_check:Fn.id
-            ~cycle_before_clock_edge:Fn.id
-            ~cycle_at_clock_edge:Fn.id
-            ~cycle_after_clock_edge:Fn.id
-            ~traced:{ input_ports = []; output_ports = []; internal_signals = [] }
-            ~lookup_node:(Fn.const None)
-            ~lookup_reg:(Fn.const None)
-            ~lookup_mem:(Fn.const None)
-            ()
-        in
-        Out_channel.with_file filename_out ~f:(fun file_out ->
-          let sim = Vcd.wrap file_out sim in
-          let num_cycles =
-            let _, data, _ = in_ports.(0) in
-            Data.length data
-          in
-          for cycle = 0 to num_cycles - 1 do
-            Array.iter in_ports ~f:(fun (_, data, port) -> port := Data.get data cycle);
-            Cyclesim.cycle sim
-          done)]
+        Waveform.Serialize.unmarshall filename_in
+        |> Waveform.Serialize.marshall_vcd ~filename:filename_out]
 ;;
 
 let () =

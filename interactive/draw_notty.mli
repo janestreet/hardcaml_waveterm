@@ -2,8 +2,7 @@ open! Base
 open Hardcaml_waveterm_kernel.Expert
 
 (** Notty based gfx API. We need to use an intermediate in memory representation for
-    notty.
-*)
+    notty. *)
 include module type of Draw.In_memory with type style = Draw.In_memory.style
 
 val to_image : ctx -> Notty.I.t

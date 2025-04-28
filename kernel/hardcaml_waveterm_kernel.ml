@@ -1,8 +1,7 @@
 (** {!Hardcaml_waveterm_kernel} is a library for displaying terminal-based waveforms from
     hardcaml simulations.
 
-    The kernel library avoids any unix dependency so can be compiled for javascript.
-*)
+    The kernel library avoids any unix dependency so can be compiled for javascript. *)
 
 module Display_rule = Display_rule
 module Display_rules = Display_rules

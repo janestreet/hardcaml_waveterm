@@ -105,7 +105,7 @@ let%expect_test "1 bit cases" =
 
 let%expect_test "2 bits" =
   let t = Data.create 2 in
-  Data.set t 1 Bits.(of_int ~width:2 3);
+  Data.set t 1 Bits.(of_int_trunc ~width:2 3);
   print_s [%message (t : Data.t)];
   [%expect
     {|
@@ -123,7 +123,7 @@ let%expect_test "2 bits" =
       (non_cache_hits 0)
       (setter_index   1)))
     |}];
-  Data.set t 1 Bits.(of_int ~width:2 0);
+  Data.set t 1 Bits.(of_int_trunc ~width:2 0);
   print_s [%message (t : Data.t)];
   [%expect
     {|
@@ -142,7 +142,7 @@ let%expect_test "2 bits" =
       (setter_index   1)))
     |}];
   for i = 0 to 3 do
-    Data.set t i Bits.(of_int ~width:2 3)
+    Data.set t i Bits.(of_int_trunc ~width:2 3)
   done;
   print_s [%message (t : Data.t)];
   [%expect
@@ -166,7 +166,7 @@ let%expect_test "2 bits" =
 let%expect_test "16 bits" =
   let t = Data.create 16 in
   for i = 0 to 5 do
-    Data.set t i Bits.(of_int ~width:16 0xFFFF);
+    Data.set t i Bits.(of_int_trunc ~width:16 0xFFFF);
     print_s [%message (t : Data.t)]
   done;
   [%expect
@@ -255,7 +255,7 @@ let%expect_test "16 bits" =
 let%expect_test "64 bits" =
   let t = Data.create 64 in
   for i = 0 to 2 do
-    Data.set t i Bits.(of_int64 ~width:64 0xFFFF_FFFF_FFFF_FFFFL);
+    Data.set t i Bits.(of_int64_trunc ~width:64 0xFFFF_FFFF_FFFF_FFFFL);
     print_s [%message (t : Data.t)]
   done;
   [%expect

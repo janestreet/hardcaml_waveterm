@@ -56,7 +56,8 @@ module Make (Time : Time) (Data : Data) = struct
        `Last_less_than_or_equal_to
        ~compare:Time.compare
        time
-     |> [%globalize: int option]) [@nontail]
+     |> [%globalize: int option])
+    [@nontail]
   ;;
 
   let shuffle_up t index =

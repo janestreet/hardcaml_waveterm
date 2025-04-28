@@ -1,6 +1,5 @@
 (** {!Hardcaml_waveterm} is a library for displaying terminal-based waveforms from
-    hardcaml simulations.
-*)
+    hardcaml simulations. *)
 
 include struct
   open Hardcaml_waveterm_kernel
@@ -23,6 +22,9 @@ module Expert = struct
         include Hardcaml_waveterm_kernel.Expert.Waveform.M(Data)(Wave)(Waves)(Render).S
 
         val expect : (?show_digest:bool -> ?serialize_to:string -> t -> unit) with_options
+
+        val expect_exact
+          : (?show_digest:bool -> ?serialize_to:string -> t -> unit) with_options
       end
 
       module Serialize : Serialize_waveform.M(Data)(Wave)(Waves)(Render)(Waveform).S
@@ -45,6 +47,7 @@ module Expert = struct
       include Modules.Waveform
 
       let expect = Expect.expect
+      let expect_exact = Expect.expect_exact
     end
   end
 end
@@ -60,6 +63,7 @@ module For_cyclesim = struct
     module Serialize = Serialize
 
     let expect = Expect.expect
+    let expect_exact = Expect.expect_exact
   end
 end
 

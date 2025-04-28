@@ -42,12 +42,12 @@ let%expect_test "scope with assertions" =
   let inputs = Cyclesim.inputs sim in
   let waveform, sim = Waveform.create sim in
   let assertions, sim = Assertions.trace sim (Scope.assertion_manager scope) in
-  inputs.a := Bits.of_int ~width:1 0;
-  inputs.b := Bits.of_int ~width:1 1;
+  inputs.a := Bits.of_int_trunc ~width:1 0;
+  inputs.b := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
-  inputs.enable := Bits.of_int ~width:1 1;
+  inputs.enable := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
-  inputs.b := Bits.of_int ~width:1 0;
+  inputs.b := Bits.of_int_trunc ~width:1 0;
   Cyclesim.cycle sim;
   Waveform.expect ~serialize_to:"scope_with_assertions" waveform;
   Stdio.print_s [%message (assertions : Assertions.t)];
@@ -69,8 +69,6 @@ let%expect_test "scope with assertions" =
     │result         ││        ┌───────┐                                  │
     │               ││────────┘       └───────                           │
     │result implies ││────────────────────────                           │
-    │               ││                                                   │
-    │               ││                                                   │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
     53e55d03bc60aca3f7151f9b3094123e
@@ -112,13 +110,13 @@ module Operator_operation = struct
             i.enable
             [ switch
                 i.op
-                [ ( Signal.of_int ~width:2 0
+                [ ( Signal.of_int_trunc ~width:2 0
                   , [ result <-- (i.a |: i.b)
                     ; Assertions.Always.add scope "assert (nested false)" Signal.gnd
                     ] )
-                ; Signal.of_int ~width:2 1, [ result <-- (i.a &: i.b) ]
-                ; Signal.of_int ~width:2 2, [ result <-- i.a ^: i.b ]
-                ; ( Signal.of_int ~width:2 3
+                ; Signal.of_int_trunc ~width:2 1, [ result <-- (i.a &: i.b) ]
+                ; Signal.of_int_trunc ~width:2 2, [ result <-- i.a ^: i.b ]
+                ; ( Signal.of_int_trunc ~width:2 3
                   , [ result <-- ~:(i.a &: i.b)
                     ; Assertions.Always.add scope "assert (nested true)" Signal.vdd
                     ] )
@@ -148,22 +146,21 @@ let%expect_test "scope always with assertions" =
   let inputs = Cyclesim.inputs sim in
   let waveform, sim = Waveform.create sim in
   let assertions, sim = Assertions.trace sim (Scope.assertion_manager scope) in
-  inputs.a := Bits.of_int ~width:1 0;
-  inputs.b := Bits.of_int ~width:1 1;
+  inputs.a := Bits.of_int_trunc ~width:1 0;
+  inputs.b := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
-  inputs.enable := Bits.of_int ~width:1 1;
-  inputs.op := Bits.of_int ~width:2 0;
+  inputs.enable := Bits.of_int_trunc ~width:1 1;
+  inputs.op := Bits.of_int_trunc ~width:2 0;
   Cyclesim.cycle sim;
-  inputs.op := Bits.of_int ~width:2 1;
+  inputs.op := Bits.of_int_trunc ~width:2 1;
   Cyclesim.cycle sim;
-  inputs.op := Bits.of_int ~width:2 2;
+  inputs.op := Bits.of_int_trunc ~width:2 2;
   Cyclesim.cycle sim;
-  inputs.enable := Bits.of_int ~width:1 0;
-  inputs.foo := Bits.of_int ~width:1 1;
+  inputs.enable := Bits.of_int_trunc ~width:1 0;
+  inputs.foo := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
   Waveform.expect
     ~display_width:70
-    ~display_height:34
     ~serialize_to:"scope_with_assertions_using_always_api"
     waveform;
   Stdio.print_s [%message (assertions : Assertions.t)];
@@ -197,11 +194,6 @@ let%expect_test "scope always with assertions" =
     │               ││────────┘       └───────┘                          │
     │~enable -> foo ││        ┌───────────────────────────────           │
     │               ││────────┘                                          │
-    │               ││                                                   │
-    │               ││                                                   │
-    │               ││                                                   │
-    │               ││                                                   │
-    │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
     d55aa079985ec7093fb9c721f9db0b34
     (assertions

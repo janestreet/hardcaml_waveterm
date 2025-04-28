@@ -27,6 +27,8 @@ module type S = sig
     ; waves : Wave.t array
     }
   [@@deriving sexp_of]
+
+  val total_rows : t -> int
 end
 
 module M (Data : Data.S) (Wave : Wave.M(Data).S) = struct

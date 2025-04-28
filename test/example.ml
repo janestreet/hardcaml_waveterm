@@ -33,9 +33,9 @@ let testbench () =
   i.clr := Bits.vdd;
   Cyclesim.cycle sim;
   i.clr := Bits.gnd;
-  i.a := Bits.of_int ~width:16 23;
+  i.a := Bits.of_int_trunc ~width:16 23;
   Cyclesim.cycle sim;
-  i.a := Bits.of_int ~width:16 45;
+  i.a := Bits.of_int_trunc ~width:16 45;
   Cyclesim.cycle sim;
   Cyclesim.cycle sim;
   Cyclesim.cycle sim;
