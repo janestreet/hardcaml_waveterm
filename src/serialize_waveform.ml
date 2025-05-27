@@ -100,7 +100,9 @@ struct
         ~cycle_at_clock_edge:Fn.id
         ~cycle_after_clock_edge:Fn.id
         ~traced:{ input_ports = []; output_ports = []; internal_signals = [] }
+        ~lookup_node_by_id:(Fn.const None)
         ~lookup_node:(Fn.const None)
+        ~lookup_reg_by_id:(Fn.const None)
         ~lookup_reg:(Fn.const None)
         ~lookup_mem:(Fn.const None)
         ()
