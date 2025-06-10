@@ -102,8 +102,8 @@ module Operator_operation = struct
   end
 
   let create_with_always scope (i : _ I.t) =
-    let result = Always.Variable.wire ~default:gnd in
-    let enable_passthrough = Always.Variable.wire ~default:gnd in
+    let result = Always.Variable.wire ~default:gnd () in
+    let enable_passthrough = Always.Variable.wire ~default:gnd () in
     Always.(
       compile
         [ if_

@@ -45,9 +45,8 @@ let create_wave signal name data =
   wave
 ;;
 
-let is_clock = function
-  | "clock" | "clk" -> true
-  | _ -> false
+let is_clock x =
+  String.equal "clock" x || String.equal "clk" x || String.is_suffix ~suffix:"$clock" x
 ;;
 
 let is_reset = function
