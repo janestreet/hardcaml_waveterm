@@ -8,7 +8,7 @@ module type Data = sig
 end
 
 module type Time = sig
-  type t [@@deriving compare, sexp_of]
+  type t [@@deriving compare ~localize, sexp_of]
 
   val zero : t
 end

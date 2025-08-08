@@ -10,14 +10,14 @@ module Style = struct
     | Magenta
     | Cyan
     | White
-  [@@deriving sexp_of, compare]
+  [@@deriving sexp_of, compare ~localize]
 
   type t =
     { bold : bool
     ; fg : colour
     ; bg : colour
     }
-  [@@deriving sexp_of, compare]
+  [@@deriving sexp_of, compare ~localize]
 
   let default = { bold = false; fg = White; bg = Black }
 end

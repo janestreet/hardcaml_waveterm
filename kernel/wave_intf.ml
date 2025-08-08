@@ -9,7 +9,7 @@ module type S = sig
     | Clock of string
     | Binary of string * Data.t
     | Data of string * Data.t * Wave_format.t * Text_alignment.t
-  [@@deriving sexp_of, equal]
+  [@@deriving sexp_of, equal ~localize]
 
   val set_name : t -> string -> t
   val get_name : t -> string
@@ -18,6 +18,7 @@ module type S = sig
   val get_alignment : t -> Text_alignment.t
   val get_format : t -> Wave_format.t
   val get_height_in_chars : t -> wave_height:int -> int
+  val create_from_signal : string -> Signal.t -> Data.t -> t
 end
 
 module M (Data : Data.S) = struct

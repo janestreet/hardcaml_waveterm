@@ -11,7 +11,7 @@ module Make (Data : Data.S) = struct
     | Clock of string
     | Binary of string * Data.t
     | Data of string * Data.t * Wave_format.t * Text_alignment.t
-  [@@deriving sexp_of, equal]
+  [@@deriving sexp_of, equal ~localize]
 
   let set_name t n =
     match t with
@@ -67,5 +67,17 @@ module Make (Data : Data.S) = struct
     | h, Empty _ | h, Clock _ -> h + 1
     | h, Data _ -> h + 1
     | h, Binary _ -> h + 1
+  ;;
+
+  let create_from_signal name signal data =
+    let width = Signal.width signal in
+    let wave_format = Signal.Type.get_wave_format signal in
+    if width = 1
+       &&
+       match wave_format with
+       | Bit | Bit_or _ -> true
+       | _ -> false
+    then Binary (name, data)
+    else Data (name, data, wave_format, Left)
   ;;
 end

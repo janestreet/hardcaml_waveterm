@@ -933,9 +933,11 @@ struct
 
   let run_and_close ?ui_state_file waves =
     don't_wait_for
-      (let%bind () = run_waves ?ui_state_file waves in
-       shutdown 0;
-       return ());
+      (Monitor.protect
+         (fun () -> run_waves ?ui_state_file waves)
+         ~finally:(fun _ ->
+           shutdown 0;
+           return ()));
     Core.never_returns (Scheduler.go ())
   ;;
 

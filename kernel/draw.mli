@@ -11,7 +11,7 @@ module Style : sig
     | Magenta
     | Cyan
     | White
-  [@@deriving sexp_of, compare]
+  [@@deriving sexp_of, compare ~localize]
 
   (** foreground/backgound colours and weight (bold) *)
   type t =
@@ -19,7 +19,7 @@ module Style : sig
     ; fg : colour
     ; bg : colour
     }
-  [@@deriving sexp_of, compare]
+  [@@deriving sexp_of, compare ~localize]
 
   (** white on black, normal weight *)
   val default : t

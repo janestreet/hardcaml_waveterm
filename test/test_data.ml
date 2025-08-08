@@ -377,7 +377,7 @@ module Unpacked_data = struct
     ; mutable length : int
     ; width : int
     }
-  [@@deriving sexp_of, compare, equal]
+  [@@deriving sexp_of, compare ~localize, equal ~localize]
 
   let[@cold] raise_index_out_of_bounds index length =
     raise_s [%message "Index into waveform is out of bounds" (index : int) (length : int)]

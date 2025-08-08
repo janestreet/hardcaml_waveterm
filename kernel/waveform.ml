@@ -44,7 +44,7 @@ struct
     { waves : Wave.t array
     ; ports : Port.t list
     }
-  [@@deriving sexp_of, equal, fields ~getters]
+  [@@deriving sexp_of, equal ~localize, fields ~getters]
 
   let update_waves t waves = { t with waves }
 

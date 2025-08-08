@@ -11,7 +11,7 @@ module type S = sig
   module Waves : Waves.M(Data)(Wave).S
   module Render : Render.M(Data)(Wave)(Waves).S
 
-  type t [@@deriving sexp_of, equal]
+  type t [@@deriving sexp_of, equal ~localize]
 
   val create_from_data : waves:Wave.t list -> ports:Port.t list -> t
   val waves : t -> Wave.t array

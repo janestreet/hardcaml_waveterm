@@ -14,7 +14,7 @@ module Events = Hardcaml_waveterm_event_store.Event_store.Make (Time) (Data)
 module Waveterm = Hardcaml_waveterm_kernel.Expert.Make (struct
     include Events
 
-    let equal _ _ = false
+    let%template equal _ _ = false [@@mode __ = (local, global)]
     let width t = get t 0 |> Bits.width
     let get_digestible_string _ = Bytes.of_string "", 0
   end)

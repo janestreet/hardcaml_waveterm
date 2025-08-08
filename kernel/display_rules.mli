@@ -32,10 +32,17 @@ val is_signal_displayed : t -> Hardcaml.Signal.t -> bool
 (** Create rules for each signal in the interface. *)
 module With_interface (I : Hardcaml.Interface.S) : sig
   val default
-    :  ?alignment:Text_alignment.t
+    :  ?prefix:string
+    -> ?suffix:string
+    -> ?alignment:Text_alignment.t
     -> ?wave_format:Hardcaml.Wave_format.t
     -> unit
     -> t
 
-  val with_format : ?alignment:Text_alignment.t -> Hardcaml.Wave_format.t I.t -> t
+  val with_format
+    :  ?prefix:string
+    -> ?suffix:string
+    -> ?alignment:Text_alignment.t
+    -> Hardcaml.Wave_format.t I.t
+    -> t
 end

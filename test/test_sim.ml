@@ -430,3 +430,51 @@ let%expect_test "expect_exact" =
 8810362927e35cce94c7652659a13137
 |}]
 ;;
+
+let%expect_test "auto display rules" =
+  let module A = struct
+    type 'a t = { a : 'a } [@@deriving hardcaml]
+  end
+  in
+  let module B = struct
+    type 'a t =
+      { a : 'a A.t
+      ; b : 'a A.t [@rtlprefix "b$"]
+      ; c : 'a A.t [@rtlsuffix "$c"]
+      }
+    [@@deriving hardcaml ~rtlmangle:false]
+  end
+  in
+  let module Sim = Cyclesim.With_interface (Interface.Empty) (B) in
+  let sim = Sim.create (fun _ -> B.Of_signal.zero ()) in
+  let waves, sim = Waveform.create sim in
+  Cyclesim.cycle ~n:10 sim;
+  let module A = Display_rules.With_interface (A) in
+  Waveform.expect_exact waves ~display_rules:(List.concat [ A.default () ]);
+  [%expect
+    {|
+    ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
+    │a                 ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────────────│
+    └──────────────────┘└────────────────────────────────────────────────────────────────────┘
+    ba2e36d1d08d114b90957c7b1fa80e3a
+    |}];
+  Waveform.expect_exact waves ~display_rules:(List.concat [ A.default ~prefix:"b$" () ]);
+  [%expect
+    {|
+    ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
+    │b$a               ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────────────│
+    └──────────────────┘└────────────────────────────────────────────────────────────────────┘
+    ba2e36d1d08d114b90957c7b1fa80e3a
+    |}];
+  Waveform.expect_exact waves ~display_rules:(List.concat [ A.default ~suffix:"$c" () ]);
+  [%expect
+    {|
+    ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
+    │a$c               ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────────────│
+    └──────────────────┘└────────────────────────────────────────────────────────────────────┘
+    ba2e36d1d08d114b90957c7b1fa80e3a
+    |}]
+;;

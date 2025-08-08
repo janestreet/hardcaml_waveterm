@@ -30,24 +30,10 @@ let lookup_out_port sim cycle t =
   lookup_port (Cyclesim.out_port ~clock_edge:Before) sim cycle t
 ;;
 
-let create_wave signal name data =
-  let width = Signal.width signal in
-  let wave_format = Signal.Type.get_wave_format signal in
-  let wave =
-    if width = 1
-       &&
-       match wave_format with
-       | Bit | Bit_or _ -> true
-       | _ -> false
-    then Wave.Binary (name, data)
-    else Wave.Data (name, data, wave_format, Left)
-  in
-  wave
-;;
+let create_wave signal name data = Wave.create_from_signal name signal data
 
-let is_clock = function
-  | "clock" | "clk" -> true
-  | _ -> false
+let is_clock x =
+  String.equal "clock" x || String.equal "clk" x || String.is_suffix ~suffix:"$clock" x
 ;;
 
 let is_reset = function
