@@ -25,15 +25,6 @@ module type S = sig
       [display_rules] see [Display_rules]. A waveform may be constructed once and
       displayed multiple times with differing options.
 
-      [wave_height] sets the number of rows each wave is displayed with.
-
-      - [<0] an exception is raised
-      - [0] 2 lines per wave. This show transitions but not the data for multi-bit
-        signals.
-      - [1] 2 lines for binary data, 3 lines for multi-bit data. This is the default and
-        most compact view.
-      - [n] (n+1) lines per wave.
-
       [wave_width] sets the number of chars used to render each clock cycle.
 
       - [n>=0] ((n+1)*2) characters per cycle. This ensures that the clock is properly
@@ -57,7 +48,6 @@ module type S = sig
     -> ?display_height:int
     -> ?display_values:bool
     -> ?wave_width:int
-    -> ?wave_height:int
     -> ?signals_width:int
     -> ?start_cycle:int
     -> ?signals_alignment:Text_alignment.t

@@ -36,7 +36,12 @@ let waves =
 
 let%expect_test "" =
   let waves =
-    List.mapi waves ~f:(fun idx w -> Waveterm.Wave.Binary ("w" ^ Int.to_string idx, w))
+    List.mapi waves ~f:(fun idx w ->
+      Waveterm.Wave.Binary
+        { name = "w" ^ Int.to_string idx
+        ; data = w
+        ; style = { style = Hardcaml_waveterm_kernel.Style.default }
+        })
   in
   Waveterm.Waveform.print
     ~wave_width:(-1)

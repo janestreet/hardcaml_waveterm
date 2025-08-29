@@ -29,7 +29,6 @@ struct
     ?display_height
     ?display_values
     ?wave_width
-    ?wave_height
     ?signals_width
     ?start_cycle
     ?signals_alignment
@@ -44,7 +43,6 @@ struct
       ?display_height
       ?display_values
       ?wave_width
-      ?wave_height
       ?signals_width
       ?start_cycle
       ?signals_alignment
@@ -73,7 +71,6 @@ struct
     ?display_height
     ?display_values
     ?wave_width
-    ?wave_height
     ?signals_width
     ?start_cycle
     ?signals_alignment
@@ -88,7 +85,6 @@ struct
       ?display_height
       ?display_values
       ?wave_width
-      ?wave_height
       ?signals_width
       ?start_cycle
       ?signals_alignment

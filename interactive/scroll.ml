@@ -1,5 +1,5 @@
-open Base
-open Hardcaml_waveterm_kernel.Expert
+open Core
+open Hardcaml_waveterm_kernel
 
 module Adjustment = struct
   type t =
@@ -9,19 +9,19 @@ module Adjustment = struct
     }
   [@@deriving sexp_of]
 
-  let create () = { range = 0; offset = 0; on_offset_change = (fun _ -> ()) }
+  let create ~range = { range; offset = 0; on_offset_change = (fun _ -> ()) }
 
-  let set_offset ?(trigger_callback = true) t o =
+  let set_offset t o =
     let o' = max 0 (min (t.range - 1) o) in
     if t.offset <> o'
     then (
       t.offset <- o';
-      if trigger_callback then t.on_offset_change o')
+      t.on_offset_change o')
   ;;
 
-  let set_range ?(trigger_callback = true) t r =
+  let set_range t r =
     t.range <- max 0 r;
-    set_offset ~trigger_callback t t.offset
+    set_offset t t.offset
   ;;
 end
 
@@ -67,13 +67,13 @@ module Scrollable = struct
     }
   [@@deriving sexp_of]
 
-  let create () =
-    { adj = Adjustment.create ()
+  let create ~range () =
+    { adj = Adjustment.create ~range
     ; scroll_window_size = 0
     ; scroll_bar_mode = Fixed 1
     ; min_scroll_bar_size = None
     ; max_scroll_bar_size = None
-    ; scroll_bar_size = 0
+    ; scroll_bar_size = 1
     ; scroll_bar_offset = 0
     ; mouse_mode = Middle
     ; page_size = -1
@@ -97,13 +97,13 @@ module Scrollable = struct
     offset
   ;;
 
-  let set_offset ?(trigger_callback = true) t o =
-    Adjustment.set_offset t.adj ~trigger_callback o;
+  let set_offset t o =
+    Adjustment.set_offset t.adj o;
     set_scroll_bar_offset t (scroll_of_window t t.adj.offset)
   ;;
 
-  let set_range ?(trigger_callback = true) t r =
-    Adjustment.set_range ~trigger_callback t.adj r;
+  let set_range t r =
+    Adjustment.set_range t.adj r;
     set_scroll_bar_offset t (scroll_of_window t t.adj.offset)
   ;;
 
@@ -170,18 +170,6 @@ module Scrollable = struct
     offset
   ;;
 
-  let incr t =
-    if t.adj.range >= scroll_bar_steps t
-    then window_of_scroll t (t.scroll_bar_offset + 1)
-    else t.adj.offset + 1
-  ;;
-
-  let decr t =
-    if t.adj.range >= scroll_bar_steps t
-    then window_of_scroll t (t.scroll_bar_offset - 1)
-    else t.adj.offset - 1
-  ;;
-
   let mouse_scale_ratio t scroll =
     let steps = scroll_bar_steps t in
     let wsize = t.scroll_window_size in
@@ -246,12 +234,10 @@ module Scrollbar = struct
   type t =
     { scrollable : Scrollable.t
     ; mutable bar_style : Scroll_bar_style.t
-    ; incr_key : (Notty.Unescape.key[@sexp.opaque])
-    ; decr_key : (Notty.Unescape.key[@sexp.opaque])
-    ; mutable bounds : Draw.rect
+    ; mutable bounds : Rect.t
     ; orientation : Orientation.t
     }
-  [@@deriving sexp_of]
+  [@@deriving sexp_of, fields ~getters]
 
   let hbar = 0x2550
   let vbar = 0x2551
@@ -263,37 +249,25 @@ module Scrollbar = struct
     | Vert -> row - t.bounds.r
   ;;
 
-  let set_bounds t (bounds : Draw.rect) =
+  let set_bounds t (bounds : Rect.t) =
     (match t.orientation with
      | Horz -> t.scrollable.scroll_window_size <- bounds.w
      | Vert -> t.scrollable.scroll_window_size <- bounds.h);
     t.bounds <- bounds
   ;;
 
-  let create
-    ?(bar_style = Scroll_bar_style.Filled)
-    ~incr_key
-    ~decr_key
-    ~orientation
-    ~bounds
-    ()
-    =
-    let scrollable = Scrollable.create () in
-    let scrollbar = { scrollable; bar_style; incr_key; decr_key; bounds; orientation } in
+  let offset t = t.scrollable.adj.offset
+  let set_offset t o = Scrollable.set_offset t.scrollable o
+  let set_offset_min t = set_offset t 0
+  let set_offset_max t = set_offset t (t.scrollable.adj.range - 1)
+  let on_offset_change t ~f = t.scrollable.adj.on_offset_change <- f
+  let set_mode t mode = t.scrollable.scroll_bar_mode <- mode
+
+  let create ?(bar_style = Scroll_bar_style.Filled) ~orientation ~bounds ~range () =
+    let scrollable = Scrollable.create ~range () in
+    let scrollbar = { scrollable; bar_style; bounds; orientation } in
     set_bounds scrollbar bounds;
     scrollbar
-  ;;
-
-  let key_event t (key : Notty.Unescape.key) =
-    if Poly.equal key t.incr_key
-    then (
-      Scrollable.set_offset t.scrollable (Scrollable.incr t.scrollable);
-      true)
-    else if Poly.equal key t.decr_key
-    then (
-      Scrollable.set_offset t.scrollable (Scrollable.decr t.scrollable);
-      true)
-    else false
   ;;
 
   let mouse_event t ((ev, (col, row), mods) : Notty.Unescape.mouse) =
@@ -305,7 +279,7 @@ module Scrollbar = struct
     | _ -> false
   ;;
 
-  let draw_bar ~ctx ~style ~(bounds : Draw.rect) (t : t) =
+  let draw_bar ~ctx ~style ~(bounds : Rect.t) (t : t) =
     let cols, rows = bounds.w, bounds.h in
     let is_filled =
       match t.bar_style with
@@ -331,13 +305,15 @@ end
 module VScrollbar = struct
   type t = Scrollbar.t [@@deriving sexp_of]
 
-  let create (bounds : Draw.rect) =
-    Scrollbar.create
-      ~incr_key:(`Arrow `Down, [])
-      ~decr_key:(`Arrow `Up, [])
-      ~bounds
-      ~orientation:Vert
-      ()
+  let create ~bounds ~range () = Scrollbar.create ~bounds ~orientation:Vert ~range ()
+
+  let create_right_aligned ?r ?h ?(w = 2) ~(container : Rect.t) ~range () =
+    let r = Option.value r ~default:container.r in
+    let h = Option.value h ~default:container.h in
+    let bounds = { Rect.r; c = container.c + container.w - w; w; h } in
+    let remaining_bounds = { container with w = container.w - w } in
+    let t = create ~bounds ~range () in
+    t, remaining_bounds
   ;;
 
   let draw ~ctx ~style (t : t) =
@@ -346,7 +322,7 @@ module VScrollbar = struct
     let bounds = t.bounds in
     Draw_notty.fill ~ctx ~style ~bounds ' ';
     let bounds =
-      { Draw.r = bounds.r + scroll_offset
+      { Rect.r = bounds.r + scroll_offset
       ; c = bounds.c
       ; h = scroll_bar_size
       ; w = bounds.w
@@ -359,13 +335,15 @@ end
 module HScrollbar = struct
   type t = Scrollbar.t [@@deriving sexp_of]
 
-  let create (bounds : Draw.rect) =
-    Scrollbar.create
-      ~incr_key:(`Arrow `Right, [])
-      ~decr_key:(`Arrow `Left, [])
-      ~bounds
-      ~orientation:Horz
-      ()
+  let create ~bounds ~range () = Scrollbar.create ~bounds ~orientation:Horz ~range ()
+
+  let create_bottom_aligned ?c ?w ?(h = 1) ~(container : Rect.t) ~range () =
+    let c = Option.value c ~default:container.c in
+    let w = Option.value w ~default:container.w in
+    let bounds = { Rect.c; r = container.r + container.h - h; h; w } in
+    let remaining_bounds = { container with h = container.h - h } in
+    let t = create ~bounds ~range () in
+    t, remaining_bounds
   ;;
 
   let draw ~ctx ~style (t : t) =
@@ -374,7 +352,7 @@ module HScrollbar = struct
     let bounds = t.bounds in
     Draw_notty.fill ~ctx ~style ~bounds ' ';
     let bounds =
-      { Draw.r = bounds.r
+      { Rect.r = bounds.r
       ; c = bounds.c + scroll_offset
       ; h = bounds.h
       ; w = scroll_bar_size

@@ -7,7 +7,6 @@ let test
   ?display_width
   ?display_height
   ?wave_width
-  ?wave_height
   ?signals_width
   ?signals_alignment
   ()
@@ -18,7 +17,6 @@ let test
     ?display_width
     ?display_height
     ?wave_width
-    ?wave_height
     ?signals_width
     ?signals_alignment
 ;;
@@ -77,25 +75,6 @@ let%expect_test "display width" =
     │output_c││                            │
     │        ││────────────────────────────│
     └────────┘└────────────────────────────┘
-    8810362927e35cce94c7652659a13137
-    |}]
-;;
-
-let%expect_test "wave height" =
-  test () ~wave_height:0 ~display_height:11;
-  [%expect
-    {|
-    ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clk            ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
-    │clr            ││────────┐                                          │
-    │               ││        └───────────────────────────────           │
-    │a              ││────────┬───────┬───────────────────────           │
-    │               ││────────┴───────┴───────────────────────           │
-    │b              ││────────────────┬───────┬───────────────           │
-    │               ││────────────────┴───────┴───────────────           │
-    │output_c_with_a││                                                   │
-    └───────────────┘└───────────────────────────────────────────────────┘
     8810362927e35cce94c7652659a13137
     |}]
 ;;
@@ -337,8 +316,6 @@ let%expect_test "Custom signals width" =
 ;;
 
 let%expect_test "configuration exceptions" =
-  show_raise (fun () -> test () ~wave_height:(-1));
-  [%expect {| (raised ("Invalid wave height.  Must be >= 0." (wave_height -1))) |}];
   show_raise (fun () -> test () ~display_height:2);
   [%expect {| (raised ("Invalid display height.  Must be >= 3." (display_height 2))) |}];
   show_raise (fun () -> test () ~display_width:6);

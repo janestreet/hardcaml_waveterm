@@ -1,6 +1,9 @@
 open! Import
 
-let clock = Wave.Clock "clock"
+let clock =
+  Wave.Clock
+    { name = "clock"; style = { style = Hardcaml_waveterm_kernel.Style.default } }
+;;
 
 let random_string ~max_length =
   String.init
@@ -18,21 +21,32 @@ let random_format () =
   | _ -> Wave_format.Binary
 ;;
 
-let random_data ~prefix ~length =
-  if Random.int 2 = 0
-  then Wave.Binary (prefix ^ random_string ~max_length:20, random_bits ~length ~width:1)
+let random_data i ~prefix ~length ~max_bits =
+  if i % 2 = 0
+  then
+    Wave.Binary
+      { name = prefix ^ random_string ~max_length:20
+      ; data = random_bits ~length ~width:1
+      ; style = { style = Hardcaml_waveterm_kernel.Style.default }
+      }
   else
     Wave.Data
-      ( prefix ^ random_string ~max_length:20
-      , random_bits ~length ~width:(Random.int 64 + 1)
-      , random_format ()
-      , Left )
+      { name = prefix ^ random_string ~max_length:20
+      ; data = random_bits ~length ~width:(Random.int max_bits + 1)
+      ; wave_format =
+          (let wave_format = random_format () in
+           { current = wave_format; default = wave_format })
+      ; text_alignment = Left
+      ; style = { style = Hardcaml_waveterm_kernel.Style.default }
+      }
 ;;
 
-let create ~prefix ~length ~num_signals =
+let create ~prefix ~length ~num_signals ~max_bits =
   { Waves.cfg = Waves.Config.default
   ; waves =
-      clock :: List.init num_signals ~f:(fun i -> random_data ~prefix:(prefix i) ~length)
+      clock
+      :: List.init num_signals ~f:(fun i ->
+        random_data i ~prefix:(prefix i) ~length ~max_bits)
       |> Array.of_list
   }
 ;;

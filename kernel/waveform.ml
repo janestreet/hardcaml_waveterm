@@ -29,14 +29,28 @@ struct
     in
     (* Maybe switch the rendering format depending on what wave_format was chosen. *)
     match t with
-    | Binary (name, data) ->
+    | Binary { name; data; style } ->
       (match wave_format with
        | Bit | Bit_or _ -> t
-       | _ -> Data (name, data, wave_format, alignment))
-    | Data (name, data, _, _) ->
+       | _ ->
+         Data
+           { name
+           ; data
+           ; wave_format = { default = wave_format; current = wave_format }
+           ; text_alignment = alignment
+           ; style
+           })
+    | Data { name; data; wave_format = _; text_alignment = _; style } ->
       (match wave_format with
-       | (Bit | Bit_or _) when width = 1 -> Binary (name, data)
-       | _ -> Data (name, data, wave_format, alignment))
+       | (Bit | Bit_or _) when width = 1 -> Binary { name; data; style }
+       | _ ->
+         Data
+           { name
+           ; data
+           ; wave_format = { current = wave_format; default = wave_format }
+           ; text_alignment = alignment
+           ; style
+           })
     | Empty _ | Clock _ -> t
   ;;
 
@@ -88,9 +102,9 @@ struct
         match fmt_align_opt, wave with
         | Some (format, alignment), _ -> apply_wave_format wave format alignment
         (* None represents default format. Don't apply default to Map, Index and Custom *)
-        | None, Data (_, _, Wave_format.Map _, _)
-        | None, Data (_, _, Wave_format.Index _, _)
-        | None, Data (_, _, Wave_format.Custom _, _) -> wave
+        | None, Data { wave_format = { current = Map _; _ }; _ }
+        | None, Data { wave_format = { current = Index _; _ }; _ }
+        | None, Data { wave_format = { current = Custom _; _ }; _ } -> wave
         | None, _ ->
           Display_rules.run_rule Display_rule.Default port
           |> Option.map ~f:(fun (format, alignment) ->
@@ -105,7 +119,6 @@ struct
     -> ?display_height:int
     -> ?display_values:bool
     -> ?wave_width:int
-    -> ?wave_height:int
     -> ?signals_width:int
     -> ?start_cycle:int
     -> ?signals_alignment:Text_alignment.t
@@ -117,7 +130,6 @@ struct
     ?(display_width = 70)
     ?display_height
     ?(wave_width = 3)
-    ?(wave_height = 1)
     ?(start_cycle = 0)
     ?(display_values = false)
     ?signals_width
@@ -125,8 +137,6 @@ struct
     =
     if display_width < 7
     then raise_s [%message "Invalid display width.  Must be >= 7." (display_width : int)];
-    if wave_height < 0
-    then raise_s [%message "Invalid wave height.  Must be >= 0." (wave_height : int)];
     Option.iter signals_width ~f:(fun signals_width ->
       if signals_width >= display_width
       then
@@ -136,7 +146,7 @@ struct
               (signals_width : int)
               (display_width : int)]);
     let waves =
-      { Waves.cfg = { Waves.Config.default with wave_width; wave_height; start_cycle }
+      { Waves.cfg = { Waves.Config.default with wave_width; start_cycle }
       ; waves = sort_ports_and_formats t display_rules
       }
     in
@@ -153,13 +163,13 @@ struct
           256
           (2
            + Array.fold waves.waves ~init:0 ~f:(fun acc w ->
-             acc + Wave.get_height_in_chars w ~wave_height))
+             acc + Wave.get_height_in_chars w))
     in
     Render.Static.draw
       ?signals_alignment
       ?signals_width
       ~values:display_values
-      ~style:Render.Styles.black_on_white
+      ~style:Window_styles.black_on_white
       ~rows:display_height
       ~cols:display_width
       waves
@@ -171,7 +181,6 @@ struct
     ?display_height
     ?display_values
     ?wave_width
-    ?wave_height
     ?signals_width
     ?start_cycle
     ?signals_alignment
@@ -185,7 +194,6 @@ struct
         ?display_height
         ?display_values
         ?wave_width
-        ?wave_height
         ?signals_width
         ?start_cycle
         ?signals_alignment
@@ -201,7 +209,6 @@ struct
     ?display_height
     ?display_values
     ?wave_width
-    ?wave_height
     ?signals_width
     ?start_cycle
     ?signals_alignment
@@ -213,7 +220,6 @@ struct
       ?display_height
       ?display_values
       ?wave_width
-      ?wave_height
       ?signals_width
       ?start_cycle
       ?signals_alignment
@@ -227,7 +233,6 @@ struct
     ?display_height
     ?display_values
     ?wave_width
-    ?wave_height
     ?signals_width
     ?start_cycle
     ?signals_alignment
@@ -241,7 +246,6 @@ struct
         ?display_height
         ?display_values
         ?wave_width
-        ?wave_height
         ?signals_width
         ?start_cycle
         ?signals_alignment

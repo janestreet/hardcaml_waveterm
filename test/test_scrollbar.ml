@@ -1,5 +1,10 @@
 open! Import
-module Draw = Hardcaml_waveterm_kernel.Expert.Draw
+
+include struct
+  open Hardcaml_waveterm_kernel
+  module Rect = Rect
+  module Style = Style
+end
 
 (* Draw the image within a border.  This forces notty to output the whole thing. *)
 let output ctx =
@@ -10,16 +15,19 @@ let output ctx =
 ;;
 
 let create_hscroll ~width ~height ~range =
-  let hscroll = Scroll.HScrollbar.create { Draw.r = 0; c = 0; w = width; h = height } in
-  hscroll.scrollable.scroll_window_size <- width;
-  Scroll.Scrollable.set_range hscroll.scrollable range;
+  let hscroll =
+    Scroll.HScrollbar.create
+      ~bounds:{ Rect.r = 0; c = 0; w = width; h = height }
+      ~range
+      ()
+  in
   ( hscroll
   , fun ~ctx ~xloc ~yloc ~offset ->
       Scroll.Scrollbar.set_bounds
         hscroll
-        { Draw.r = yloc; c = xloc; w = width; h = height };
-      Scroll.Scrollable.set_offset hscroll.scrollable offset;
-      Scroll.HScrollbar.draw ~ctx ~style:Draw.Style.default hscroll )
+        { Rect.r = yloc; c = xloc; w = width; h = height };
+      Scroll.Scrollbar.set_offset hscroll offset;
+      Scroll.HScrollbar.draw ~ctx ~style:Style.default hscroll )
 ;;
 
 let%expect_test "scroller sexp" =
@@ -38,15 +46,13 @@ let%expect_test "scroller sexp" =
           (scroll_bar_mode (Fixed 1))
           (min_scroll_bar_size ())
           (max_scroll_bar_size ())
-          (scroll_bar_size     0)
+          (scroll_bar_size     1)
           (scroll_bar_offset   0)
           (mouse_mode          Middle)
           (page_size           -1)
           (document_size       -1)
           (on_scrollbar_change <opaque>)))
         (bar_style Filled)
-        (incr_key  <opaque>)
-        (decr_key  <opaque>)
         (bounds (
           (r 0)
           (c 0)
@@ -103,11 +109,11 @@ let%expect_test "big scroll bar area" =
 let%expect_test "dynamic scroll bar widths" =
   let ctx = Draw_notty.init ~rows:3 ~cols:60 in
   let hscroll, draw = create_hscroll ~width:60 ~height:1 ~range:200 in
-  hscroll.scrollable.scroll_bar_mode <- Dynamic 30;
+  Scroll.Scrollbar.set_mode hscroll (Dynamic 30);
   draw ~ctx ~xloc:0 ~yloc:0 ~offset:0;
-  hscroll.scrollable.scroll_bar_mode <- Dynamic 60;
+  Scroll.Scrollbar.set_mode hscroll (Dynamic 60);
   draw ~ctx ~xloc:0 ~yloc:1 ~offset:100;
-  hscroll.scrollable.scroll_bar_mode <- Dynamic 160;
+  Scroll.Scrollbar.set_mode hscroll (Dynamic 160);
   draw ~ctx ~xloc:0 ~yloc:2 ~offset:140;
   output ctx;
   [%expect
@@ -124,7 +130,7 @@ let%expect_test "dynamic scroll bar widths" =
 let%expect_test "should not raise" =
   let ctx = Draw_notty.init ~rows:3 ~cols:60 in
   let hscroll, draw = create_hscroll ~width:60 ~height:1 ~range:200 in
-  hscroll.scrollable.scroll_bar_mode <- Dynamic 160;
+  Scroll.Scrollbar.set_mode hscroll (Dynamic 160);
   require_does_not_raise ~cr:CR_someday ~hide_positions:true (fun () ->
     draw ~ctx ~xloc:0 ~yloc:2 ~offset:160);
   [%expect
