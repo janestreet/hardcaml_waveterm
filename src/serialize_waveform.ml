@@ -26,10 +26,17 @@ struct
       Array.map (waves t) ~f:(fun wave ->
         match wave with
         | Empty _ | Clock _ | Binary _ -> wave
-        | Data (name, data, wave_format, alignment) ->
-          (match wave_format with
+        | Data { name; data; wave_format; text_alignment; style } ->
+          (match wave_format.default with
            | Binary | Bit | Bit_or _ | Hex | Unsigned_int | Int | Index _ | Map _ -> wave
-           | Custom _ -> Data (name, data, Bit_or Hex, alignment)))
+           | Custom _ ->
+             Data
+               { name
+               ; data
+               ; wave_format = { default = Bit_or Hex; current = Bit_or Hex }
+               ; text_alignment
+               ; style
+               }))
     in
     update_waves t waves
   ;;
@@ -83,8 +90,9 @@ struct
       Array.filter_map waves ~f:(function
         | Empty _ -> None
         | Clock _ -> None
-        | Binary (name, data) -> Some (name, data, ref (Bits.zero (Data.width data)))
-        | Data (name, data, _format, _alignment) ->
+        | Binary { name; data; style = _ } ->
+          Some (name, data, ref (Bits.zero (Data.width data)))
+        | Data { name; data; wave_format = _; text_alignment = _; style = _ } ->
           Some (name, data, ref (Bits.zero (Data.width data))))
     in
     (* replay the waveform *)

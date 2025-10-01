@@ -77,15 +77,26 @@ let is_signal_displayed t signal =
 let sort_ports_and_formats t ports = sort t ~unmatched:ports |> List.concat
 
 module With_interface (I : Hardcaml.Interface.S) = struct
-  let map_to_list ~f = I.map I.port_names ~f:(fun name -> f name) |> I.to_list
-
-  let default ?alignment ?(wave_format = Hardcaml.Wave_format.Bit_or Hex) () =
-    map_to_list ~f:(fun name -> Display_rule.port_name_is name ?alignment ~wave_format)
+  let get_name ?prefix ?suffix name =
+    String.concat
+      [ Option.value ~default:"" prefix; name; Option.value ~default:"" suffix ]
   ;;
 
-  let with_format ?alignment wave_formats =
+  let default
+    ?prefix
+    ?suffix
+    ?alignment
+    ?(wave_format = Hardcaml.Wave_format.Bit_or Hex)
+    ()
+    =
+    I.map I.port_names ~f:(fun name ->
+      Display_rule.port_name_is (get_name ?prefix ?suffix name) ?alignment ~wave_format)
+    |> I.to_list
+  ;;
+
+  let with_format ?prefix ?suffix ?alignment wave_formats =
     I.map2 I.port_names wave_formats ~f:(fun name wave_format ->
-      Display_rule.port_name_is ?alignment name ~wave_format)
+      Display_rule.port_name_is ?alignment (get_name ?prefix ?suffix name) ~wave_format)
     |> I.to_list
   ;;
 end

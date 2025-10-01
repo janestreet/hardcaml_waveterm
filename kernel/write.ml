@@ -2,7 +2,7 @@ open Base
 
 type styler =
   { start : (string -> unit) -> unit
-  ; set : (string -> unit) -> Draw.Style.t -> unit
+  ; set : (string -> unit) -> Style.t -> unit
   ; eol : (string -> unit) -> unit
   ; finish : (string -> unit) -> unit
   }
@@ -15,7 +15,7 @@ let no_styler =
   }
 ;;
 
-open Draw.Style
+open Style
 
 let str_of_colour = function
   | Black -> "black"
@@ -56,7 +56,7 @@ let html_styler =
         set_style default os)
   ; set =
       (fun os style ->
-        if Draw.Style.compare style !prev <> 0
+        if Style.compare style !prev <> 0
         then (
           prev := style;
           close_style os;
@@ -83,7 +83,7 @@ let css_class_styler =
         set_style default os)
   ; set =
       (fun os style ->
-        if Draw.Style.compare style !prev <> 0
+        if Style.compare style !prev <> 0
         then (
           prev := style;
           close_style os;
@@ -128,7 +128,7 @@ let term_styler =
           set_style style os
         in
         match !prev with
-        | Some prev' when Draw.Style.compare style prev' <> 0 -> set_style ()
+        | Some prev' when Style.compare style prev' <> 0 -> set_style ()
         | None -> set_style ()
         | _ -> ())
   ; eol =
@@ -140,7 +140,7 @@ let term_styler =
 ;;
 
 let html_escape ?(styler = no_styler) os ctx =
-  let open Draw.In_memory in
+  let open Draw in
   let bounds = get_bounds ctx in
   styler.start os;
   for r = 0 to bounds.h - 1 do
@@ -157,7 +157,7 @@ let html_escape ?(styler = no_styler) os ctx =
 ;;
 
 let utf8 ?(styler = no_styler) os ctx =
-  let open Draw.In_memory in
+  let open Draw in
   let put c =
     if c <= 0x7f
     then os (String.init 1 ~f:(fun _ -> Char.of_int_exn c))

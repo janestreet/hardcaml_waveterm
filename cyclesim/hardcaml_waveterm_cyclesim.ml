@@ -30,20 +30,7 @@ let lookup_out_port sim cycle t =
   lookup_port (Cyclesim.out_port ~clock_edge:Before) sim cycle t
 ;;
 
-let create_wave signal name data =
-  let width = Signal.width signal in
-  let wave_format = Signal.Type.get_wave_format signal in
-  let wave =
-    if width = 1
-       &&
-       match wave_format with
-       | Bit | Bit_or _ -> true
-       | _ -> false
-    then Wave.Binary (name, data)
-    else Wave.Data (name, data, wave_format, Left)
-  in
-  wave
-;;
+let create_wave signal name data = Wave.create_from_signal name signal data
 
 let is_clock x =
   String.equal "clock" x || String.equal "clk" x || String.is_suffix ~suffix:"$clock" x
@@ -58,7 +45,7 @@ let trace sim cycle =
   let traced = Cyclesim.traced sim in
   let io_port lookup (t : Traced.io_port) =
     if is_clock t.name
-    then Wave.Clock t.name, fun _ -> ()
+    then Wave.Clock { name = t.name; style = { style = Style.default } }, fun _ -> ()
     else if is_reset t.name
     then (
       let data, _ = lookup sim cycle t in
@@ -72,7 +59,7 @@ let trace sim cycle =
     Option.value_map (lookup_node sim cycle t) ~default:[] ~f:(fun (data, update) ->
       List.map t.mangled_names ~f:(fun name ->
         if is_clock name
-        then Wave.Clock name, fun _ -> ()
+        then Wave.Clock { name; style = { style = Style.default } }, fun _ -> ()
         else create_wave t.signal name data, update))
   in
   List.concat

@@ -5,7 +5,7 @@ module Type = struct
     | Input
     | Output
     | Internal
-  [@@deriving compare, sexp_of]
+  [@@deriving compare ~localize, equal ~localize, sexp_of]
 end
 
 type t =
@@ -13,6 +13,4 @@ type t =
   ; port_name : Port_name.t
   ; width : int
   }
-[@@deriving compare, sexp_of]
-
-let equal a b = Int.equal (compare a b) 0
+[@@deriving compare ~localize, equal ~localize, sexp_of]

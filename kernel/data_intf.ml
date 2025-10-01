@@ -1,7 +1,7 @@
 (** Waveform data interface. *)
 
 module type S = sig
-  type t [@@deriving sexp_of, equal]
+  type t [@@deriving sexp_of, equal ~localize]
 
   val width : t -> int
   val length : t -> int

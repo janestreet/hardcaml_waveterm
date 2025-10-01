@@ -1,16 +1,5 @@
 open Base
-open Hardcaml_waveterm_kernel.Expert
-
-module Adjustment : sig
-  type t =
-    { mutable range : int
-    ; mutable offset : int
-    ; mutable on_offset_change : int -> unit
-    }
-  [@@deriving sexp_of]
-
-  val set_range : ?trigger_callback:bool -> t -> int -> unit
-end
+open Hardcaml_waveterm_kernel
 
 module Scroll_bar_mode : sig
   type t =
@@ -41,52 +30,54 @@ module Orientation : sig
   [@@deriving sexp_of]
 end
 
-module Scrollable : sig
-  type t =
-    { adj : Adjustment.t
-    ; mutable scroll_window_size : int
-    ; mutable scroll_bar_mode : Scroll_bar_mode.t
-    ; mutable min_scroll_bar_size : int option
-    ; mutable max_scroll_bar_size : int option
-    ; mutable scroll_bar_size : int
-    ; mutable scroll_bar_offset : int
-    ; mutable mouse_mode : Mouse_mode.t
-    ; mutable page_size : int
-    ; mutable document_size : int
-    ; mutable on_scrollbar_change : unit -> unit
-    }
-  [@@deriving sexp_of]
-
-  val set_range : ?trigger_callback:bool -> t -> int -> unit
-  val set_offset : ?trigger_callback:bool -> t -> int -> unit
-end
-
 module Scrollbar : sig
-  type t =
-    { scrollable : Scrollable.t
-    ; mutable bar_style : Scroll_bar_style.t
-    ; incr_key : Notty.Unescape.key
-    ; decr_key : Notty.Unescape.key
-    ; mutable bounds : Draw.rect
-    ; orientation : Orientation.t
-    }
-  [@@deriving sexp_of]
+  type t [@@deriving sexp_of]
 
   val mouse_event : t -> Notty.Unescape.mouse -> bool
-  val key_event : t -> Notty.Unescape.key -> bool
-  val set_bounds : t -> Draw.rect -> unit
+  val bounds : t -> Rect.t
+  val set_bounds : t -> Rect.t -> unit
+  val offset : t -> int
+  val set_offset : t -> int -> unit
+  val set_offset_min : t -> unit
+  val set_offset_max : t -> unit
+  val on_offset_change : t -> f:(int -> unit) -> unit
+  val set_mode : t -> Scroll_bar_mode.t -> unit
 end
 
 module HScrollbar : sig
   type t = Scrollbar.t [@@deriving sexp_of]
 
-  val create : Draw.rect -> t
-  val draw : ctx:Draw_notty.ctx -> style:Draw_notty.style -> t -> unit
+  val create : bounds:Rect.t -> range:int -> unit -> t
+
+  (** Create a scroll bar at the bottom of the given container. Returns the adjust
+      container bounds that excludes the scrollbar. *)
+  val create_bottom_aligned
+    :  ?c:int (** defaults to the right hand side of the container *)
+    -> ?w:int (** defaults to the full width of the container *)
+    -> ?h:int (** defaults to a standard small height *)
+    -> container:Rect.t
+    -> range:int
+    -> unit
+    -> t * Rect.t
+
+  val draw : ctx:Draw_notty.ctx -> style:Style.t -> t -> unit
 end
 
 module VScrollbar : sig
   type t = Scrollbar.t [@@deriving sexp_of]
 
-  val create : Draw.rect -> t
-  val draw : ctx:Draw_notty.ctx -> style:Draw_notty.style -> t -> unit
+  val create : bounds:Rect.t -> range:int -> unit -> t
+
+  (** Create a scroll bar at the right of the given container. Returns the adjust
+      container bounds that excludes the scrollbar. *)
+  val create_right_aligned
+    :  ?r:int (** defaults to the top of the container *)
+    -> ?h:int (** defaults to the full height of the container *)
+    -> ?w:int (** defaults to a standard small width *)
+    -> container:Rect.t
+    -> range:int
+    -> unit
+    -> t * Rect.t
+
+  val draw : ctx:Draw_notty.ctx -> style:Style.t -> t -> unit
 end

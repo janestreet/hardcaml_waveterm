@@ -4,4 +4,4 @@
  (libraries base hardcaml_waveterm_kernel async core hardcaml
    hardcaml_waveterm_cyclesim notty notty_async stdio)
  (preprocess
-  (pps ppx_jane)))
+  (pps ppx_jane ppx_hardcaml)))

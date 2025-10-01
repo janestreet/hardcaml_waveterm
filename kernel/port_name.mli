@@ -2,8 +2,9 @@
 
 open Base
 
-type t [@@deriving compare, sexp_of]
+type t [@@deriving compare ~localize, sexp_of]
 
-include Comparable.S with type t := t
-include Equal.S with type t := t
+include%template Comparable.S [@mode local] with type t := t
+include%template Equal.S [@mode local] with type t := t
+
 include Stringable.S with type t := t

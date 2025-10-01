@@ -3,7 +3,7 @@ open Base
 (** stylting functions *)
 type styler =
   { start : (string -> unit) -> unit (** called at start *)
-  ; set : (string -> unit) -> Draw.Style.t -> unit (** called for each element *)
+  ; set : (string -> unit) -> Style.t -> unit (** called for each element *)
   ; eol : (string -> unit) -> unit (** called at end of each line *)
   ; finish : (string -> unit) -> unit (** called at end *)
   }
@@ -24,7 +24,7 @@ val css_classes : string
 val term_styler : styler
 
 (** write data as html escape code *)
-val html_escape : ?styler:styler -> (string -> unit) -> Draw.In_memory.ctx -> unit
+val html_escape : ?styler:styler -> (string -> unit) -> Draw.ctx -> unit
 
 (** write data as utf-8 *)
-val utf8 : ?styler:styler -> (string -> unit) -> Draw.In_memory.ctx -> unit
+val utf8 : ?styler:styler -> (string -> unit) -> Draw.ctx -> unit

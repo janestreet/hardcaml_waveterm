@@ -1,8 +1,8 @@
 open! Import
-module Clocking = Types.Clocking
+module Clocking = Clocking
 
 module I = struct
-  type 'a t = { clocking : 'a Types.Clocking.t } [@@deriving hardcaml ~rtlmangle:"$"]
+  type 'a t = { clocking : 'a Clocking.t } [@@deriving hardcaml ~rtlmangle:"$"]
 end
 
 module O = struct

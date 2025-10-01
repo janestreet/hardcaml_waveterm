@@ -14,7 +14,7 @@ module Events = Hardcaml_waveterm_event_store.Event_store.Make (Time) (Data)
 module Waveterm = Hardcaml_waveterm_kernel.Expert.Make (struct
     include Events
 
-    let equal _ _ = false
+    let%template equal _ _ = false [@@mode __ = (local, global)]
     let width t = get t 0 |> Bits.width
     let get_digestible_string _ = Bytes.of_string "", 0
   end)
@@ -36,7 +36,12 @@ let waves =
 
 let%expect_test "" =
   let waves =
-    List.mapi waves ~f:(fun idx w -> Waveterm.Wave.Binary ("w" ^ Int.to_string idx, w))
+    List.mapi waves ~f:(fun idx w ->
+      Waveterm.Wave.Binary
+        { name = "w" ^ Int.to_string idx
+        ; data = w
+        ; style = { style = Hardcaml_waveterm_kernel.Style.default }
+        })
   in
   Waveterm.Waveform.print
     ~wave_width:(-1)

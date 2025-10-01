@@ -8,7 +8,7 @@ module Data = struct
 end
 
 module Time = struct
-  type t = int [@@deriving compare, sexp_of]
+  type t = int [@@deriving compare ~localize, sexp_of]
 
   let zero = 0
 end
@@ -25,7 +25,7 @@ type t =
 let create width max_time = { t = Event_store.create (); width; max_time }
 let length t = !(t.max_time) + 1
 let get t = Event_store.get t.t
-let equal _ _ = false
+let%template equal _ _ = false [@@mode __ = (local, global)]
 let width t = t.width
 
 let get_digestible_string t =

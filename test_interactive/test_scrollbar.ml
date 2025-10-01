@@ -1,27 +1,45 @@
 open! Import
 open Async
-module Draw = Hardcaml_waveterm_kernel.Expert.Draw
+
+include struct
+  open Hardcaml_waveterm_kernel
+  module Rect = Rect
+  module Style = Style
+end
 
 let run_scrollable () =
   let%bind term = Notty_async.Term.create () in
   let cols, rows = Notty_async.Term.size term in
-  let bounds = { Draw.r = 0; c = 0; w = 100; h = 10 } in
-  let hscroll : Scroll.Scrollbar.t = Scroll.HScrollbar.create bounds in
-  Scroll.Adjustment.set_range hscroll.scrollable.adj 5;
+  let bounds = { Rect.r = 0; c = 0; w = 100; h = 10 } in
+  let hscroll : Scroll.Scrollbar.t = Scroll.HScrollbar.create ~bounds ~range:5 () in
   let events = Notty_async.Term.events term in
   let stop = Pipe.closed events in
   let ctx = ref (Draw_notty.init ~rows ~cols) in
   let%bind () = Notty_async.Term.cursor term None in
   let draw ctx =
-    Scroll.HScrollbar.draw ~ctx ~style:Draw.Style.default hscroll;
+    Scroll.HScrollbar.draw ~ctx ~style:Style.default hscroll;
     let image = Draw_notty.to_image ctx in
     Notty_async.Term.image term image
   in
   let%bind () = draw !ctx in
+  let scroll_by ~by =
+    Scroll.Scrollbar.set_offset hscroll (Scroll.Scrollbar.offset hscroll + by)
+  in
   let handler event =
     match event with
     | `Mouse mouse -> Scroll.Scrollbar.mouse_event hscroll mouse
-    | `Key key -> Scroll.Scrollbar.key_event hscroll key
+    | `Key (`Arrow `Left, []) ->
+      scroll_by ~by:(-1);
+      true
+    | `Key (`Arrow `Left, [ `Ctrl ]) ->
+      scroll_by ~by:(-10);
+      true
+    | `Key (`Arrow `Right, []) ->
+      scroll_by ~by:1;
+      true
+    | `Key (`Arrow `Right, [ `Ctrl ]) ->
+      scroll_by ~by:10;
+      true
     | _ -> false
   in
   let handle_event event =

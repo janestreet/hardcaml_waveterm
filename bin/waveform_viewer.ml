@@ -65,7 +65,7 @@ module Make (Data : Hardcaml_waveterm_kernel.Expert.Data.S) = struct
     Command.basic
       ~summary:"Display a hardcaml waveform from a waveform binary dump."
       [%map_open.Command
-        let filename = anon ("filename" %: string)
+        let filename = anon ("filename" %: Filename_unix.arg_type)
         and wave_width = flag "-scale" (optional int) ~doc:" Waveform scale"
         and start_cycle =
           flag "-start-cycle" (optional int) ~doc:" Initial clock cycle to render"
@@ -105,8 +105,8 @@ let command_convert =
   Command.basic
     ~summary:"Convert serialized hardcaml waveform to VCD"
     [%map_open.Command
-      let filename_in = anon ("waveterm_in" %: string)
-      and filename_out = anon ("vcd_out" %: string) in
+      let filename_in = anon ("waveterm_in" %: Filename_unix.arg_type)
+      and filename_out = anon ("vcd_out" %: Filename_unix.arg_type) in
       fun () ->
         Waveform.Serialize.unmarshall filename_in
         |> Waveform.Serialize.marshall_vcd ~filename:filename_out]

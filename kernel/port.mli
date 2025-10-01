@@ -7,7 +7,7 @@ module Type : sig
     | Input
     | Output
     | Internal
-  [@@deriving compare, sexp_of]
+  [@@deriving compare ~localize, sexp_of]
 end
 
 type t =
@@ -15,4 +15,4 @@ type t =
   ; port_name : Port_name.t
   ; width : int
   }
-[@@deriving compare, sexp_of, equal]
+[@@deriving compare ~localize, sexp_of, equal ~localize]

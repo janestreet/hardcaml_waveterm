@@ -57,6 +57,7 @@ module For_cyclesim = struct
   module Data = Data
   module Serialize = Serialize_waveform.Make (Data) (Wave) (Waves) (Render) (Waveform)
   module Expect = Expect.Make (Data) (Wave) (Waves) (Render) (Waveform)
+  module Digest = Waveform_digest.Make (Data) (Wave) (Waves) (Render) (Waveform)
 
   module Waveform = struct
     include Waveform
@@ -70,6 +71,7 @@ end
 include struct
   open For_cyclesim
   module Data = Data
+  module Digest = Digest
   module Serialize = Serialize
   module Waveform = Waveform
 end

@@ -1,7 +1,7 @@
 open! Core
 
 module Time = struct
-  type t = int [@@deriving compare, sexp_of]
+  type t = int [@@deriving compare ~localize, sexp_of]
 
   let zero = 0
 end

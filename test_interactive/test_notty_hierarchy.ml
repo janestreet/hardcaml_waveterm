@@ -35,7 +35,7 @@ let () =
      in
      fun () ->
        Random.init 42;
-       let waves = Test_data.create ~prefix ~length:1000 ~num_signals:1000 in
+       let waves = Test_data.create ~prefix ~length:1000 ~num_signals:1000 ~max_bits:64 in
        run_waves { waves with cfg = { waves.cfg with signals_width; values_width } })
   |> Command_unix.run
 ;;

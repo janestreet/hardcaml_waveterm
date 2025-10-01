@@ -5,10 +5,16 @@
 
 module Display_rule = Display_rule
 module Display_rules = Display_rules
+module Draw = Draw
+module Key_help = Key_help
 module Text_alignment = Text_alignment
 module Wave_format = Hardcaml.Wave_format
 module Port = Port
 module Port_name = Port_name
+module Rect = Rect
+module Style = Style
+module Window_bounds = Window_bounds
+module Window_styles = Window_styles
 
 module Expert = struct
   module M (Data : Data.S) = struct
@@ -28,7 +34,6 @@ module Expert = struct
   end
 
   module Data = Data
-  module Draw = Draw
   module Write = Write
   module Wave = Wave
   module Waves = Waves
