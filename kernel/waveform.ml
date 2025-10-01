@@ -101,10 +101,8 @@ struct
       |> Option.map ~f:(fun wave ->
         match fmt_align_opt, wave with
         | Some (format, alignment), _ -> apply_wave_format wave format alignment
-        (* None represents default format. Don't apply default to Map, Index and Custom *)
-        | None, Data { wave_format = { current = Map _; _ }; _ }
-        | None, Data { wave_format = { current = Index _; _ }; _ }
-        | None, Data { wave_format = { current = Custom _; _ }; _ } -> wave
+        (* None represents default format, or format applied to a signal. *)
+        | None, Data _ -> wave
         | None, _ ->
           Display_rules.run_rule Display_rule.Default port
           |> Option.map ~f:(fun (format, alignment) ->
