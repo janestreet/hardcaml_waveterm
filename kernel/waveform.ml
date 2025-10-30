@@ -251,4 +251,71 @@ struct
     in
     Write.utf8 (Out_channel.output_string channel) ctx
   ;;
+
+  let look_for_nth_instance_of_condition_in_waveform
+    ~n
+    ~(conditions : Wave_condition.t list)
+    t
+    =
+    assert (List.length conditions > 0);
+    let waves = t.waves in
+    (* Pick out the signal (specifically, its set of events) that we will use for each
+       condition. *)
+    let events_per_condition =
+      List.map conditions ~f:(fun { suffix; condition = _ } ->
+        let potential_matches =
+          Array.filter_map waves ~f:(fun wave ->
+            match wave with
+            | (Binary { name; data = events; style = _ } | Data { name; data = events; _ })
+              when String.is_suffix name ~suffix -> Some (name, events)
+            | Binary _ | Empty _ | Clock _ | Data _ -> None)
+        in
+        match Array.length potential_matches with
+        | 0 ->
+          failwith
+            [%string
+              "Your suffix \"%{suffix}\" didn't match any wave in the waveform! Please \
+               try again."]
+        | 1 -> snd potential_matches.(0)
+        | _ ->
+          raise_s
+            [%message
+              "Your suffix matched multiple signals in the waveform! Please be more \
+               specific."
+                (suffix : string)
+                ~matches:(Array.map ~f:fst potential_matches : string array)])
+    in
+    let num_events =
+      match
+        List.map events_per_condition ~f:Data.length |> List.all_equal ~equal:Int.equal
+      with
+      | None ->
+        raise_s
+          [%message
+            "Expect all signals to have the same number of events! If this is no longer \
+             true, this function will have to be rewritten based on the new encoding \
+             scheme."]
+      | Some v -> v
+    in
+    (* Iterate through all of the events and find the first point where all the conditions
+       are met. *)
+    With_return.with_return (fun { return } ->
+      let num_found = ref 0 in
+      for i = 0 to num_events - 1 do
+        let conditions_met =
+          List.fold2_exn
+            ~init:true
+            conditions
+            events_per_condition
+            ~f:(fun acc { condition; suffix = _ } events ->
+              let ev = Data.get events i in
+              acc && condition ev)
+        in
+        if conditions_met
+        then (
+          Int.incr num_found;
+          if !num_found = n then return (Some i))
+      done;
+      None)
+  ;;
 end

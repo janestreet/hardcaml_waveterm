@@ -15,7 +15,7 @@ struct
 
     (** Write to VCD using the "legacy" VCD conversion method of running the waveform
         through a fake cyclesim instance *)
-    val marshall_vcd : Waveform.t -> filename:string -> unit
+    val marshall_vcd : Waveform.t -> string -> unit
 
     (** For testing marshalling functions. *)
     val equal : Waveform.t -> Waveform.t -> bool
