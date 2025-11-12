@@ -41,7 +41,7 @@ struct
     update_waves t waves
   ;;
 
-  let marshall (t : t) filename =
+  let marshall_waveterm (t : t) filename =
     let t = sanitize t in
     let oc = Unix.open_process_out (Printf.sprintf "gzip -c >%s" filename) in
     Stdlib.Marshal.to_channel oc t [];
@@ -66,7 +66,7 @@ struct
     if phys_equal here Lexing.dummy_pos
     then raise_s [%message "Must provide ~here:[%here] when using [marshall_here]"];
     let filename = default_waveform_filename here.pos_fname in
-    marshall t filename
+    marshall_waveterm t filename
   ;;
 
   let unmarshall filename : t =
@@ -84,7 +84,7 @@ struct
       raise_s [%message "Unix.close_process_in stopped due to signal" (signal : int)]
   ;;
 
-  let marshall_vcd t ~filename =
+  let marshall_vcd t filename =
     let waves = Waveform.waves t in
     let in_ports =
       Array.filter_map waves ~f:(function
@@ -125,5 +125,11 @@ struct
         Array.iter in_ports ~f:(fun (_, data, port) -> port := Data.get data cycle);
         Cyclesim.cycle sim
       done)
+  ;;
+
+  let marshall (t : t) filename =
+    if String.is_suffix filename ~suffix:".vcd"
+    then marshall_vcd t filename
+    else marshall_waveterm t filename
   ;;
 end

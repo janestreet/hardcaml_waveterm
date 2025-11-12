@@ -1,5 +1,5 @@
 (library
  (name hardcaml_waveterm_kernel_bench)
- (libraries core hardcaml hardcaml_waveterm_kernel hardcaml_waveterm_cyclesim)
+ (libraries core hardcaml hardcaml_waveterm_cyclesim hardcaml_waveterm_kernel)
  (preprocess
   (pps ppx_jane)))

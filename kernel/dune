@@ -1,6 +1,6 @@
 (library
  (name hardcaml_waveterm_kernel)
  (public_name hardcaml_waveterm.kernel)
- (libraries core base hardcaml bignum.bigint re stdio)
+ (libraries base bignum.bigint core hardcaml re stdio)
  (preprocess
   (pps ppx_jane -require-template-extension)))

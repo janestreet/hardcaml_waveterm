@@ -1,7 +1,7 @@
 (library
  (name hardcaml_waveterm)
  (public_name hardcaml_waveterm)
- (libraries hardcaml hardcaml_waveterm_kernel hardcaml_waveterm_cyclesim
-   cryptokit stdio unix)
+ (libraries cryptokit hardcaml hardcaml_waveterm_cyclesim
+   hardcaml_waveterm_kernel stdio unix)
  (preprocess
   (pps ppx_jane)))

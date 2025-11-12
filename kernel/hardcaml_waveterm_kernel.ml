@@ -15,6 +15,7 @@ module Rect = Rect
 module Style = Style
 module Window_bounds = Window_bounds
 module Window_styles = Window_styles
+module Wave_condition = Wave_condition
 
 module Expert = struct
   module M (Data : Data.S) = struct

@@ -108,8 +108,8 @@ let command_convert =
       let filename_in = anon ("waveterm_in" %: Filename_unix.arg_type)
       and filename_out = anon ("vcd_out" %: Filename_unix.arg_type) in
       fun () ->
-        Waveform.Serialize.unmarshall filename_in
-        |> Waveform.Serialize.marshall_vcd ~filename:filename_out]
+        let waves = Waveform.Serialize.unmarshall filename_in in
+        Waveform.Serialize.marshall_vcd waves filename_out]
 ;;
 
 let () =

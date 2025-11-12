@@ -64,6 +64,13 @@ module type S = sig
   (** Print waveform to [channel] *)
   val print
     : (?channel:Stdio.Out_channel.t (** default is [stdout] *) -> t -> unit) with_options
+
+  (** General function to look up the nth cycle where the set of conditions given are met. *)
+  val look_for_nth_instance_of_condition_in_waveform
+    :  n:int
+    -> conditions:Wave_condition.t list
+    -> t
+    -> int option
 end
 
 module M
