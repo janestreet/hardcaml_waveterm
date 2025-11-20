@@ -153,9 +153,9 @@ module Waveform_window = struct
             then (
               (* iterate down 1 signal at a time until the selected signal is in view.
 
-               Why is this difficult? Because the height of each signal differs. Another
-               approach would be to iterate backwards from the selected signal and count
-               the height relative to the window bounds. *)
+                 Why is this difficult? Because the height of each signal differs. Another
+                 approach would be to iterate backwards from the selected signal and count
+                 the height relative to the window bounds. *)
               let rec find_in_view () =
                 let signal_offset = get_signal_offset t + 1 in
                 set_signal_offset t signal_offset;

@@ -10,20 +10,20 @@ struct
   open Draw
   open Wave
 
-  (* The user specifies the wave width with an integer - here we encode the integer into
-       a rendering representation.
+  (* The user specifies the wave width with an integer - here we encode the integer into a
+     rendering representation.
 
-       {v
+     {v
        -3 -> 3 cycles encoded into 1 char
        -2 -> 2 cycles encoded into 1 char
        -1 -> 1 cycle encoded into 1 char
         0 -> 1 cyle encoded into 2 chars
         1 -> 1 cycle encoded into 4 char
         2 -> 1 cycle encoded into 6 chars
-       v}
+     v}
 
-       Note that when we encode 1 cycle into multiple chars, we require an even number of
-       chars - this is because to render the clock properly it must be even. *)
+     Note that when we encode 1 cycle into multiple chars, we require an even number of
+     chars - this is because to render the clock properly it must be even. *)
   let wave_width_of_code wave_width_code =
     if wave_width_code = -1
     then `Chars_per_cycle 1

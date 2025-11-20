@@ -79,8 +79,8 @@ module Make (Time : Time) (Data : Data) = struct
         shuffle_up t 0;
         set t 0 time data
       | Some index ->
-        (* 2 cases: time in array equals time of insert -> merge
-           time in array is less than time of insert -> shuffle *)
+        (* 2 cases: time in array equals time of insert -> merge time in array is less
+           than time of insert -> shuffle *)
         (match Time.compare (get_time_at_index t index) time with
          | 0 -> set t index time (Data.merge (get_data_at_index t index) data)
          | -1 ->

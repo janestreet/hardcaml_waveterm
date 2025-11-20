@@ -6,7 +6,7 @@ include struct
   module Style = Style
 end
 
-(* Draw the image within a border.  This forces notty to output the whole thing. *)
+(* Draw the image within a border. This forces notty to output the whole thing. *)
 let output ctx =
   let open Notty in
   let image = Draw_notty.to_image ctx in

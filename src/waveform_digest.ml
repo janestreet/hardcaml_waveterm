@@ -20,8 +20,8 @@ struct
       let wave = waves.(i) in
       match wave with
       | Empty _ | Clock _ ->
-        (* [Expert.Wave.get_data] raises if we try to access a [Clock] or [Empty] data wave.
-           Just ignore it. *)
+        (* [Expert.Wave.get_data] raises if we try to access a [Clock] or [Empty] data
+           wave. Just ignore it. *)
         ()
       | _ ->
         let data = Wave.get_data waves.(i) in

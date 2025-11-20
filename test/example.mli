@@ -1,4 +1,4 @@
-(** Example circuit and testbench **)
+(** Example circuit and testbench *)
 
 open! Import
 

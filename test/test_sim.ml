@@ -455,3 +455,35 @@ let%expect_test "auto display rules" =
     ba2e36d1d08d114b90957c7b1fa80e3a
     |}]
 ;;
+
+let%expect_test "look_for_nth_instance_of_condition_in_waveform with suffix and regex" =
+  let waveform = Lazy.force testbench in
+  (* Test with suffix matching - find 'clr' signal when it equals 1 *)
+  let cycle_with_suffix =
+    Waveform.look_for_nth_instance_of_condition_in_waveform
+      waveform
+      ~n:1
+      ~conditions:
+        [ { Wave_condition.how_to_find = Suffix "clr"
+          ; condition = (fun bits -> Bits.equal bits Bits.vdd)
+          }
+        ]
+  in
+  print_s [%message "Found with suffix" (cycle_with_suffix : int option)];
+  [%expect {| ("Found with suffix" (cycle_with_suffix (0))) |}];
+  (* Test with regex matching - find signals containing 'output' and 'long'. This signal
+     never becomes 1 in the testbench, so we expect None. *)
+  let cycle_with_regex2 =
+    Waveform.look_for_nth_instance_of_condition_in_waveform
+      waveform
+      ~n:1
+      ~conditions:
+        [ { Wave_condition.how_to_find =
+              Regex (Re.Posix.compile (Re.Posix.re "output.*long"))
+          ; condition = (fun bits -> Bits.equal bits Bits.vdd)
+          }
+        ]
+  in
+  print_s [%message "Found with regex (output)" (cycle_with_regex2 : int option)];
+  [%expect {| ("Found with regex (output)" (cycle_with_regex2 ())) |}]
+;;
