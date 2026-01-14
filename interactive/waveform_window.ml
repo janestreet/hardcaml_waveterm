@@ -140,7 +140,7 @@ struct
       end)
 
   (* We optionally take in an existing [Waveform_window.t] to use in constructing the new
-       [t]. This is useful for when we want to resize an existing window. *)
+     [t]. This is useful for when we want to resize an existing window. *)
   let create ?(waveform : t option) ~rows ~cols ~ui_state_file (waves : M.Waves.t) keys =
     let hierarchy =
       (* hierarchy is subtle - it is a shared state that needs to survive when the
@@ -364,8 +364,7 @@ struct
               let actual_wave = Hierarchy.find_actual_wave t.hierarchy signal_index in
               (match rendered_waves.waves.(signal_index) with
                | Empty _ ->
-                 (* An Empty node represents a hierarchy module. Toggle it open or
-                    closed. *)
+                 (* An Empty node represents a hierarchy module. Toggle it open or closed. *)
                  t.hierarchy.cfg.selected_signal <- signal_index;
                  let name = Wave.get_name actual_wave in
                  Hierarchy.toggle_module t.hierarchy name;

@@ -4,7 +4,7 @@
    test_scrollbar test_sim)
  (libraries async core_unix.command_unix core expect_test_helpers_core
    hardcaml_waveterm hardcaml_waveterm_cyclesim hardcaml_waveterm_interactive
-   hardcaml_waveterm_kernel hardcaml_waveterm_test notty notty_async
-   notty.unix)
+   hardcaml_waveterm_kernel hardcaml_waveterm_test notty-community
+   notty_async notty-community.unix)
  (preprocess
   (pps ppx_jane)))

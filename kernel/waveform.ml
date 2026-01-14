@@ -69,8 +69,8 @@ struct
 
   let combine a b = { waves = Array.append a.waves b.waves; ports = a.ports @ b.ports }
 
-  (* A simple heuristic to put the standard clock and reset related signals
-     at the top of the waveform, then everything else in sorted order. *)
+  (* A simple heuristic to put the standard clock and reset related signals at the top of
+     the waveform, then everything else in sorted order. *)
   let default_display_rules =
     Display_rule.
       [ port_name_is "clk" ~wave_format:Bit
@@ -93,9 +93,9 @@ struct
     in
     (* Construct the display order and formatting *)
     Display_rules.sort_ports_and_formats display_rules t.ports
-    (* Associate ports in display order with waves in [t.waves].  We make no assumptions
+    (* Associate ports in display order with waves in [t.waves]. We make no assumptions
        about what [hardcaml_waveterm] is actually doing and do our best to construct the
-       requested display.  In fact, [t.waves] should match [t.ports]. *)
+       requested display. In fact, [t.waves] should match [t.ports]. *)
     |> List.filter_map ~f:(fun ((port : Port.t), fmt_align_opt) ->
       Map.find waves port.port_name
       |> Option.map ~f:(fun wave ->
@@ -262,27 +262,37 @@ struct
     (* Pick out the signal (specifically, its set of events) that we will use for each
        condition. *)
     let events_per_condition =
-      List.map conditions ~f:(fun { suffix; condition = _ } ->
+      List.map conditions ~f:(fun { how_to_find; condition = _ } ->
+        let matches_name name =
+          match how_to_find with
+          | Wave_condition.How_to_find.Suffix suffix -> String.is_suffix name ~suffix
+          | Regex re -> Re.execp (Display_rule.Regexp.compile re) name
+        in
         let potential_matches =
           Array.filter_map waves ~f:(fun wave ->
             match wave with
             | (Binary { name; data = events; style = _ } | Data { name; data = events; _ })
-              when String.is_suffix name ~suffix -> Some (name, events)
+              when matches_name name -> Some (name, events)
             | Binary _ | Empty _ | Clock _ | Data _ -> None)
+        in
+        let how_to_find_str =
+          match how_to_find with
+          | Suffix suffix -> [%string "suffix \"%{suffix}\""]
+          | Regex _ -> "regex"
         in
         match Array.length potential_matches with
         | 0 ->
           failwith
             [%string
-              "Your suffix \"%{suffix}\" didn't match any wave in the waveform! Please \
-               try again."]
+              "Your %{how_to_find_str} didn't match any wave in the waveform! Please try \
+               again."]
         | 1 -> snd potential_matches.(0)
         | _ ->
           raise_s
             [%message
-              "Your suffix matched multiple signals in the waveform! Please be more \
+              "Your pattern matched multiple signals in the waveform! Please be more \
                specific."
-                (suffix : string)
+                (how_to_find_str : string)
                 ~matches:(Array.map ~f:fst potential_matches : string array)])
     in
     let num_events =
@@ -303,13 +313,12 @@ struct
       let num_found = ref 0 in
       for i = 0 to num_events - 1 do
         let conditions_met =
-          List.fold2_exn
-            ~init:true
+          List.for_all2_exn
             conditions
             events_per_condition
-            ~f:(fun acc { condition; suffix = _ } events ->
+            ~f:(fun { condition; how_to_find = _ } events ->
               let ev = Data.get events i in
-              acc && condition ev)
+              condition ev)
         in
         if conditions_met
         then (

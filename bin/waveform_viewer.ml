@@ -53,7 +53,7 @@ let get_display_rules ~regex_engine ~display_rules ~wave_format =
     Some
       (List.map display_rules ~f:(fun regex ->
          Display_rule.port_name_matches
-           (Re.compile (regex_engine regex))
+           (Re (Re.compile (regex_engine regex)))
            ~wave_format:(Bit_or wave_format)))
 ;;
 

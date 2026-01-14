@@ -24,7 +24,7 @@ let%expect_test "inside" =
             "Unexpected" (row : int) (col : int) (should_be_inside : bool) (inside : bool)];
       print_endline [%string {|(%{row#Int}, %{col#Int})  inside-%{inside#Bool}|}])
   in
-  (*
+  (*=
      (1, 2) --- (1, 3)
        |           |
      (4, 2) --- (4, 3)

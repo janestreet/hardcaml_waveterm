@@ -24,11 +24,11 @@ struct
       ; mutable active : [ `Waveform | `Help ]
       }
 
-    (* Look for a hardcaml waveterm rc file which stores key bindings.  In order:
+    (* Look for a hardcaml waveterm rc file which stores key bindings. In order:
 
-     - Look at HARDCAMLWAVETERMRC envvar
-     - Look in local dir
-     - Look in home dir (via HOME envvar)
+       - Look at HARDCAMLWAVETERMRC envvar
+       - Look in local dir
+       - Look in home dir (via HOME envvar)
     *)
 
     let keys () =

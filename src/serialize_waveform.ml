@@ -15,8 +15,8 @@ struct
   let equal = equal
 
   (* serialization of waveform onto disk. while we can in theory write a better
-     serialization format with bit-packing, gzip is a quick-and-easy way to get
-     them reasonably compressed.
+     serialization format with bit-packing, gzip is a quick-and-easy way to get them
+     reasonably compressed.
 
      on waveforms with 300 cycles and 200 ports, we see a 10x decrease in file size.
   *)
@@ -103,6 +103,9 @@ struct
         ~out_ports_before_clock_edge:[]
         ~out_ports_after_clock_edge:[]
         ~reset:Fn.id
+        ~clock_mode:`All_one_domain
+        ~clocks_aligned:(Fn.const true)
+        ~cycle_multiple:1
         ~cycle_check:Fn.id
         ~cycle_before_clock_edge:Fn.id
         ~cycle_at_clock_edge:Fn.id

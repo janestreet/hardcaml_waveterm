@@ -20,6 +20,18 @@ type t =
       (Port.t -> (Hardcaml.Wave_format.t * Text_alignment.t) option)
 [@@deriving sexp_of]
 
+(** Regular expression syntax *)
+module Regexp : sig
+  type t =
+    | Glob of string
+    | Posix of string
+    | Perl of string
+    | Re of Re.re
+  [@@deriving sexp_of]
+
+  val compile : t -> Re.re
+end
+
 (** Default formatting - binary for 1 bit signals, hex otherwise. *)
 val default : t
 
@@ -27,7 +39,7 @@ val default : t
 val port_name_matches
   :  ?alignment:Text_alignment.t
   -> ?wave_format:Hardcaml.Wave_format.t
-  -> Re.re
+  -> Regexp.t
   -> t
 
 (** Use [format] for ports with given name. *)

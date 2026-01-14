@@ -6,7 +6,7 @@ include struct
   module Style = Style
 end
 
-(* Draw the image within a border.  This forces notty to output the whole thing. *)
+(* Draw the image within a border. This forces notty to output the whole thing. *)
 let output ctx =
   let open Notty in
   let image = Draw_notty.to_image ctx in
@@ -126,7 +126,7 @@ let%expect_test "dynamic scroll bar widths" =
     |}]
 ;;
 
-(* This is a bug.  Should be tracked down and fixed. *)
+(* This is a bug. Should be tracked down and fixed. *)
 let%expect_test "should not raise" =
   let ctx = Draw_notty.init ~rows:3 ~cols:60 in
   let hscroll, draw = create_hscroll ~width:60 ~height:1 ~range:200 in

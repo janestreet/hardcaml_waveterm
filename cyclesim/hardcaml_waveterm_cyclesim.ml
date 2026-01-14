@@ -32,8 +32,14 @@ let lookup_out_port sim cycle t =
 
 let create_wave signal name data = Wave.create_from_signal name signal data
 
-let is_clock x =
-  String.equal "clock" x || String.equal "clk" x || String.is_suffix ~suffix:"$clock" x
+let is_clock x ~clock_mode =
+  match clock_mode with
+  | `All_one_domain ->
+    String.equal "clock" x || String.equal "clk" x || String.is_suffix ~suffix:"$clock" x
+  | `By_input_clocks ->
+    (* Clocks are driven in the sim and don't need to be special cased here for the
+       waveform *)
+    false
 ;;
 
 let is_reset = function
@@ -41,10 +47,10 @@ let is_reset = function
   | _ -> false
 ;;
 
-let trace sim cycle =
+let trace sim cycle ~clock_mode =
   let traced = Cyclesim.traced sim in
   let io_port lookup (t : Traced.io_port) =
-    if is_clock t.name
+    if is_clock t.name ~clock_mode
     then Wave.Clock { name = t.name; style = { style = Style.default } }, fun _ -> ()
     else if is_reset t.name
     then (
@@ -58,7 +64,7 @@ let trace sim cycle =
   let internal_signal (t : Traced.internal_signal) =
     Option.value_map (lookup_node sim cycle t) ~default:[] ~f:(fun (data, update) ->
       List.map t.mangled_names ~f:(fun name ->
-        if is_clock name
+        if is_clock name ~clock_mode
         then Wave.Clock { name; style = { style = Style.default } }, fun _ -> ()
         else create_wave t.signal name data, update))
   in
@@ -72,7 +78,7 @@ let trace sim cycle =
 module Expert = struct
   let wrap sim =
     let cycle = ref 0 in
-    let traced = trace sim cycle in
+    let traced = trace sim cycle ~clock_mode:(Cyclesim.clock_mode sim) in
     let waves =
       let waves = Array.of_list_map traced ~f:fst in
       Array.sort waves ~compare:(fun w0 w1 ->
