@@ -6,7 +6,7 @@ open Hardcaml
 module How_to_find : sig
   type t =
     | Suffix of string
-    | Regex of Re.re
+    | Regex of Display_rule.Regexp.t
 end
 
 type t =

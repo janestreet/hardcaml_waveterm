@@ -266,7 +266,7 @@ struct
         let matches_name name =
           match how_to_find with
           | Wave_condition.How_to_find.Suffix suffix -> String.is_suffix name ~suffix
-          | Regex re -> Re.execp re name
+          | Regex re -> Re.execp (Display_rule.Regexp.compile re) name
         in
         let potential_matches =
           Array.filter_map waves ~f:(fun wave ->
@@ -313,13 +313,12 @@ struct
       let num_found = ref 0 in
       for i = 0 to num_events - 1 do
         let conditions_met =
-          List.fold2_exn
-            ~init:true
+          List.for_all2_exn
             conditions
             events_per_condition
-            ~f:(fun acc { condition; how_to_find = _ } events ->
+            ~f:(fun { condition; how_to_find = _ } events ->
               let ev = Data.get events i in
-              acc && condition ev)
+              condition ev)
         in
         if conditions_met
         then (

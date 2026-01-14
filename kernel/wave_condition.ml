@@ -3,7 +3,7 @@ open Hardcaml
 module How_to_find = struct
   type t =
     | Suffix of string
-    | Regex of Re.re
+    | Regex of Display_rule.Regexp.t
 end
 
 type t =

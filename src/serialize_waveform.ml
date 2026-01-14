@@ -105,6 +105,7 @@ struct
         ~reset:Fn.id
         ~clock_mode:`All_one_domain
         ~clocks_aligned:(Fn.const true)
+        ~cycle_multiple:1
         ~cycle_check:Fn.id
         ~cycle_before_clock_edge:Fn.id
         ~cycle_at_clock_edge:Fn.id
