@@ -197,7 +197,7 @@ struct
         ?signals_alignment
         t
     in
-    Write.utf8 (Buffer.add_string buffer) ctx;
+    Write.utf8 (fun s -> Buffer.add_string buffer s) ctx;
     buffer
   ;;
 
