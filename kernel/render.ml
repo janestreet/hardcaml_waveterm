@@ -5,8 +5,7 @@ module type S = Render_intf.S
 
 module M = Render_intf.M
 
-module Make (Data : Data.S) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) =
-struct
+module Make (Data : Hardcaml.Wave_data.S) = struct
   open Draw
   open Wave
 
@@ -32,16 +31,16 @@ struct
     else `Chars_per_cycle ((wave_width_code + 1) * 2)
   ;;
 
-  let wave_width (state : Waves.t) =
+  let wave_width (state : _ Waves.t) =
     let wave_width_code = state.cfg.wave_width in
     wave_width_of_code wave_width_code
   ;;
 
-  let get_max_signal_width_in_chars (state : Waves.t) =
+  let get_max_signal_width_in_chars (state : _ Waves.t) =
     Array.fold state.waves ~init:0 ~f:(fun m s -> max m (String.length (get_name s)))
   ;;
 
-  let get_max_value_width_in_chars (state : Waves.t) =
+  let get_max_value_width_in_chars (state : _ Waves.t) =
     let fold f a d =
       let len = Data.length d in
       let rec g a i = if i = len then a else g (f a (Data.get d i)) (i + 1) in
@@ -57,7 +56,7 @@ struct
       | _ -> m)
   ;;
 
-  let get_estimated_max_value_width (state : Waves.t) =
+  let get_estimated_max_value_width (state : _ Waves.t) =
     let unsigned_width =
       let table =
         Array.init 64 ~f:(fun i ->
@@ -101,7 +100,7 @@ struct
       max max_width (get_width (Wave.get_format wave)))
   ;;
 
-  let total_cycles_in_waveform (state : Waves.t) =
+  let total_cycles_in_waveform (state : _ Waves.t) =
     Array.fold state.waves ~init:0 ~f:(fun m d ->
       max
         m
@@ -109,9 +108,9 @@ struct
          | _ -> 0))
   ;;
 
-  let total_signals_in_waveform (state : Waves.t) = Array.length state.waves
+  let total_signals_in_waveform (state : _ Waves.t) = Array.length state.waves
 
-  let get_max_wave_width_in_chars (state : Waves.t) =
+  let get_max_wave_width_in_chars (state : _ Waves.t) =
     let total_cycles = total_cycles_in_waveform state in
     match wave_width state with
     | `Cycles_per_char cycles_per_char ->
@@ -119,7 +118,7 @@ struct
     | `Chars_per_cycle chars_per_cycle -> total_cycles * chars_per_cycle
   ;;
 
-  let get_max_wave_height_in_chars (state : Waves.t) start_signal =
+  let get_max_wave_height_in_chars (state : _ Waves.t) start_signal =
     let rec f acc i =
       if i < Array.length state.waves
       then (
@@ -173,6 +172,12 @@ struct
     | `Chars_per_cycle w when w = 1 -> draw_clock_cycles_per_char ~ctx ~style ~bounds ~cnt
     | `Chars_per_cycle w -> draw_clock_chars_per_cycle ~ctx ~style ~bounds ~w ~cnt
     | `Cycles_per_char _w -> draw_clock_cycles_per_char ~ctx ~style ~bounds ~cnt
+  ;;
+
+  let draw_divider ~ctx ~style ~bounds ~wave_width:_ ~cnt =
+    for c = 0 to cnt - 1 do
+      draw_piece ~ctx ~style ~bounds ~r:0 ~c H_dash
+    done
   ;;
 
   let get_data_bounds_clipped data i =
@@ -422,7 +427,7 @@ struct
       draw_data_cycles_per_char ~ctx ~style ~bounds ~to_str ~alignment ~w ~data ~off
   ;;
 
-  let rec draw_iter i (bounds : Rect.t) (state : Waves.t) f =
+  let rec draw_iter i (bounds : Rect.t) (state : _ Waves.t) f =
     if i < Array.length state.waves && bounds.h > 0
     then (
       let wah = Wave.get_height_in_chars state.waves.(i) in
@@ -431,7 +436,8 @@ struct
       draw_iter (i + 1) { bounds with r = bounds.r + wah; h = bounds.h - wah } state f)
   ;;
 
-  type 'a draw_item = ?style:Style.t -> ctx:Draw.ctx -> bounds:Rect.t -> Waves.t -> 'a
+  type 'a draw_item =
+    ?style:Style.t -> ctx:Draw.ctx -> bounds:Rect.t -> Data.t Waves.t -> 'a
 
   let with_border
     ~(draw : 'a draw_item)
@@ -454,7 +460,7 @@ struct
     | _ -> r
   ;;
 
-  let draw_cursor ~ctx ~(bounds : Rect.t) ~wave_cursor ~primary ~(state : Waves.t) =
+  let draw_cursor ~ctx ~(bounds : Rect.t) ~wave_cursor ~primary ~(state : _ Waves.t) =
     let c =
       let cycle_offset = wave_cursor - state.cfg.start_cycle in
       match wave_width state with
@@ -482,7 +488,7 @@ struct
     ~selected_wave_index
     ~ctx
     ~bounds
-    (state : Waves.t)
+    (state : _ Waves.t)
     =
     let wave_width = wave_width state in
     fill ~ctx ~bounds ~style ' ';
@@ -495,6 +501,9 @@ struct
       let off = state.cfg.start_cycle in
       (match wave with
        | Empty _ -> ()
+       | Divider { name = _; style } ->
+         maybe_fill ~bounds ~style:style.style;
+         draw_divider ~ctx ~style:style.style ~bounds ~wave_width ~cnt:bounds.w
        | Clock { name = _; style } ->
          maybe_fill ~bounds ~style:style.style;
          draw_clock_cycles ~ctx ~style:style.style ~bounds ~wave_width ~cnt:bounds.w
@@ -502,7 +511,7 @@ struct
          maybe_fill ~bounds ~style:style.style;
          let off = min (Data.length data - 1) off in
          draw_binary_data ~ctx ~style:style.style ~bounds ~wave_width ~data ~off
-       | Data { name = _; data; wave_format = _; text_alignment; style } ->
+       | Data { name = _; data; width = _; wave_format = _; text_alignment; style } ->
          maybe_fill ~bounds ~style:style.style;
          let off = min (Data.length data - 1) off in
          draw_data
@@ -570,7 +579,7 @@ struct
     ~selected_wave_index
     ~ctx
     ~bounds
-    (state : Waves.t)
+    (state : _ Waves.t)
     =
     fill ~ctx ~bounds ~style ' ';
     draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
@@ -620,7 +629,7 @@ struct
     ~selected_wave_index
     ~ctx
     ~bounds
-    (state : Waves.t)
+    (state : _ Waves.t)
     =
     fill ~ctx ~bounds ~style ' ';
     let off =
@@ -633,13 +642,13 @@ struct
       let wah = Wave.get_height_in_chars wave in
       let r = (wah - 1) / 2 in
       (match wave with
-       | Empty _ | Clock _ -> ()
+       | Empty _ | Divider _ | Clock _ -> ()
        | Binary { name = _; data; style = _ } ->
          let d = get_data_bounds_clipped data off in
          let str = Bits.to_bstr d in
          max_string_length := max !max_string_length (String.length str);
          draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str
-       | Data { name = _; data; wave_format; text_alignment = _; style = _ } ->
+       | Data { name = _; data; width = _; wave_format; text_alignment = _; style = _ } ->
          let d = get_data_bounds_clipped data off in
          let to_str = Wave.get_to_str wave in
          let str = add_value_prefix wave_format.current d (to_str d) in
@@ -654,7 +663,7 @@ struct
     !max_string_length
   ;;
 
-  let draw_status ?(style = Style.default) ?wave_cursor ~ctx ~bounds (state : Waves.t) =
+  let draw_status ?(style = Style.default) ?wave_cursor ~ctx ~bounds (state : _ Waves.t) =
     fill ~ctx ~bounds ~style ' ';
     draw_string
       ~ctx
@@ -676,7 +685,7 @@ struct
     ?(style = Window_styles.default Style.default)
     ?(bounds : Window_bounds.t option)
     ~ctx
-    (state : Waves.t)
+    (state : _ Waves.t)
     =
     let bounds =
       match bounds with
@@ -750,7 +759,7 @@ struct
     | Status
     | No_pick
 
-  let pick ~(bounds : Window_bounds.t) ~r ~c (state : Waves.t) =
+  let pick ~(bounds : Window_bounds.t) ~r ~c (state : _ Waves.t) =
     let in_rect (b : Rect.t) = r >= b.r && c >= b.c && r < b.r + b.h && c < b.c + b.w in
     let get_signal_offset (b : Rect.t) =
       let r = r - b.r in
@@ -790,7 +799,7 @@ struct
       | Some _ -> 2
     ;;
 
-    let get_max_height border (state : Waves.t) =
+    let get_max_height border (state : _ Waves.t) =
       border_ext border + get_max_wave_height_in_chars state state.cfg.start_signal
     ;;
 

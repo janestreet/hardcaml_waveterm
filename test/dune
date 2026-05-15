@@ -1,8 +1,7 @@
 (library
  (name hardcaml_waveterm_test)
  (libraries base core expect_test_helpers_core file_path filesystem.core
-   hardcaml hardcaml_waveterm hardcaml_waveterm_cyclesim
-   hardcaml_waveterm_event_store hardcaml_waveterm_interactive
+   hardcaml hardcaml_waveterm hardcaml_waveterm_interactive
    hardcaml_waveterm_kernel notty-community notty-community.unix stdio)
  (preprocess
   (pps ppx_hardcaml ppx_jane)))

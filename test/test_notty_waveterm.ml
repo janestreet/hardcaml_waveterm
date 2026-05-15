@@ -5,7 +5,11 @@ let%expect_test "show a waveform through notty" =
   let waves =
     Test_data.create ~prefix:(fun _ -> "") ~length:10 ~num_signals:3 ~max_bits:64
   in
-  Render.draw_ui ~ctx waves;
+  Render.draw_ui
+    ~ctx
+    { Waves.cfg = Waves.Config.default
+    ; waves = Waveform.sort_ports_and_formats waves (Some [ Default ])
+    };
   Draw_notty.to_image ctx |> Notty_unix.output_image;
   [%expect
     {|
@@ -14,10 +18,10 @@ let%expect_test "show a waveform through notty" =
     │        ││        ││    └───┘   └───┘   └───┘   └───┘   └─│
     │dder    ││       1││────────┐                       ┌─────│
     │        ││        ││        └───────────────────────┘     │
+    │ikgcvexs││       1││────────┐       ┌───────┐       ┌─────│
+    │        ││        ││        └───────┘       └───────┘     │
     │        ││        ││────────┬───────┬───────┬───────┬─────│
     │s       ││D-667198││ -667198│543625 │14517  │121697 │-5568│
-    │        ││        ││────────┴───────┴───────┴───────┴─────│
-    │ikgcvexs││       1││────────┐       ┌───────┐       ┌─────│
     └────────┘└────────┘└──────────────────────────────────────┘
     |}]
 ;;
@@ -39,11 +43,7 @@ let%expect_test "normal binary rendering" =
   let waves =
     Test_data.create ~prefix:(fun _ -> "") ~length:10 ~num_signals:3 ~max_bits:2
   in
-  let data =
-    match waves.waves.(1) with
-    | Binary { data; _ } -> data
-    | _ -> failwith ""
-  in
+  let data = waves.(1).wave_data in
   render_binary_data ~data ~w:(`Cycles_per_char 3) ~off:0;
   render_binary_data ~data ~w:(`Cycles_per_char 2) ~off:0;
   render_binary_data ~data ~w:(`Cycles_per_char 1) ~off:0;
@@ -92,11 +92,7 @@ let%expect_test "data rendering" =
   let waves =
     Test_data.create ~prefix:(fun _ -> "") ~length:10 ~num_signals:3 ~max_bits:2
   in
-  let data =
-    match waves.waves.(2) with
-    | Data { data; _ } -> data
-    | _ -> failwith ""
-  in
+  let data = waves.(2).wave_data in
   (* fuzzy *)
   render_data ~data ~w:(`Cycles_per_char 3) ~off:0;
   render_data ~data ~w:(`Cycles_per_char 2) ~off:0;

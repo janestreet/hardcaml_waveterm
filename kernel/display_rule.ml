@@ -15,6 +15,7 @@ type t =
   | Custom of (Port.t -> Hardcaml.Wave_format.t option)
   | Custom_with_alignment of
       (Port.t -> (Hardcaml.Wave_format.t * Text_alignment.t) option)
+  | Divider of string
 [@@deriving sexp_of]
 
 module Regexp = struct
@@ -50,6 +51,7 @@ let port_name_matches ?(alignment = Text_alignment.Left) ?wave_format re =
 
 let custom ~f = Custom f
 let custom_with_alignment ~f = Custom_with_alignment f
+let divider name = Divider name
 
 module type States = sig
   type t [@@deriving sexp_of, enumerate]

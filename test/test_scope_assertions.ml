@@ -21,10 +21,10 @@ module Or_with_enable = struct
   end
 
   let create scope (i : _ I.t) =
-    Assertions.add scope "enabled means it is being used" (i.enable -->: (i.a |: i.b));
+    Assertions.add scope "enabled_means_it_is_being_used" (i.enable -->: (i.a |: i.b));
     let o = { O.enable_passthrough = i.enable; result = i.enable &: (i.a |: i.b) } in
-    Assertions.add scope "enable passthrough" (i.enable ==: o.enable_passthrough);
-    Assertions.add scope "result implies an input is one" (o.result -->: (i.a |: i.b));
+    Assertions.add scope "enable_passthrough_assert" (i.enable ==: o.enable_passthrough);
+    Assertions.add scope "result_implies_an_input_is_one" (o.result -->: (i.a |: i.b));
     o
   ;;
 
@@ -40,7 +40,7 @@ let%expect_test "scope with assertions" =
       (Or_with_enable.create scope)
   in
   let inputs = Cyclesim.inputs sim in
-  let waveform, sim = Waveform.create sim in
+  let waveform, sim = Cyclesim.Waveform.create sim in
   let assertions, sim = Assertions.trace sim (Scope.assertion_manager scope) in
   inputs.a := Bits.of_int_trunc ~width:1 0;
   inputs.b := Bits.of_int_trunc ~width:1 1;
@@ -49,33 +49,33 @@ let%expect_test "scope with assertions" =
   Cyclesim.cycle sim;
   inputs.b := Bits.of_int_trunc ~width:1 0;
   Cyclesim.cycle sim;
-  Waveform.expect ~serialize_to:"scope_with_assertions" waveform;
+  Waveform.expect ~signals_width:30 ~serialize_to:"scope_with_assertions" waveform;
   Stdio.print_s [%message (assertions : Assertions.t)];
   [%expect
     {|
-    ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │enable         ││        ┌───────────────                           │
-    │               ││────────┘                                          │
-    │a              ││                                                   │
-    │               ││────────────────────────                           │
-    │b              ││────────────────┐                                  │
-    │               ││                └───────                           │
-    │enable passthro││────────────────────────                           │
-    │               ││                                                   │
-    │enable_passthro││        ┌───────────────                           │
-    │               ││────────┘                                          │
-    │enabled means i││────────────────┐                                  │
-    │               ││                └───────                           │
-    │result         ││        ┌───────┐                                  │
-    │               ││────────┘       └───────                           │
-    │result implies ││────────────────────────                           │
-    │               ││                                                   │
-    └───────────────┘└───────────────────────────────────────────────────┘
-    53e55d03bc60aca3f7151f9b3094123e
+    ┌Signals─────────────────────┐┌Waves─────────────────────────────────┐
+    │enable                      ││        ┌───────────────              │
+    │                            ││────────┘                             │
+    │a                           ││                                      │
+    │                            ││────────────────────────              │
+    │b                           ││────────────────┐                     │
+    │                            ││                └───────              │
+    │enable_passthrough          ││        ┌───────────────              │
+    │                            ││────────┘                             │
+    │enable_passthrough_assert   ││────────────────────────              │
+    │                            ││                                      │
+    │enabled_means_it_is_being_us││────────────────┐                     │
+    │                            ││                └───────              │
+    │result                      ││        ┌───────┐                     │
+    │                            ││────────┘       └───────              │
+    │result_implies_an_input_is_o││────────────────────────              │
+    │                            ││                                      │
+    └────────────────────────────┘└──────────────────────────────────────┘
+    506341df454732fc001f2b86fa8ca25a
     (assertions
-     ((("enable passthrough" Not_violated)
-       ("enabled means it is being used" (Violated (2)))
-       ("result implies an input is one" Not_violated))))
+     (((enable_passthrough_assert Not_violated)
+       (enabled_means_it_is_being_used (Violated (2)))
+       (result_implies_an_input_is_one Not_violated))))
     |}]
 ;;
 
@@ -112,21 +112,21 @@ module Operator_operation = struct
                 i.op
                 [ ( Signal.of_int_trunc ~width:2 0
                   , [ result <-- (i.a |: i.b)
-                    ; Assertions.Always.add scope "assert (nested false)" Signal.gnd
+                    ; Assertions.Always.add scope "assert_(nested_false)" Signal.gnd
                     ] )
                 ; Signal.of_int_trunc ~width:2 1, [ result <-- (i.a &: i.b) ]
                 ; Signal.of_int_trunc ~width:2 2, [ result <-- i.a ^: i.b ]
                 ; ( Signal.of_int_trunc ~width:2 3
                   , [ result <-- ~:(i.a &: i.b)
-                    ; Assertions.Always.add scope "assert (nested true)" Signal.vdd
+                    ; Assertions.Always.add scope "assert_(nested_true)" Signal.vdd
                     ] )
                 ]
-            ; Assertions.Always.add scope "enable -> ~foo" ~:(i.foo)
+            ; Assertions.Always.add scope "enable_->_~foo" ~:(i.foo)
             ]
-            [ result <-- i.foo; Assertions.Always.add scope "~enable -> foo" i.foo ]
+            [ result <-- i.foo; Assertions.Always.add scope "~enable_->_foo" i.foo ]
         ; enable_passthrough <-- i.enable
-        ; Assertions.Always.add scope "assert enable" i.enable
-        ; Assertions.Always.add scope "assert false" Signal.gnd
+        ; Assertions.Always.add scope "assert_enable" i.enable
+        ; Assertions.Always.add scope "assert_false" Signal.gnd
         ]);
     { O.enable_passthrough = Always.Variable.value enable_passthrough
     ; result = Always.Variable.value result
@@ -144,7 +144,7 @@ let%expect_test "scope always with assertions" =
       (Operator_operation.create_with_always scope)
   in
   let inputs = Cyclesim.inputs sim in
-  let waveform, sim = Waveform.create sim in
+  let waveform, sim = Cyclesim.Waveform.create sim in
   let assertions, sim = Assertions.trace sim (Scope.assertion_manager scope) in
   inputs.a := Bits.of_int_trunc ~width:1 0;
   inputs.b := Bits.of_int_trunc ~width:1 1;
@@ -160,47 +160,48 @@ let%expect_test "scope always with assertions" =
   inputs.foo := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
   Waveform.expect
+    ~signals_width:20
     ~display_width:70
     ~serialize_to:"scope_with_assertions_using_always_api"
     waveform;
   Stdio.print_s [%message (assertions : Assertions.t)];
   [%expect
     {|
-    ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │enable         ││        ┌───────────────────────┐                  │
-    │               ││────────┘                       └───────           │
-    │a              ││                                                   │
-    │               ││────────────────────────────────────────           │
-    │b              ││────────────────────────────────────────           │
-    │               ││                                                   │
-    │foo            ││                                ┌───────           │
-    │               ││────────────────────────────────┘                  │
-    │               ││────────────────┬───────┬───────────────           │
-    │op             ││ 0              │1      │2                         │
-    │               ││────────────────┴───────┴───────────────           │
-    │assert (nested ││────────┐       ┌───────────────────────           │
-    │               ││        └───────┘                                  │
-    │assert (nested ││────────────────────────────────────────           │
-    │               ││                                                   │
-    │assert enable  ││        ┌───────────────────────┐                  │
-    │               ││────────┘                       └───────           │
-    │assert false   ││                                                   │
-    │               ││────────────────────────────────────────           │
-    │enable -> ~foo ││────────────────────────────────────────           │
-    │               ││                                                   │
-    │enable_passthro││        ┌───────────────────────┐                  │
-    │               ││────────┘                       └───────           │
-    │result         ││        ┌───────┐       ┌───────────────           │
-    │               ││────────┘       └───────┘                          │
-    │~enable -> foo ││        ┌───────────────────────────────           │
-    │               ││────────┘                                          │
-    └───────────────┘└───────────────────────────────────────────────────┘
+    ┌Signals───────────┐┌Waves───────────────────────────────────────────┐
+    │enable            ││        ┌───────────────────────┐               │
+    │                  ││────────┘                       └───────        │
+    │a                 ││                                                │
+    │                  ││────────────────────────────────────────        │
+    │b                 ││────────────────────────────────────────        │
+    │                  ││                                                │
+    │foo               ││                                ┌───────        │
+    │                  ││────────────────────────────────┘               │
+    │                  ││────────────────┬───────┬───────────────        │
+    │op                ││ 0              │1      │2                      │
+    │                  ││────────────────┴───────┴───────────────        │
+    │assert_(nested_fal││────────┐       ┌───────────────────────        │
+    │                  ││        └───────┘                               │
+    │assert_(nested_tru││────────────────────────────────────────        │
+    │                  ││                                                │
+    │assert_enable     ││        ┌───────────────────────┐               │
+    │                  ││────────┘                       └───────        │
+    │assert_false      ││                                                │
+    │                  ││────────────────────────────────────────        │
+    │enable_->_~foo    ││────────────────────────────────────────        │
+    │                  ││                                                │
+    │enable_passthrough││        ┌───────────────────────┐               │
+    │                  ││────────┘                       └───────        │
+    │result            ││        ┌───────┐       ┌───────────────        │
+    │                  ││────────┘       └───────┘                       │
+    │~enable_->_foo    ││        ┌───────────────────────────────        │
+    │                  ││────────┘                                       │
+    └──────────────────┘└────────────────────────────────────────────────┘
     d55aa079985ec7093fb9c721f9db0b34
     (assertions
-     ((("assert (nested false)" (Violated (1)))
-       ("assert (nested true)" Not_violated) ("assert enable" (Violated (0 4)))
-       ("assert false" (Violated (0 1 2 3 4))) ("enable -> ~foo" Not_violated)
-       ("~enable -> foo" (Violated (0))))))
+     ((("assert_(nested_false)" (Violated (1)))
+       ("assert_(nested_true)" Not_violated) (assert_enable (Violated (0 4)))
+       (assert_false (Violated (0 1 2 3 4))) (enable_->_~foo Not_violated)
+       (~enable_->_foo (Violated (0))))))
     |}]
 ;;
 

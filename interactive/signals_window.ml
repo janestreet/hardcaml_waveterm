@@ -3,12 +3,10 @@ open Hardcaml_waveterm_kernel
 module M = Signals_window_intf.M
 
 module Make
-    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-    (M : Hardcaml_waveterm_kernel.Expert.M(Data).S)
-    (Hierarchy : Hierarchy.M(Data)(M).S) =
+    (Data : Hardcaml_waveterm_kernel.Data.S)
+    (Render : Hardcaml_waveterm_kernel.Render.M(Data).S)
+    (Hierarchy : Hierarchy.M(Data).S) =
 struct
-  open M
-
   type t =
     { hierarchy : Hierarchy.t
     ; max_signal_name_width : int

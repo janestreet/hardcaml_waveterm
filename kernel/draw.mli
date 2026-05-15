@@ -30,6 +30,8 @@ type piece =
   (* Arrows *)
   | Up_arrow
   | Down_arrow
+  (* Other *)
+  | H_dash
 [@@deriving sexp_of]
 
 (** unicode value of piece *)

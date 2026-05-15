@@ -19,7 +19,7 @@ let%expect_test "clocking$clock renders as a clock" =
   let module Sim = Cyclesim.With_interface (I) (O) in
   let sim = Sim.create ~config:Cyclesim.Config.trace_all create in
   let i = Cyclesim.inputs sim in
-  let waveform, sim = Waveform.create sim in
+  let waveform, sim = Cyclesim.Waveform.create sim in
   i.clocking.clear := Bits.vdd;
   Cyclesim.cycle sim;
   i.clocking.clear := Bits.gnd;

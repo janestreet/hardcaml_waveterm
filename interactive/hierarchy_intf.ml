@@ -1,27 +1,24 @@
 open Base
 
-module M
-    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-    (Modl : Hardcaml_waveterm_kernel.Expert.M(Data).S) =
-struct
-  open Modl
-
+module M (Data : Hardcaml_waveterm_kernel.Data.S) = struct
   module type S = sig
+    type wave := Data.t Hardcaml_waveterm_kernel.Wave.t
+
     type node =
       { mutable visible : bool
-      ; signals : Wave.t list
+      ; signals : wave list
       ; children : node Base.Map.M(String).t
       }
     [@@deriving sexp_of]
 
     type currently_rendered =
-      { actual_wave : Wave.t array
-      ; for_rendering : Wave.t array
+      { actual_wave : wave array
+      ; for_rendering : wave array
       }
     [@@deriving sexp_of]
 
     type t =
-      { mutable cfg : Waves.Config.t
+      { mutable cfg : Hardcaml_waveterm_kernel.Waves.Config.t
       ; mutable cursors : Cursors.t
       ; root : node
       ; mutable currently_rendered : currently_rendered
@@ -30,8 +27,8 @@ struct
 
     val iter_nodes : f:(depth:int -> module_name:string -> node -> unit) -> t -> unit
     val set_currently_rendered : t -> unit
-    val get_currently_rendered_waves : t -> Waves.t
-    val of_waves : Waves.t -> t
+    val get_currently_rendered_waves : t -> Data.t Hardcaml_waveterm_kernel.Waves.t
+    val of_waves : Data.t Hardcaml_waveterm_kernel.Waves.t -> t
     val change_selected_signal_index : delta:int -> t -> int
     val toggle_selected_module_if_present : t -> bool
 
@@ -45,15 +42,12 @@ struct
     val reset_wave_format : t -> unit
     val cycle_colour : t -> unit
     val toggle_bold : t -> unit
-    val find_actual_wave : t -> int -> Wave.t
+    val find_actual_wave : t -> int -> wave
     val toggle_module : t -> string -> unit
   end
 end
 
 module type Hierarchy = sig
   module M = M
-
-  module Make
-      (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-      (Modl : Hardcaml_waveterm_kernel.Expert.M(Data).S) : M(Data)(Modl).S
+  module Make (Data : Hardcaml_waveterm_kernel.Data.S) : M(Data).S
 end

@@ -31,15 +31,7 @@ let regex_engine_flag =
 
 let wave_format_flag =
   let open Command.Param in
-  let wave_format_type =
-    Command.Arg_type.create (fun wave_format ->
-      match String.lowercase wave_format with
-      | "s" | "int" | "sint" | "signed-int" -> Wave_format.Int
-      | "u" | "uint" | "unsigned-int" -> Wave_format.Unsigned_int
-      | "b" | "bin" | "binary" -> Wave_format.Binary
-      | "h" | "hex" -> Wave_format.Hex
-      | wave_format -> raise_s [%message "Invalid wave_format" (wave_format : string)])
-  in
+  let wave_format_type = Command.Arg_type.create Wave_format.of_string_exn in
   flag
     "-wave-format"
     (optional_with_default Wave_format.Hex wave_format_type)
@@ -57,49 +49,39 @@ let get_display_rules ~regex_engine ~display_rules ~wave_format =
            ~wave_format:(Bit_or wave_format)))
 ;;
 
-module Make (Data : Hardcaml_waveterm_kernel.Expert.Data.S) = struct
-  module Waveterm = Hardcaml_waveterm.Expert.Make (Data)
-  module Widget = Hardcaml_waveterm_interactive.Widget.Make (Data) (Waveterm)
-
-  let command_show =
-    Command.basic
-      ~summary:"Display a hardcaml waveform from a waveform binary dump."
-      [%map_open.Command
-        let filename = anon ("filename" %: Filename_unix.arg_type)
-        and wave_width = flag "-scale" (optional int) ~doc:" Waveform scale"
-        and start_cycle =
-          flag "-start-cycle" (optional int) ~doc:" Initial clock cycle to render"
-        and signals_width =
-          flag "-signals-width" (optional int) ~doc:" Width of signals display window"
-        and values_width =
-          flag "-values-width" (optional int) ~doc:" Width of values display window"
-        and display_rules =
-          flag "-rule" (listed string) ~doc:" Display rule regular expressions"
-        and ui_state_file =
-          flag
-            "-ui-state-file"
-            (optional string)
-            ~doc:" Location to save/load UI state file"
-        and regex_engine = regex_engine_flag
-        and wave_format = wave_format_flag in
-        fun () ->
-          let waveform = Waveterm.Serialize.unmarshall filename in
-          let display_rules =
-            get_display_rules ~regex_engine ~display_rules ~wave_format
-          in
-          Widget.run
-            ?ui_state_file
-            ?signals_width
-            ?values_width
-            ?start_cycle
-            ?wave_width
-            ?display_rules
-            waveform]
-  ;;
-end
-
-module Show_cyclesim = Make (Hardcaml.Wave_data)
-module Show_evsim = Make (Hardcaml_waveterm_event_store.Bits_store)
+let command_show =
+  Command.basic
+    ~summary:"Display a hardcaml waveform from a waveform binary dump."
+    [%map_open.Command
+      let filename = anon ("filename" %: Filename_unix.arg_type)
+      and wave_width = flag "-scale" (optional int) ~doc:" Waveform scale"
+      and start_cycle =
+        flag "-start-cycle" (optional int) ~doc:" Initial clock cycle to render"
+      and signals_width =
+        flag "-signals-width" (optional int) ~doc:" Width of signals display window"
+      and values_width =
+        flag "-values-width" (optional int) ~doc:" Width of values display window"
+      and display_rules =
+        flag "-rule" (listed string) ~doc:" Display rule regular expressions"
+      and ui_state_file =
+        flag
+          "-ui-state-file"
+          (optional string)
+          ~doc:" Location to save/load UI state file"
+      and regex_engine = regex_engine_flag
+      and wave_format = wave_format_flag in
+      fun () ->
+        let waveform = Hardcaml_waveterm.Waveform.Serialize.unmarshall filename in
+        let display_rules = get_display_rules ~regex_engine ~display_rules ~wave_format in
+        Hardcaml_waveterm_interactive.Widget.run
+          ?ui_state_file
+          ?signals_width
+          ?values_width
+          ?start_cycle
+          ?wave_width
+          ?display_rules
+          waveform]
+;;
 
 let command_convert =
   Command.basic
@@ -114,10 +96,5 @@ let command_convert =
 
 let () =
   Command_unix.run
-    (Command.group
-       ~summary:""
-       [ "show", Show_cyclesim.command_show
-       ; "event-driven", Show_evsim.command_show
-       ; "convert", command_convert
-       ])
+    (Command.group ~summary:"" [ "show", command_show; "convert", command_convert ])
 ;;

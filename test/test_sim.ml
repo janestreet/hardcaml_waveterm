@@ -107,6 +107,7 @@ let%expect_test "display rules" =
       ; port_name_matches (Posix ".d.*") ~wave_format:Unsigned_int
       ; port_name_matches (Glob "*long*") ~wave_format:Binary
       ; port_name_is_one_of [ "b"; "a" ] ~wave_format:Int
+      ; divider "SEPARATOR"
       ; port_name_is "clr" ~wave_format:(Index [ "run"; "clear" ])
       ]
   in
@@ -121,6 +122,7 @@ let%expect_test "display rules" =
       (Regexp (re <opaque>) (wave_format (Unsigned_int)) (alignment Left))
       (Regexp (re <opaque>) (wave_format (Binary)) (alignment Left))
       (Names (names (b a)) (wave_format (Int)) (alignment Left))
+      (Divider SEPARATOR)
       (Names (names (clr)) (wave_format ((Index (run clear)))) (alignment Left))))
     |}];
   test () ~display_rules ~display_height:16;
@@ -138,9 +140,9 @@ let%expect_test "display rules" =
     │               ││────────────────┬───────┬───────────────           │
     │b              ││ 0              │24     │46                        │
     │               ││────────────────┴───────┴───────────────           │
+    │SEPARATOR      ││╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍│
     │               ││────────┬───────────────────────────────           │
     │clr            ││ clear  │run                                       │
-    │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
     8810362927e35cce94c7652659a13137
     |}]
@@ -362,7 +364,7 @@ let%expect_test "auto wave format of input, output and internal ports" =
   let b = output "b" a_n --$ format in
   let circ = Circuit.create_exn ~name:"whimsy" [ b ] in
   let sim = Cyclesim.create ~config:Cyclesim.Config.trace_all circ in
-  let waves, sim = Waveform.create sim in
+  let waves, sim = Cyclesim.Waveform.create sim in
   let a = Cyclesim.in_port sim "a" in
   for i = 0 to 5 do
     a := Bits.of_int_trunc ~width:1 (i land 1);
@@ -424,7 +426,7 @@ let%expect_test "auto display rules" =
   in
   let module Sim = Cyclesim.With_interface (Interface.Empty) (B) in
   let sim = Sim.create (fun _ -> B.Of_signal.zero ()) in
-  let waves, sim = Waveform.create sim in
+  let waves, sim = Cyclesim.Waveform.create sim in
   Cyclesim.cycle ~n:10 sim;
   let module A = Display_rules.With_interface (A) in
   Waveform.expect_exact waves ~display_rules:(List.concat [ A.default () ]);
@@ -485,4 +487,66 @@ let%expect_test "look_for_nth_instance_of_condition_in_waveform with suffix and 
   in
   print_s [%message "Found with regex (output)" (cycle_with_regex2 : int option)];
   [%expect {| ("Found with regex (output)" (cycle_with_regex2 ())) |}]
+;;
+
+let%expect_test "look_for_nth_instance_of_condition_in_waveform with pos/span/negate" =
+  let waveform = Lazy.force testbench in
+  (* In the testbench: clr = 1 at cycle 0, 0 at cycles 1..4. *)
+  let clr_is_high =
+    { Wave_condition.how_to_find = Suffix "clr"
+    ; condition = (fun bits -> Bits.equal bits Bits.vdd)
+    }
+  in
+  let clr_is_low =
+    { Wave_condition.how_to_find = Suffix "clr"
+    ; condition = (fun bits -> Bits.equal bits Bits.gnd)
+    }
+  in
+  let find ?pos ?span ?negate ~n conditions =
+    Waveform.look_for_nth_instance_of_condition_in_waveform
+      ?pos
+      ?span
+      ?negate
+      waveform
+      ~n
+      ~conditions
+  in
+  (* [pos] skips past matches before the starting cycle. *)
+  print_s
+    [%message
+      "clr=1 starting search at 0 and 1"
+        ~at_0:(find ~pos:0 ~n:1 [ clr_is_high ] : int option)
+        ~at_1:(find ~pos:1 ~n:1 [ clr_is_high ] : int option)];
+  [%expect {| ("clr=1 starting search at 0 and 1" (at_0 (0)) (at_1 ())) |}];
+  (* First three [clr=0] cycles are 1, 2, 3; [pos:2] skips to cycle 2. *)
+  print_s
+    [%message
+      "clr=0 first match from different start positions"
+        ~from_0:(find ~pos:0 ~n:1 [ clr_is_low ] : int option)
+        ~from_2:(find ~pos:2 ~n:1 [ clr_is_low ] : int option)];
+  [%expect
+    {|
+    ("clr=0 first match from different start positions"
+     (from_0 (1))
+     (from_2 (2)))
+    |}];
+  (* [span] limits the window; there is no clr=0 in cycles [0, 0]. *)
+  print_s
+    [%message
+      "clr=0 with span of exclusively cycle 0"
+        ~_:(find ~pos:0 ~span:1 ~n:1 [ clr_is_low ] : int option)];
+  [%expect {| ("clr=0 with span of exclusively cycle 0" ()) |}];
+  (* [span] larger than the remaining cycles is clamped to the end. *)
+  print_s
+    [%message
+      "clr=0 with oversized span"
+        ~n_is_3:(find ~pos:2 ~span:100 ~n:3 [ clr_is_low ] : int option)
+        ~n_is_r:(find ~pos:2 ~span:100 ~n:4 [ clr_is_low ] : int option)];
+  [%expect {| ("clr=0 with oversized span" (n_is_3 (4)) (n_is_r ())) |}];
+  (* [negate] inverts the combined condition: NOT (clr=1) is the same as clr=0. *)
+  print_s
+    [%message
+      "negate: first cycle where NOT (clr=1)"
+        ~_:(find ~negate:true ~n:1 [ clr_is_high ] : int option)];
+  [%expect {| ("negate: first cycle where NOT (clr=1)" (1)) |}]
 ;;

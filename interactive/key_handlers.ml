@@ -22,13 +22,10 @@ end
 
 module Waveform_window = struct
   module Make
-      (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-      (Modl : Hardcaml_waveterm_kernel.Expert.M(Data).S)
-      (Hierarchy : Hierarchy.M(Data)(Modl).S)
-      (Ui_state : Ui_state.M(Data)(Modl)(Hierarchy).S)
-      (X : Waveform_window_api
-           with type waves_config := Modl.Waves.Config.t
-            and type hierarchy := Hierarchy.t) =
+      (Data : Hardcaml_waveterm_kernel.Data.S)
+      (Hierarchy : Hierarchy.M(Data).S)
+      (Ui_state : Ui_state.M(Data)(Hierarchy).S)
+      (X : Waveform_window_api with type hierarchy := Hierarchy.t) =
   struct
     include X
     open Event_response

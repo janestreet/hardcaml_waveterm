@@ -1,12 +1,5 @@
 open Base
-
-module Type = struct
-  type t =
-    | Input
-    | Output
-    | Internal
-  [@@deriving compare ~localize, equal ~localize, sexp_of]
-end
+module Type = Hardcaml.Wave_data.Type
 
 type t =
   { type_ : Type.t

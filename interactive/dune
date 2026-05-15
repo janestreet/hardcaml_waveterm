@@ -1,7 +1,7 @@
 (library
  (name hardcaml_waveterm_interactive)
  (public_name hardcaml_waveterm.interactive)
- (libraries async base core hardcaml hardcaml_waveterm_cyclesim
+ (libraries async base core hardcaml hardcaml_waveterm
    hardcaml_waveterm_kernel notty-community notty_async stdio)
  (preprocess
   (pps ppx_jane ppx_hardcaml)))

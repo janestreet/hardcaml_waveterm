@@ -28,6 +28,6 @@ let () =
            ~num_signals:1000
            ~max_bits:64
        in
-       run_waves { waves with cfg = { waves.cfg with signals_width; values_width } })
+       Widget.By_cycle.run_async ~signals_width ~values_width waves)
   |> Command_unix.run
 ;;
