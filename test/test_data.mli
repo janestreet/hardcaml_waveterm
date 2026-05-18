@@ -7,4 +7,4 @@ val create
   -> length:int
   -> num_signals:int
   -> max_bits:int
-  -> Waves.t
+  -> Data.t Hardcaml.Wave_data.Wave.t array

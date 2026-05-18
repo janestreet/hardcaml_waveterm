@@ -2,10 +2,9 @@ open! Core
 
 module type Waveform_window_api = sig
   type t
-  type waves_config
   type hierarchy
 
-  val cfg : t -> waves_config
+  val cfg : t -> Hardcaml_waveterm_kernel.Waves.Config.t
   val cursors : t -> Cursors.t
   val hierarchy : t -> hierarchy
   val cycles_displayed : t -> int
@@ -32,13 +31,10 @@ end
 module type Key_handlers = sig
   module Waveform_window : sig
     module Make
-        (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-        (Modl : Hardcaml_waveterm_kernel.Expert.M(Data).S)
-        (Hierarchy : Hierarchy.M(Data)(Modl).S)
-        (Ui_state : Ui_state.M(Data)(Modl)(Hierarchy).S)
-        (Api : Waveform_window_api
-               with type waves_config := Modl.Waves.Config.t
-                and type hierarchy := Hierarchy.t) : sig
+        (Data : Hardcaml_waveterm_kernel.Data.S)
+        (Hierarchy : Hierarchy.M(Data).S)
+        (Ui_state : Ui_state.M(Data)(Hierarchy).S)
+        (Api : Waveform_window_api with type hierarchy := Hierarchy.t) : sig
       val key_table
         :  Key_actions.Key.t Key_actions.t
         -> (Api.t -> Event_response.t) Hashtbl.M(Key_actions.Key).t

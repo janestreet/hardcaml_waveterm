@@ -1,10 +1,5 @@
 open! Import
 
-let clock =
-  Wave.Clock
-    { name = "clock"; style = { style = Hardcaml_waveterm_kernel.Style.default } }
-;;
-
 let random_string ~max_length =
   String.init
     (Random.int max_length + 1)
@@ -21,34 +16,43 @@ let random_format () =
   | _ -> Wave_format.Binary
 ;;
 
+let clock =
+  { Hardcaml.Wave_data.Wave.name = "clock"
+  ; width = 1
+  ; typ = Internal
+  ; is_pseudo_clock = true
+  ; wave_format = Bit
+  ; wave_data = random_bits ~length:0 ~width:1
+  }
+;;
+
 let random_data i ~prefix ~length ~max_bits =
   if i % 2 = 0
   then
-    Wave.Binary
-      { name = prefix ^ random_string ~max_length:20
-      ; data = random_bits ~length ~width:1
-      ; style = { style = Hardcaml_waveterm_kernel.Style.default }
-      }
-  else
-    Wave.Data
-      { name = prefix ^ random_string ~max_length:20
-      ; data = random_bits ~length ~width:(Random.int max_bits + 1)
-      ; wave_format =
-          (let wave_format = random_format () in
-           { current = wave_format; default = wave_format })
-      ; text_alignment = Left
-      ; style = { style = Hardcaml_waveterm_kernel.Style.default }
-      }
+    { Hardcaml.Wave_data.Wave.name = prefix ^ random_string ~max_length:20
+    ; width = 1
+    ; typ = Internal
+    ; wave_format = Bit
+    ; is_pseudo_clock = false
+    ; wave_data = random_bits ~length ~width:1
+    }
+  else (
+    let wave_format = random_format () in
+    let width = Random.int max_bits + 1 in
+    { Hardcaml.Wave_data.Wave.name = prefix ^ random_string ~max_length:20
+    ; width
+    ; typ = Internal
+    ; wave_format
+    ; is_pseudo_clock = false
+    ; wave_data = random_bits ~length ~width
+    })
 ;;
 
 let create ~prefix ~length ~num_signals ~max_bits =
-  { Waves.cfg = Waves.Config.default
-  ; waves =
-      clock
-      :: List.init num_signals ~f:(fun i ->
-        random_data i ~prefix:(prefix i) ~length ~max_bits)
-      |> Array.of_list
-  }
+  clock
+  :: List.init num_signals ~f:(fun i ->
+    random_data i ~prefix:(prefix i) ~length ~max_bits)
+  |> Array.of_list
 ;;
 
 let%expect_test "1 bit cases" =

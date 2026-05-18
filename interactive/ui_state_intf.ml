@@ -1,9 +1,6 @@
 open Base
 
-module M
-    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-    (M : Hardcaml_waveterm_kernel.Expert.M(Data).S)
-    (Hierarchy : Hierarchy.M(Data)(M).S) =
+module M (Data : Hardcaml_waveterm_kernel.Data.S) (Hierarchy : Hierarchy.M(Data).S) =
 struct
   module type S = sig
     module Module : sig
@@ -11,7 +8,7 @@ struct
     end
 
     type t =
-      { cfg : M.Waves.Config.t
+      { cfg : Hardcaml_waveterm_kernel.Waves.Config.t
       ; modules : Module.t Base.Map.M(Base.String).t
       ; cursors : Cursors.t
       }
@@ -25,8 +22,6 @@ end
 module type Ui_state = sig
   module M = M
 
-  module Make
-      (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-      (Modl : Hardcaml_waveterm_kernel.Expert.M(Data).S)
-      (Hierarchy : Hierarchy.M(Data)(Modl).S) : M(Data)(Modl)(Hierarchy).S
+  module Make (Data : Hardcaml_waveterm_kernel.Data.S) (Hierarchy : Hierarchy.M(Data).S) :
+    M(Data)(Hierarchy).S
 end

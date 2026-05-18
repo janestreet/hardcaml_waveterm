@@ -1,14 +1,7 @@
 (** Simulation port description. *)
 
 open Base
-
-module Type : sig
-  type t =
-    | Input
-    | Output
-    | Internal
-  [@@deriving compare ~localize, sexp_of]
-end
+module Type = Hardcaml.Wave_data.Type
 
 type t =
   { type_ : Type.t

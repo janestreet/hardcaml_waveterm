@@ -1,9 +1,6 @@
 open Base
 
 module type S = sig
-  module Data : Data.S
-  module Wave : Wave.M(Data).S
-
   module Config : sig
     type t =
       { mutable signals_width : int
@@ -20,22 +17,15 @@ module type S = sig
     val default : t
   end
 
-  type t =
+  type 'data t =
     { cfg : Config.t
-    ; waves : Wave.t array
+    ; waves : 'data Wave.t array
     }
   [@@deriving sexp_of]
 
-  val total_rows : t -> int
-end
-
-module M (Data : Data.S) (Wave : Wave.M(Data).S) = struct
-  module type S = S with module Data := Data and module Wave := Wave
+  val total_rows : _ t -> int
 end
 
 module type Waves = sig
-  module type S = S
-
-  module M = M
-  module Make (Data : Data.S) (Wave : Wave.M(Data).S) : M(Data)(Wave).S
+  include S
 end

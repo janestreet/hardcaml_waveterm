@@ -2,13 +2,7 @@ open Base
 open Hardcaml_waveterm_kernel
 module M = Ui_state_intf.M
 
-module Make
-    (Data : Expert.Data.S)
-    (M : Expert.M(Data).S)
-    (Hierarchy : Hierarchy.M(Data)(M).S) =
-struct
-  open M
-
+module Make (Data : Data.S) (Hierarchy : Hierarchy.M(Data).S) = struct
   module Module = struct
     type t = { expanded : bool } [@@deriving sexp]
   end

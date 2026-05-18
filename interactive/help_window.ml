@@ -1,12 +1,7 @@
 open Base
 open Hardcaml_waveterm_kernel
 
-module Make
-    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-    (M : Hardcaml_waveterm_kernel.Expert.M(Data).S) =
-struct
-  open M
-
+module Make (Data : Data.S) (Render : Render.M(Data).S) = struct
   type t =
     { key_table : (Key_actions.Key.t, t -> Event_response.t) Hashtbl.t
     ; key_help : Key_help.t list

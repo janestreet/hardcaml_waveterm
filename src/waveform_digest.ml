@@ -1,39 +1,33 @@
 open Base
-open Hardcaml_waveterm_kernel.Expert
-module M = Waveform_digest_intf.M
+open Hardcaml
 
-module Make
-    (Data : Data.S)
-    (Wave : Wave.M(Data).S)
-    (Waves : Waves.M(Data)(Wave).S)
-    (Render : Render.M(Data)(Wave)(Waves).S)
-    (Waveform : Waveform.M(Data)(Wave)(Waves)(Render).S) =
-struct
-  type t = string
+module type S = Waveform_digest_intf.S
 
-  let create (waves : Waveform.t) =
-    let hash =
-      Crypto.Cryptokit.MAC.aes ~pad:Crypto.Cryptokit.Padding._8000 "HardcamlHardcaml"
-    in
-    let waves = Waveform.waves waves in
-    for i = 0 to Array.length waves - 1 do
-      let wave = waves.(i) in
-      match wave with
-      | Empty _ | Clock _ ->
-        (* [Expert.Wave.get_data] raises if we try to access a [Clock] or [Empty] data
-           wave. Just ignore it. *)
-        ()
-      | _ ->
-        let data = Wave.get_data waves.(i) in
-        let raw, length = Data.get_digestible_string data in
-        hash#add_substring raw 0 length
-    done;
-    hash#result
-  ;;
+type t = string
 
-  let to_hex_string t =
-    String.to_list t
-    |> List.map ~f:(fun c -> Printf.sprintf "%02x" (Char.to_int c))
-    |> String.concat
-  ;;
-end
+let create
+  (type data)
+  (module Data : Hardcaml.Wave_data.S with type t = data)
+  (waves : data Hardcaml.Wave_data.Wave.t array)
+  =
+  let hash =
+    Crypto.Cryptokit.MAC.aes ~pad:Crypto.Cryptokit.Padding._8000 "HardcamlHardcaml"
+  in
+  for i = 0 to Array.length waves - 1 do
+    let raw, length = Data.get_digestible_string waves.(i).wave_data in
+    hash#add_substring raw 0 length
+  done;
+  hash#result
+;;
+
+let create (t : Hardcaml.Wave_data.t) =
+  match t with
+  | By_cycle waves -> create (module Wave_data_in_cycles) waves
+  | By_event waves -> create (module Wave_data_in_events.Bits) waves
+;;
+
+let to_hex_string t =
+  String.to_list t
+  |> List.map ~f:(fun c -> Printf.sprintf "%02x" (Char.to_int c))
+  |> String.concat
+;;

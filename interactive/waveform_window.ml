@@ -11,15 +11,14 @@ module With_bounds = struct
 end
 
 module Make
-    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-    (M : Hardcaml_waveterm_kernel.Expert.M(Data).S) =
+    (Data : Hardcaml_waveterm_kernel.Data.S)
+    (Render : Hardcaml_waveterm_kernel.Render.M(Data).S) =
 struct
-  open M
-  module Hierarchy = Hierarchy.Make (Data) (M)
-  module Signals_window = Signals_window.Make (Data) (M) (Hierarchy)
-  module Values_window = Values_window.Make (Data) (M) (Hierarchy)
-  module Waves_window = Waves_window.Make (Data) (M) (Hierarchy)
-  module Ui_state = Ui_state.Make (Data) (M) (Hierarchy)
+  module Hierarchy = Hierarchy.Make (Data)
+  module Signals_window = Signals_window.Make (Data) (Render) (Hierarchy)
+  module Values_window = Values_window.Make (Data) (Render) (Hierarchy)
+  module Waves_window = Waves_window.Make (Data) (Render) (Hierarchy)
+  module Ui_state = Ui_state.Make (Data) (Hierarchy)
 
   type t =
     { hierarchy : Hierarchy.t
@@ -79,7 +78,7 @@ struct
   ;;
 
   let cycles_displayed t =
-    match M.Render.wave_width_of_code t.hierarchy.cfg.wave_width with
+    match Render.wave_width_of_code t.hierarchy.cfg.wave_width with
     | `Cycles_per_char w ->
       (* This isn't the actual bounds - it needs adjustment for the border. *)
       t.waves_window.bounds.w * w
@@ -93,7 +92,7 @@ struct
   ;;
 
   module Keys =
-    Key_handlers.Waveform_window.Make (Data) (M) (Hierarchy) (Ui_state)
+    Key_handlers.Waveform_window.Make (Data) (Hierarchy) (Ui_state)
       (struct
         type nonrec t = t
 
@@ -141,7 +140,7 @@ struct
 
   (* We optionally take in an existing [Waveform_window.t] to use in constructing the new
      [t]. This is useful for when we want to resize an existing window. *)
-  let create ?(waveform : t option) ~rows ~cols ~ui_state_file (waves : M.Waves.t) keys =
+  let create ?(waveform : t option) ~rows ~cols ~ui_state_file (waves : _ Waves.t) keys =
     let hierarchy =
       (* hierarchy is subtle - it is a shared state that needs to survive when the
          waveform is recreated on things like resizing. It is also stored inside the
@@ -409,8 +408,7 @@ struct
       && Scroll.Scrollbar.mouse_event scroll mouse
     in
     let or_no_short_circuit a b = a || b in
-    match button with
-    | `Press b ->
+    let handle_press b =
       last_mouse_button := Some (b, mods);
       List.fold_left
         [ update_buttons
@@ -422,11 +420,13 @@ struct
         ]
         ~init:false
         ~f:(fun acc f -> or_no_short_circuit acc (f !last_mouse_button))
-    | `Release ->
+    in
+    let handle_release () =
       let button = !last_mouse_button in
       last_mouse_button := None;
       update_cursor button
-    | `Drag ->
+    in
+    let handle_drag () =
       List.fold_left
         [ update_cursor
         ; update_scroll_bar t.scroll_vert
@@ -436,6 +436,11 @@ struct
         ]
         ~init:false
         ~f:(fun acc f -> or_no_short_circuit acc (f !last_mouse_button))
+    in
+    match button with
+    | `Press b -> handle_press b
+    | `Release -> handle_release ()
+    | `Drag -> handle_drag ()
   ;;
 
   (* return true to redraw *)

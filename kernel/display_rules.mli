@@ -9,18 +9,26 @@ open Base
 
 type t = Display_rule.t list [@@deriving sexp_of]
 
-val run_rule
-  :  Display_rule.t
-  -> Port.t
-  -> (Hardcaml.Wave_format.t option * Text_alignment.t) option
+type format =
+  { wave_format : Hardcaml.Wave_format.t option
+  ; alignment : Text_alignment.t
+  }
+
+type matched_port =
+  { port : Port.t
+  ; format : format option
+  }
+
+type matched_rule =
+  | Port of matched_port
+  | Divider of string
+
+val run_rule : Display_rule.t -> Port.t -> format option
 
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object). Unmatched ports are not shown, unless [Rule.default]
     (or a similar custom rule) is included as the last display rule. *)
-val sort_ports_and_formats
-  :  t
-  -> Port.t list
-  -> (Port.t * (Hardcaml.Wave_format.t option * Text_alignment.t) option) list
+val sort_ports_and_formats : t -> Port.t list -> matched_rule list
 
 (** Check if a given port is displayed by any of the rules. *)
 val is_displayed : t -> Port.t -> bool

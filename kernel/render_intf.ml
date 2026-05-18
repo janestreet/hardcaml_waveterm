@@ -2,24 +2,22 @@ open Base
 open Hardcaml
 
 module type S = sig
-  module Data : Data.S
-  module Wave : Wave.M(Data).S
-  module Waves : Waves.M(Data)(Wave).S
+  module Data : Hardcaml.Wave_data.S
 
   (** Functions for drawing waves, signal names and values *)
 
   (** max width of name window *)
-  val get_max_signal_width_in_chars : Waves.t -> int
+  val get_max_signal_width_in_chars : Data.t Waves.t -> int
 
   (** gets an estimate fo the max with of values. Inaccruate for the constructors [U], [S]
       and [F]. *)
-  val get_estimated_max_value_width : Waves.t -> int
+  val get_estimated_max_value_width : Data.t Waves.t -> int
 
   (** max no of wave cycles *)
-  val total_cycles_in_waveform : Waves.t -> int
+  val total_cycles_in_waveform : Data.t Waves.t -> int
 
   (** max no of wave signals *)
-  val total_signals_in_waveform : Waves.t -> int
+  val total_signals_in_waveform : Data.t Waves.t -> int
 
   (** Turn the UI integer representation of wave_width into a the rendering form. *)
   val wave_width_of_code : int -> [ `Cycles_per_char of int | `Chars_per_cycle of int ]
@@ -55,7 +53,8 @@ module type S = sig
     -> off:int
     -> unit
 
-  type 'a draw_item = ?style:Style.t -> ctx:Draw.ctx -> bounds:Rect.t -> Waves.t -> 'a
+  type 'a draw_item =
+    ?style:Style.t -> ctx:Draw.ctx -> bounds:Rect.t -> Data.t Waves.t -> 'a
 
   val with_border : draw:'a draw_item -> label:string -> ?border:Style.t -> 'a draw_item
 
@@ -65,7 +64,7 @@ module type S = sig
     -> bounds:Rect.t
     -> wave_cursor:int
     -> primary:bool
-    -> state:Waves.t
+    -> state:Data.t Waves.t
     -> unit
 
   (** draw waveforms *)
@@ -75,7 +74,7 @@ module type S = sig
     -> selected_wave_index:int option
     -> ctx:Draw.ctx
     -> bounds:Rect.t
-    -> Waves.t
+    -> Data.t Waves.t
     -> unit
 
   (** draw signal names *)
@@ -85,7 +84,7 @@ module type S = sig
     -> selected_wave_index:int option
     -> ctx:Draw.ctx
     -> bounds:Rect.t
-    -> Waves.t
+    -> Data.t Waves.t
     -> unit
 
   (** draw signal values *)
@@ -95,7 +94,7 @@ module type S = sig
     -> selected_wave_index:int option
     -> ctx:Draw.ctx
     -> bounds:Rect.t
-    -> Waves.t
+    -> Data.t Waves.t
     -> int
 
   val draw_status
@@ -103,7 +102,7 @@ module type S = sig
     -> ?wave_cursor:int
     -> ctx:Draw.ctx
     -> bounds:Rect.t
-    -> Waves.t
+    -> Data.t Waves.t
     -> unit
 
   (** draw standard user inferface (names, values, waveforms left to right *)
@@ -112,7 +111,7 @@ module type S = sig
     -> ?style:Window_styles.t
     -> ?bounds:Window_bounds.t
     -> ctx:Draw.ctx
-    -> Waves.t
+    -> Data.t Waves.t
     -> unit
 
   val draw_help
@@ -133,7 +132,7 @@ module type S = sig
     | Status
     | No_pick
 
-  val pick : bounds:Window_bounds.t -> r:int -> c:int -> Waves.t -> pick
+  val pick : bounds:Window_bounds.t -> r:int -> c:int -> Data.t Waves.t -> pick
 
   module Static : sig
     val draw
@@ -145,27 +144,24 @@ module type S = sig
       -> ?rows:int
       -> ?cols:int
       -> ?signals_width:int
-      -> Waves.t
+      -> Data.t Waves.t
       -> Draw.ctx
 
     val draw_full
       :  ?signals_alignment:Text_alignment.t
       -> ?style:Window_styles.t
-      -> Waves.t
+      -> Data.t Waves.t
       -> Draw.ctx * Draw.ctx * Draw.ctx
   end
 end
 
-module M (Data : Data.S) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) = struct
-  module type S =
-    S with module Data := Data and module Wave := Wave and module Waves := Waves
+module M (Data : Hardcaml.Wave_data.S) = struct
+  module type S = S with module Data := Data
 end
 
 module type Render = sig
   module type S = S
 
   module M = M
-
-  module Make (Data : Data.S) (Wave : Wave.M(Data).S) (Waves : Waves.M(Data)(Wave).S) :
-    M(Data)(Wave)(Waves).S
+  module Make (Data : Hardcaml.Wave_data.S) : M(Data).S
 end

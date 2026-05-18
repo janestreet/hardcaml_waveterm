@@ -14,5 +14,5 @@ module type S = sig
 end
 
 module type Help_window = sig
-  module Make (Data : Expert.Data.S) (Modl : Expert.M(Data).S) : S
+  module Make (Data : Data.S) (Render : Render.M(Data).S) : S
 end

@@ -36,6 +36,6 @@ let () =
      fun () ->
        Random.init 42;
        let waves = Test_data.create ~prefix ~length:1000 ~num_signals:1000 ~max_bits:64 in
-       run_waves { waves with cfg = { waves.cfg with signals_width; values_width } })
+       Widget.By_cycle.run_async ~values_width ~signals_width waves)
   |> Command_unix.run
 ;;

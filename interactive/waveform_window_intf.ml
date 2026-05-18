@@ -1,9 +1,9 @@
 open Base
 open Hardcaml_waveterm_kernel
 
-module M (Data : Expert.Data.S) (M : Expert.M(Data).S) = struct
+module M (Data : Data.S) = struct
   module type S = sig
-    module Hierarchy : Hierarchy.M(Data)(M).S
+    module Hierarchy : Hierarchy.M(Data).S
 
     type t [@@deriving sexp_of]
 
@@ -12,7 +12,7 @@ module M (Data : Expert.Data.S) (M : Expert.M(Data).S) = struct
       -> rows:int
       -> cols:int
       -> ui_state_file:string
-      -> M.Waves.t
+      -> Data.t Waves.t
       -> Key_actions.Key.t Key_actions.t
       -> t
 
@@ -31,5 +31,7 @@ end
 
 module type Waveform_window = sig
   module M = M
-  module Make (Data : Expert.Data.S) (Modl : Expert.M(Data).S) : M(Data)(Modl).S
+
+  module Make (Data : Data.S) (Render : Hardcaml_waveterm_kernel.Render.M(Data).S) :
+    M(Data).S
 end

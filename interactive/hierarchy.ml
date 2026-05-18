@@ -3,26 +3,24 @@ open Base
 include struct
   open Hardcaml_waveterm_kernel
   module Style = Style
+  module Waves = Waves
 end
 
 module M = Hierarchy_intf.M
 
-module Make
-    (Data : Hardcaml_waveterm_kernel.Expert.Data.S)
-    (M : Hardcaml_waveterm_kernel.Expert.M(Data).S) =
-struct
-  open M
+module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
+  module Wave = Hardcaml_waveterm_kernel.Wave
 
   type node =
     { mutable visible : bool
-    ; signals : Wave.t list
+    ; signals : Data.t Wave.t list
     ; children : node Base.Map.M(String).t
     }
   [@@deriving sexp_of]
 
   type currently_rendered =
-    { actual_wave : Wave.t array
-    ; for_rendering : Wave.t array
+    { actual_wave : Data.t Wave.t array
+    ; for_rendering : Data.t Wave.t array
     }
   [@@deriving sexp_of]
 
@@ -60,7 +58,7 @@ struct
   let move_to_delta_on_active_node ~start_cycle ~search_forwards_or_backwards (t : t) =
     let selected_wave_index = t.cfg.selected_signal in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
-    | Clock _ | Empty _ -> None
+    | Clock _ | Empty _ | Divider _ -> None
     | Binary { data; _ } | Data { data; _ } ->
       let len = Data.length data in
       let start_cycle =
@@ -98,7 +96,7 @@ struct
   let cycle_wave_format (t : t) =
     let selected_wave_index = t.cfg.selected_signal in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
-    | Clock _ | Empty _ | Binary _ -> ()
+    | Clock _ | Empty _ | Divider _ | Binary _ -> ()
     | Data { wave_format; _ } ->
       wave_format.current
       <- (match wave_format.current with
@@ -118,7 +116,7 @@ struct
   let reset_wave_format (t : t) =
     let selected_wave_index = t.cfg.selected_signal in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
-    | Clock _ | Empty _ | Binary _ -> ()
+    | Clock _ | Empty _ | Divider _ | Binary _ -> ()
     | Data { wave_format; _ } -> wave_format.current <- wave_format.default
   ;;
 
@@ -142,6 +140,7 @@ struct
     in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
     | Empty _ -> ()
+    | Divider { style; _ } -> style.style <- cycle_fg_colour style.style
     | Clock { style; _ } -> style.style <- cycle_fg_colour style.style
     | Binary { style; _ } -> style.style <- cycle_fg_colour style.style
     | Data { style; _ } -> style.style <- cycle_fg_colour style.style
@@ -152,6 +151,7 @@ struct
     let toggle_bold { Style.bold; fg; bg } = { Style.bold = not bold; fg; bg } in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
     | Empty _ -> ()
+    | Divider { style; _ } -> style.style <- toggle_bold style.style
     | Clock { style; _ } -> style.style <- toggle_bold style.style
     | Binary { style; _ } -> style.style <- toggle_bold style.style
     | Data { style; _ } -> style.style <- toggle_bold style.style
@@ -200,7 +200,7 @@ struct
     t.currently_rendered <- { for_rendering; actual_wave }
   ;;
 
-  let of_waves (waves : Waves.t) =
+  let of_waves (waves : Data.t Waves.t) =
     let init = empty_node in
     let ret =
       Array.fold waves.waves ~init ~f:(fun acc wave ->
@@ -253,6 +253,6 @@ struct
     | Empty { name } ->
       toggle_module t name;
       true
-    | Clock _ | Data _ | Binary _ -> false
+    | Clock _ | Divider _ | Data _ | Binary _ -> false
   ;;
 end

@@ -2,21 +2,50 @@ open Base
 
 type t = Display_rule.t list [@@deriving sexp_of]
 
-let run_rule (t : Display_rule.t) (port : Port.t)
-  : (Hardcaml.Wave_format.t option * Text_alignment.t) option
-  =
+type format =
+  { wave_format : Hardcaml.Wave_format.t option
+  ; alignment : Text_alignment.t
+  }
+
+type matched_port =
+  { port : Port.t
+  ; format : format option
+  }
+
+type matched_rule =
+  | Port of matched_port
+  | Divider of string
+
+let compare_matched_rule_by_port s t =
+  match s, t with
+  | Port _, Divider _ -> -1
+  | Divider _, Port _ -> 1
+  | Divider _, Divider _ -> 0
+  | Port { port; format = _ }, Port { port = port'; format = _ } ->
+    Port.compare port port'
+;;
+
+let run_rule (t : Display_rule.t) (port : Port.t) : format option =
   match t with
-  | Default -> if port.width = 1 then Some (Some Bit, Left) else Some (Some Hex, Left)
+  | Default ->
+    if port.width = 1
+    then Some { wave_format = Some Bit; alignment = Left }
+    else Some { wave_format = Some Hex; alignment = Left }
   | Regexp { re; wave_format; alignment } ->
     Option.map
       (Re.exec_opt re (port.port_name |> Port_name.to_string))
-      ~f:(fun _ -> wave_format, alignment)
+      ~f:(fun _ -> { wave_format; alignment })
   | Names { names; wave_format; alignment } ->
     if List.mem names port.port_name ~equal:Port_name.equal
-    then Some (wave_format, alignment)
+    then Some { wave_format; alignment }
     else None
-  | Custom f -> Option.map (f port) ~f:(fun a -> Some a, Text_alignment.Left)
-  | Custom_with_alignment f -> Option.map (f port) ~f:(fun (f, a) -> Some f, a)
+  | Custom f ->
+    Option.map (f port) ~f:(fun wave_format ->
+      { wave_format = Some wave_format; alignment = Text_alignment.Left })
+  | Custom_with_alignment f ->
+    Option.map (f port) ~f:(fun (wave_format, alignment) ->
+      { wave_format = Some wave_format; alignment })
+  | Divider _ -> (* this is handled before the call *) failwith "Unexpected"
 ;;
 
 let rec sort (t : Display_rule.t list) ~unmatched =
@@ -24,17 +53,19 @@ let rec sort (t : Display_rule.t list) ~unmatched =
   | [] -> []
   | Default :: _ ->
     let defaults =
-      List.sort unmatched ~compare:Port.compare |> List.map ~f:(fun port -> port, None)
+      List.sort unmatched ~compare:Port.compare
+      |> List.map ~f:(fun port -> Port { port; format = None })
     in
     [ defaults ]
+  | Divider name :: t -> [ Divider name ] :: sort t ~unmatched
   | rule :: t ->
     let matched, unmatched =
       List.partition_map unmatched ~f:(fun port ->
         match run_rule rule port with
-        | Some (fmt, alignment) -> First (port, Some (fmt, alignment))
+        | Some format -> First (Port { port; format = Some format })
         | None -> Second port)
     in
-    List.sort matched ~compare:[%compare: Port.t * (_ * _) option] :: sort t ~unmatched
+    List.sort matched ~compare:compare_matched_rule_by_port :: sort t ~unmatched
 ;;
 
 let is_displayed (t : Display_rule.t list) =

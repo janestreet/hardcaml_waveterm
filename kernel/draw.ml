@@ -25,6 +25,7 @@ type piece =
   (* Arrows *)
   | Up_arrow
   | Down_arrow
+  | H_dash
 [@@deriving sexp_of]
 
 (* kinda interesting *)
@@ -51,6 +52,7 @@ let unicode_of_piece = function
   | QTR -> 0x259d
   | Up_arrow -> 0x2191
   | Down_arrow -> 0x2193
+  | H_dash -> 0x254d
 ;;
 
 type ctx = (int * Style.t) array array
