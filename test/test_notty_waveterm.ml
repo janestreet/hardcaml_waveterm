@@ -54,10 +54,10 @@ let%expect_test "normal binary rendering" =
   render_binary_data ~data ~w:(`Chars_per_cycle 5) ~off:0;
   [%expect
     {|
-    ╥╥─┐
-    ╨╨ └
-    ╥─╥─╥
-    ╨ ╨ ╨
+    ┌┐┌┐
+    ┘└┘└
+    ┌─┐┌┐
+    ┘ └┘└
      ┌───┐┌──┐
     ─┘   └┘  └
      ┌───┐┌──┐
@@ -70,6 +70,177 @@ let%expect_test "normal binary rendering" =
     ────┘               └───┘           └───
          ┌───────────────────┐    ┌──────────────┐
     ─────┘                   └────┘              └────
+    |}]
+;;
+
+let b0 = Bits.gnd
+let b1 = Bits.vdd
+
+let data_of_list bits =
+  let len = List.length bits in
+  let arr = Array.of_list bits in
+  Data.init len ~width:1 ~f:(fun i -> arr.(i))
+;;
+
+let bits_to_str bits = List.map bits ~f:Bits.to_string |> String.concat ~sep:" "
+
+let test_single data ~render =
+  List.iter data ~f:(fun data ->
+    print_endline (bits_to_str data);
+    render ~data:(data_of_list data) ~w:(`Cycles_per_char 3) ~off:0)
+;;
+
+let test_back_to_back data ~render =
+  List.iter data ~f:(fun prev ->
+    List.iter data ~f:(fun data ->
+      print_endline (bits_to_str prev ^ " - " ^ bits_to_str data);
+      render ~data:(data_of_list (prev @ data)) ~w:(`Cycles_per_char 3) ~off:0))
+;;
+
+let fuzz_data =
+  [ [ b1; b1; b1 ]
+  ; [ b1; b1; b0 ]
+  ; [ b1; b0; b1 ]
+  ; [ b0; b0; b0 ]
+  ; [ b0; b0; b1 ]
+  ; [ b0; b1; b0 ]
+  ]
+;;
+
+let%expect_test "fuzzing - binary" =
+  test_single fuzz_data ~render:render_binary_data;
+  [%expect
+    {|
+    1 1 1
+    ─
+
+    1 1 0
+    ┐
+    └
+    1 0 1
+    ╥
+    ╨
+    0 0 0
+
+    ─
+    0 0 1
+    ┌
+    ┘
+    0 1 0
+    ╥
+    ╨
+    |}];
+  test_back_to_back fuzz_data ~render:render_binary_data;
+  [%expect
+    {|
+    1 1 1 - 1 1 1
+    ──
+
+    1 1 1 - 1 1 0
+    ─┐
+     └
+    1 1 1 - 1 0 1
+    ─╥
+     ╨
+    1 1 1 - 0 0 0
+    ─┐
+     └
+    1 1 1 - 0 0 1
+    ─╥
+     ╨
+    1 1 1 - 0 1 0
+    ─╥
+     ╨
+    1 1 0 - 1 1 1
+    ┐┌
+    └┘
+    1 1 0 - 1 1 0
+    ┐╥
+    └╨
+    1 1 0 - 1 0 1
+    ┐╥
+    └╨
+    1 1 0 - 0 0 0
+    ┐
+    └─
+    1 1 0 - 0 0 1
+    ┐┌
+    └┘
+    1 1 0 - 0 1 0
+    ┐╥
+    └╨
+    1 0 1 - 1 1 1
+    ╥─
+    ╨
+    1 0 1 - 1 1 0
+    ╥┐
+    ╨└
+    1 0 1 - 1 0 1
+    ╥╥
+    ╨╨
+    1 0 1 - 0 0 0
+    ╥┐
+    ╨└
+    1 0 1 - 0 0 1
+    ╥╥
+    ╨╨
+    1 0 1 - 0 1 0
+    ╥╥
+    ╨╨
+    0 0 0 - 1 1 1
+     ┌
+    ─┘
+    0 0 0 - 1 1 0
+     ╥
+    ─╨
+    0 0 0 - 1 0 1
+     ╥
+    ─╨
+    0 0 0 - 0 0 0
+
+    ──
+    0 0 0 - 0 0 1
+     ┌
+    ─┘
+    0 0 0 - 0 1 0
+     ╥
+    ─╨
+    0 0 1 - 1 1 1
+    ┌─
+    ┘
+    0 0 1 - 1 1 0
+    ┌┐
+    ┘└
+    0 0 1 - 1 0 1
+    ┌╥
+    ┘╨
+    0 0 1 - 0 0 0
+    ┌┐
+    ┘└
+    0 0 1 - 0 0 1
+    ┌╥
+    ┘╨
+    0 0 1 - 0 1 0
+    ┌╥
+    ┘╨
+    0 1 0 - 1 1 1
+    ╥┌
+    ╨┘
+    0 1 0 - 1 1 0
+    ╥╥
+    ╨╨
+    0 1 0 - 1 0 1
+    ╥╥
+    ╨╨
+    0 1 0 - 0 0 0
+    ╥
+    ╨─
+    0 1 0 - 0 0 1
+    ╥┌
+    ╨┘
+    0 1 0 - 0 1 0
+    ╥╥
+    ╨╨
     |}]
 ;;
 
@@ -104,9 +275,9 @@ let%expect_test "data rendering" =
   render_data ~data ~w:(`Chars_per_cycle 5) ~off:0;
   [%expect
     {|
-    ╥╥──
-    ║║1
-    ╨╨──
+    ┬╥──
+    │║1
+    ┴╨──
     ─╥───
      ║1
     ─╨───
@@ -128,5 +299,184 @@ let%expect_test "data rendering" =
     ──────────┬────┬────┬─────────────────────────────
      0        │1   │0   │1
     ──────────┴────┴────┴─────────────────────────────
+    |}]
+;;
+
+let%expect_test "fuzzing - data" =
+  test_single fuzz_data ~render:render_data;
+  [%expect
+    {|
+    1 1 1
+    ─
+
+    ─
+    1 1 0
+    ┬
+    │
+    ┴
+    1 0 1
+    ╥
+    ║
+    ╨
+    0 0 0
+    ─
+
+    ─
+    0 0 1
+    ┬
+    │
+    ┴
+    0 1 0
+    ╥
+    ║
+    ╨
+    |}];
+  test_back_to_back fuzz_data ~render:render_data;
+  [%expect
+    {|
+    1 1 1 - 1 1 1
+    ──
+     1
+    ──
+    1 1 1 - 1 1 0
+    ─┬
+     │
+    ─┴
+    1 1 1 - 1 0 1
+    ─╥
+     ║
+    ─╨
+    1 1 1 - 0 0 0
+    ─┬
+     │
+    ─┴
+    1 1 1 - 0 0 1
+    ─╥
+     ║
+    ─╨
+    1 1 1 - 0 1 0
+    ─╥
+     ║
+    ─╨
+    1 1 0 - 1 1 1
+    ┬┬
+    ││
+    ┴┴
+    1 1 0 - 1 1 0
+    ┬╥
+    │║
+    ┴╨
+    1 1 0 - 1 0 1
+    ┬╥
+    │║
+    ┴╨
+    1 1 0 - 0 0 0
+    ┬─
+    │0
+    ┴─
+    1 1 0 - 0 0 1
+    ┬┬
+    ││
+    ┴┴
+    1 1 0 - 0 1 0
+    ┬╥
+    │║
+    ┴╨
+    1 0 1 - 1 1 1
+    ╥─
+    ║1
+    ╨─
+    1 0 1 - 1 1 0
+    ╥┬
+    ║│
+    ╨┴
+    1 0 1 - 1 0 1
+    ╥╥
+    ║║
+    ╨╨
+    1 0 1 - 0 0 0
+    ╥─
+    ║0
+    ╨─
+    1 0 1 - 0 0 1
+    ╥┬
+    ║│
+    ╨┴
+    1 0 1 - 0 1 0
+    ╥╥
+    ║║
+    ╨╨
+    0 0 0 - 1 1 1
+    ─┬
+     │
+    ─┴
+    0 0 0 - 1 1 0
+    ─╥
+     ║
+    ─╨
+    0 0 0 - 1 0 1
+    ─╥
+     ║
+    ─╨
+    0 0 0 - 0 0 0
+    ──
+     0
+    ──
+    0 0 0 - 0 0 1
+    ─┬
+     │
+    ─┴
+    0 0 0 - 0 1 0
+    ─╥
+     ║
+    ─╨
+    0 0 1 - 1 1 1
+    ┬─
+    │1
+    ┴─
+    0 0 1 - 1 1 0
+    ┬┬
+    ││
+    ┴┴
+    0 0 1 - 1 0 1
+    ┬╥
+    │║
+    ┴╨
+    0 0 1 - 0 0 0
+    ┬┬
+    ││
+    ┴┴
+    0 0 1 - 0 0 1
+    ┬╥
+    │║
+    ┴╨
+    0 0 1 - 0 1 0
+    ┬╥
+    │║
+    ┴╨
+    0 1 0 - 1 1 1
+    ╥─
+    ║1
+    ╨─
+    0 1 0 - 1 1 0
+    ╥┬
+    ║│
+    ╨┴
+    0 1 0 - 1 0 1
+    ╥╥
+    ║║
+    ╨╨
+    0 1 0 - 0 0 0
+    ╥─
+    ║0
+    ╨─
+    0 1 0 - 0 0 1
+    ╥┬
+    ║│
+    ╨┴
+    0 1 0 - 0 1 0
+    ╥╥
+    ║║
+    ╨╨
     |}]
 ;;

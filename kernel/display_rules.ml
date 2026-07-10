@@ -27,6 +27,14 @@ let compare_matched_rule_by_port s t =
 
 let run_rule (t : Display_rule.t) (port : Port.t) : format option =
   match t with
+  | Input { wave_format; alignment } ->
+    if Hardcaml.Wave_data.Type.equal port.type_ Input
+    then Some { wave_format; alignment }
+    else None
+  | Output { wave_format; alignment } ->
+    if Hardcaml.Wave_data.Type.equal port.type_ Output
+    then Some { wave_format; alignment }
+    else None
   | Default ->
     if port.width = 1
     then Some { wave_format = Some Bit; alignment = Left }
@@ -48,6 +56,15 @@ let run_rule (t : Display_rule.t) (port : Port.t) : format option =
   | Divider _ -> (* this is handled before the call *) failwith "Unexpected"
 ;;
 
+let run_matches rule ~unmatched =
+  List.partition_map unmatched ~f:(fun port ->
+    match run_rule rule port with
+    | Some format -> First (Port { port; format = Some format })
+    | None -> Second port)
+;;
+
+let sort_matched matched = List.sort matched ~compare:compare_matched_rule_by_port
+
 let rec sort (t : Display_rule.t list) ~unmatched =
   match t with
   | [] -> []
@@ -58,14 +75,22 @@ let rec sort (t : Display_rule.t list) ~unmatched =
     in
     [ defaults ]
   | Divider name :: t -> [ Divider name ] :: sort t ~unmatched
-  | rule :: t ->
+  | Names { names; wave_format; alignment } :: t ->
+    (* We match each name in turn, so they are in the user specified order *)
     let matched, unmatched =
-      List.partition_map unmatched ~f:(fun port ->
-        match run_rule rule port with
-        | Some format -> First (Port { port; format = Some format })
-        | None -> Second port)
+      List.fold names ~init:([], unmatched) ~f:(fun (matched', unmatched) name ->
+        let matched, unmatched =
+          run_matches (Names { names = [ name ]; wave_format; alignment }) ~unmatched
+        in
+        matched :: matched', unmatched)
     in
-    List.sort matched ~compare:compare_matched_rule_by_port :: sort t ~unmatched
+    List.concat (List.rev matched) :: sort t ~unmatched
+  | ((Input _ | Output _ | Custom _ | Custom_with_alignment _) as rule) :: t ->
+    let matched, unmatched = run_matches rule ~unmatched in
+    matched :: sort t ~unmatched
+  | (Regexp _ as rule) :: t ->
+    let matched, unmatched = run_matches rule ~unmatched in
+    sort_matched matched :: sort t ~unmatched
 ;;
 
 let is_displayed (t : Display_rule.t list) =

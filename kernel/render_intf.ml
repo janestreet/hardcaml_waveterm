@@ -153,6 +153,23 @@ module type S = sig
       -> Data.t Waves.t
       -> Draw.ctx * Draw.ctx * Draw.ctx
   end
+
+  module To_render : sig
+    type 'a t =
+      { at_most_one_transition : bool
+      ; first : 'a
+      ; last : 'a
+      }
+  end
+
+  module For_testing : sig
+    val get_transition_data
+      :  prev_bits:Bits.t option
+      -> data:Data.t
+      -> chars_per_cycle:int
+      -> off:int
+      -> Bits.t To_render.t
+  end
 end
 
 module M (Data : Hardcaml.Wave_data.S) = struct
