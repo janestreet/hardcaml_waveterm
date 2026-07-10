@@ -82,7 +82,7 @@ let get_alignment = function
 ;;
 
 let get_format : _ t -> Wave_format.t = function
-  | Empty _ | Divider _ | Clock _ | Binary _ -> Binary
+  | Empty _ | Divider _ | Clock _ | Binary _ -> Bit
   | Data { wave_format; _ } -> wave_format.current
 ;;
 

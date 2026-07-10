@@ -4,6 +4,14 @@
 open Base
 
 type t =
+  | Input of
+      { wave_format : Hardcaml.Wave_format.t option
+      ; alignment : Text_alignment.t
+      }
+  | Output of
+      { wave_format : Hardcaml.Wave_format.t option
+      ; alignment : Text_alignment.t
+      }
   | Default
   | Regexp of
       { re : Re.re
@@ -68,3 +76,17 @@ val custom_with_alignment
 
 (** Draw a divider line within the waveform. *)
 val divider : string -> t
+
+(** Matches top level inputs *)
+val input
+  :  ?alignment:Text_alignment.t
+  -> ?wave_format:Hardcaml.Wave_format.t
+  -> unit
+  -> t
+
+(** Matches top level outputs *)
+val output
+  :  ?alignment:Text_alignment.t
+  -> ?wave_format:Hardcaml.Wave_format.t
+  -> unit
+  -> t

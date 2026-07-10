@@ -15,7 +15,7 @@ let create (i : Signal.t I.t) =
   { O.ctr }
 ;;
 
-let%expect_test "clocking$clock renders as a clock" =
+let%expect_test "clock renders as a clock" =
   let module Sim = Cyclesim.With_interface (I) (O) in
   let sim = Sim.create ~config:Cyclesim.Config.trace_all create in
   let i = Cyclesim.inputs sim in
@@ -31,10 +31,10 @@ let%expect_test "clocking$clock renders as a clock" =
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clocking$clear ││────────┐                                          │
-    │               ││        └───────────────────────────────           │
-    │clocking$clock ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
+    │clock          ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
     │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
+    │clear          ││────────┐                                          │
+    │               ││        └───────────────────────────────           │
     │               ││────────────────┬───────┬───────┬───────           │
     │ctr            ││ 0000           │0001   │0002   │0003              │
     │               ││────────────────┴───────┴───────┴───────           │

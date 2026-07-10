@@ -24,10 +24,14 @@ depends: [
   "stdio"
   "cryptokit"       {>= "1.16" & < "1.17"}
   "dune"            {>= "3.17.0"}
-  "notty-community" {= "0.2.4+ox"}
-  "re"              {= "1.14.0+ox"}
+  "notty-community" {>= "0.2.4"}
+  "re"              {>= "1.8.0"}
 ]
 available: arch != "x86_32"
+conflicts: [
+  "oxcaml-compiler" {< "5.2.0minus39"}
+  "hardcaml-waveterm"
+]
 synopsis: "A terminal based digital waveform viewer for Hardcaml"
 description: "
 The hardcaml_waveterm library renders digital waveforms to unicode. Such
@@ -37,4 +41,3 @@ interactive terminal application.
 The library is closely integrated with Hardcaml and can be easily attached
 to simulations.
 "
-conflicts: ["hardcaml-waveterm"] 

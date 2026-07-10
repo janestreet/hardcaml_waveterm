@@ -10,6 +10,9 @@ let create
   (module Data : Hardcaml.Wave_data.S with type t = data)
   (waves : data Hardcaml.Wave_data.Wave.t array)
   =
+  (* Create a (shallow) copy of the waves then sort by name *)
+  let waves = Array.copy waves in
+  Array.sort waves ~compare:(fun a b -> String.compare a.name b.name);
   let hash =
     Crypto.Cryptokit.MAC.aes ~pad:Crypto.Cryptokit.Padding._8000 "HardcamlHardcaml"
   in

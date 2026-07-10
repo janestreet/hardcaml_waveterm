@@ -14,6 +14,8 @@ let default_display_rules =
     ; port_name_is "clr" ~wave_format:Bit
     ; port_name_is "clear" ~wave_format:Bit
     ; port_name_is "enable" ~wave_format:Bit
+    ; input ()
+    ; output ()
     ; default
     ]
 ;;

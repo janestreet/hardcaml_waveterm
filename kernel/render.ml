@@ -226,17 +226,52 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     ;;
   end
 
-  let get_transition_data ~data ~chars_per_cycle ~off =
-    let rec f first_value i =
-      if i = chars_per_cycle
-      then true
-      else if Bits.equal first_value (get_data_bounds_clipped data (off + i))
-      then f first_value (i + 1)
-      else false
+  module To_render = struct
+    type 'a t =
+      { at_most_one_transition : bool
+      ; first : 'a
+      ; last : 'a
+      }
+
+    let bits_to_bool t =
+      { at_most_one_transition = t.at_most_one_transition
+      ; first = Bits.to_bool t.first
+      ; last = Bits.to_bool t.last
+      }
+    ;;
+  end
+
+  let get_transition_data ~(prev_bits : Bits.t option) ~data ~chars_per_cycle ~off =
+    let get_data i = get_data_bounds_clipped data (off + i) in
+    let rec find_first_diff value i =
+      if i >= chars_per_cycle
+      then None
+      else (
+        let cur = get_data i in
+        if Bits.equal value cur then find_first_diff value (i + 1) else Some (i, cur))
     in
-    let first_value = get_data_bounds_clipped data off in
-    if f first_value 1 then Some first_value else None
+    let all_the_same value i = find_first_diff value i |> Option.is_none in
+    let first = get_data 0 in
+    let last = get_data (Int.max 0 (chars_per_cycle - 1)) in
+    let at_most_one_transition =
+      match prev_bits with
+      | Some prev when not (Bits.equal prev first) ->
+        (* Count prev -> fist as one transition; check that there are no remaining
+           transitions. *)
+        all_the_same first 1
+      | None | Some _ ->
+        (* When there is no prev data or the first cycle is the same as the prev data,
+           allow one transition in the remaining cycles. *)
+        (match find_first_diff first 1 with
+         | None -> true
+         | Some (i, value) -> all_the_same value (i + 1))
+    in
+    { To_render.at_most_one_transition; first; last }
   ;;
+
+  module For_testing = struct
+    let get_transition_data = get_transition_data
+  end
 
   let draw_binary_data_chars_per_cycle ~ctx ~style ~(bounds : Rect.t) ~w ~data ~off =
     (* [w] represents the number of chars per cycle and must be 1 or more *)
@@ -264,18 +299,24 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
       then ()
       else (
         let cur_data =
-          get_transition_data ~data ~chars_per_cycle:w ~off:cycle
-          |> Option.map ~f:Bits.to_bool
+          get_transition_data
+            ~prev_bits:(Option.map prev_data ~f:Bits.of_bool)
+            ~data
+            ~chars_per_cycle:w
+            ~off:cycle
+          |> To_render.bits_to_bool
         in
+        let prev_data = Option.value prev_data ~default:cur_data.first in
         (match prev_data, cur_data with
-         | _, None -> Binary_rendering.fuzz ~ctx ~style ~bounds ~c
-         | (Some false | None), Some false ->
-           Binary_rendering.low ~ctx ~style ~bounds ~w:1 ~c
-         | Some true, Some false -> Binary_rendering.high_low ~ctx ~style ~bounds ~w:1 ~c
-         | Some false, Some true -> Binary_rendering.low_high ~ctx ~style ~bounds ~w:1 ~c
-         | (Some true | None), Some true ->
-           Binary_rendering.high ~ctx ~style ~bounds ~w:1 ~c);
-        f cur_data (c + 1) (cycle + w))
+         | _, { at_most_one_transition = false; _ } ->
+           Binary_rendering.fuzz ~ctx ~style ~bounds ~c
+         | false, { last = false; _ } -> Binary_rendering.low ~ctx ~style ~bounds ~w:1 ~c
+         | true, { last = false; _ } ->
+           Binary_rendering.high_low ~ctx ~style ~bounds ~w:1 ~c
+         | false, { last = true; _ } ->
+           Binary_rendering.low_high ~ctx ~style ~bounds ~w:1 ~c
+         | true, { last = true; _ } -> Binary_rendering.high ~ctx ~style ~bounds ~w:1 ~c);
+        f (Some cur_data.last) (c + 1) (cycle + w))
     in
     f None 0 off
   ;;
@@ -390,28 +431,41 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
             ~r:1
             ~c:(c - prev_data_space)
             ~max_length:prev_data_space
-            (to_str prev_data))
+            (to_str prev_data.To_render.last))
       in
       if c >= bounds.w || cycle >= Data.length data
       then draw_previous_text_data ()
       else (
-        let cur_data = get_transition_data ~data ~chars_per_cycle:w ~off:cycle in
+        let cur_data =
+          get_transition_data
+            ~prev_bits:(Option.map prev_data ~f:(fun p -> p.last))
+            ~data
+            ~chars_per_cycle:w
+            ~off:cycle
+        in
         match prev_data, cur_data with
-        | None, None ->
-          Data_rendering.fuzz ~ctx ~style ~bounds ~c;
-          f 0 None (c + 1) (cycle + w)
-        | Some _, None ->
+        | _, { at_most_one_transition = false; _ } ->
+          (* Multiple transitions internal to the character, fuzz *)
           draw_previous_text_data ();
           Data_rendering.fuzz ~ctx ~style ~bounds ~c;
           f 0 None (c + 1) (cycle + w)
-        | None, Some cur_data ->
+        | _, { first; last; _ } when not (Bits.equal first last) ->
+          (* One transition internal to the character, draw a transition *)
+          draw_previous_text_data ();
+          Data_rendering.transition ~ctx ~style ~bounds ~w:1 ~c;
+          f 0 (Some cur_data) (c + 1) (cycle + w)
+        | (None | Some { at_most_one_transition = false; _ }), _ ->
+          (* Previous character was fuzzed or doesn't exist, don't draw a transition in
+             this case. *)
           Data_rendering.extend ~ctx ~style ~bounds ~w:1 ~c;
           let prev_data_space_except_at_start = if c = 0 then 0 else 1 in
           f prev_data_space_except_at_start (Some cur_data) (c + 1) (cycle + w)
-        | Some prev_data, Some cur_data when Bits.equal prev_data cur_data ->
+        | Some { last = prev_data; _ }, { last = cur; _ } when Bits.equal prev_data cur ->
+          (* New data is the same as the old, extend *)
           Data_rendering.extend ~ctx ~style ~bounds ~w:1 ~c;
           f (prev_data_space + 1) (Some cur_data) (c + 1) (cycle + w)
-        | Some _, Some cur_data ->
+        | Some _, _ ->
+          (* New data is the different than the old, draw a transition *)
           draw_previous_text_data ();
           Data_rendering.transition ~ctx ~style ~bounds ~w:1 ~c;
           f 0 (Some cur_data) (c + 1) (cycle + w))
