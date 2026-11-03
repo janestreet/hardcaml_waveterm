@@ -86,7 +86,7 @@ let%expect_test "up to two transitions per char" =
   Cyclesim.cycle sim ~n:10;
   i.a := Bits.vdd;
   Cyclesim.cycle sim ~n:200;
-  Waveform.expect waveform ~wave_width:(-2);
+  Waveform.expect waveform ~wave_scale:(-3);
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
@@ -105,7 +105,7 @@ let%expect_test "up to two transitions per char" =
     │f              ││       ┌───────────────────────────────────────────│
     │               ││───────┘                                           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    c6b651ab279edc5460c23100aa37a317
+    efcbbe9532e5a80fa9e0e2eaebd7a497
     |}];
   let waveform, sim = init_data_test () in
   let i = Cyclesim.inputs sim in
@@ -114,7 +114,7 @@ let%expect_test "up to two transitions per char" =
   Cyclesim.cycle sim ~n:2;
   i.a := Bits.gnd;
   Cyclesim.cycle sim ~n:200;
-  Waveform.expect waveform ~wave_width:(-2);
+  Waveform.expect waveform ~wave_scale:(-3);
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
@@ -138,7 +138,7 @@ let%expect_test "up to two transitions per char" =
     │f              ││ 0     │1                                          │
     │               ││───────┴───────────────────────────────────────────│
     └───────────────┘└───────────────────────────────────────────────────┘
-    e4d1b9ee07b5480b302c5040808e5a29
+    529268a8492b39808872c4aeba22887f
     |}]
 ;;
 
@@ -150,7 +150,7 @@ let%expect_test "up to three transitions per char" =
   Cyclesim.cycle sim;
   i.a := Bits.gnd;
   Cyclesim.cycle sim ~n:200;
-  Waveform.expect waveform ~wave_width:(-3);
+  Waveform.expect waveform ~wave_scale:(-5);
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
@@ -169,7 +169,7 @@ let%expect_test "up to three transitions per char" =
     │f              ││     ╥                                             │
     │               ││─────╨─────────────────────────────────────────────│
     └───────────────┘└───────────────────────────────────────────────────┘
-    e8627a2e9c2df4a9e45ca689a696949f
+    f67263ccab2f96aa9291e8e07d56bea4
     |}];
   let waveform, sim = init_data_test () in
   let i = Cyclesim.inputs sim in
@@ -181,7 +181,7 @@ let%expect_test "up to three transitions per char" =
     Cyclesim.cycle sim
   done;
   Cyclesim.cycle sim ~n:200;
-  Waveform.expect waveform ~wave_width:(-3);
+  Waveform.expect waveform ~wave_scale:(-5);
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
@@ -205,7 +205,7 @@ let%expect_test "up to three transitions per char" =
     │f              ││ 0   ║2                                            │
     │               ││─────╨─────────────────────────────────────────────│
     └───────────────┘└───────────────────────────────────────────────────┘
-    83fcd69b1c357ad7570d678720a6312a
+    95b667ba23623d0ff013a286c9f4e140
     |}]
 ;;
 
@@ -251,7 +251,7 @@ module%test _ = struct
       { O.o = List.map2_exn o p ~f:(fun o p -> { D.o; p }) }
     ;;
 
-    let test ?override_wave_width () =
+    let test ?override_wave_scale () =
       let open Bits in
       let module Sim = Cyclesim.With_interface (I) (O) in
       let sim = Sim.create create in
@@ -269,7 +269,8 @@ module%test _ = struct
       Cyclesim.cycle ~n:200 sim;
       Waveform.expect_exact
         waves
-        ~wave_width:(Option.value override_wave_width ~default:(-C.cycles_per_char))
+        ~wave_scale:
+          (Option.value override_wave_scale ~default:(1 - (2 * C.cycles_per_char)))
         ~display_rules:
           Display_rule.(
             List.concat
@@ -280,13 +281,13 @@ module%test _ = struct
     ;;
   end
 
-  let test ?override_wave_width cycles_per_char =
+  let test ?override_wave_scale cycles_per_char =
     let module T =
       Make (struct
         let cycles_per_char = cycles_per_char
       end)
     in
-    T.test ?override_wave_width ()
+    T.test ?override_wave_scale ()
   ;;
 
   let%expect_test "show 2 char transitions" =
@@ -296,11 +297,11 @@ module%test _ = struct
 
        The transitions on o_0 and p_0 are aligned to cycles_per_char.
     *)
-    test 2 ~override_wave_width:0;
+    test 2 ~override_wave_scale:0;
     [%expect_exact
       {|
 ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
-│clk               ││┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐│
+│clk               ││─┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐┌┐│
 │                  ││ └┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└┘└│
 │o$o_0             ││        ┌─┐                 ┌───┐               ┌─────┐             │
 │                  ││────────┘ └─────────────────┘   └───────────────┘     └─────────────│
@@ -318,7 +319,7 @@ module%test _ = struct
 │o$p_2             ││ 0          │3│0                │3  │0              │3    │0        │
 │                  ││────────────┴─┴─────────────────┴───┴───────────────┴─────┴─────────│
 └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-3bc33d1ac4dde8679afaf6c8ae32a888
+0b0232481984149878d66c4603dd31fe
 |}]
   ;;
 
@@ -345,7 +346,7 @@ module%test _ = struct
 │o$p_2             ││ 0 ║0   ││0  ││0   │3│0                                             │
 │                  ││───╨────┴┴───┴┴────┴─┴──────────────────────────────────────────────│
 └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-3bc33d1ac4dde8679afaf6c8ae32a888
+0b0232481984149878d66c4603dd31fe
 |}]
   ;;
 
@@ -377,7 +378,7 @@ module%test _ = struct
 │o$p_3             ││ 0 ║0   ║0   ││0  ││0   ││0                                         │
 │                  ││───╨────╨────┴┴───┴┴────┴┴──────────────────────────────────────────│
 └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-a5e5c24dbc5cbe2cb902e909c308dd7b
+cbc2479e59716f9b31ac491688c53cbe
 |}]
   ;;
 
@@ -414,7 +415,7 @@ a5e5c24dbc5cbe2cb902e909c308dd7b
 │o$p_4             ││ 0 ║0   ║0   ║0   ││0  ││0   ││0                                    │
 │                  ││───╨────╨────╨────┴┴───┴┴────┴┴─────────────────────────────────────│
 └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-106d7e7d81abb0c0e2becfdb7b534271
+8d9c9cacc3a3af1513953d2ca57bdd55
 |}]
   ;;
 end

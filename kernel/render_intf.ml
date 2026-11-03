@@ -6,37 +6,30 @@ module type S = sig
 
   (** Functions for drawing waves, signal names and values *)
 
-  (** max width of name window *)
+  (** Maximum width of the signal-name window, in characters. *)
   val get_max_signal_width_in_chars : Data.t Waves.t -> int
 
-  (** gets an estimate fo the max with of values. Inaccruate for the constructors [U], [S]
-      and [F]. *)
+  (** Estimate of the maximum width of the values window, in characters. Inaccurate for
+      the constructors [U], [S], and [F]. *)
   val get_estimated_max_value_width : Data.t Waves.t -> int
 
-  (** max no of wave cycles *)
-  val total_cycles_in_waveform : Data.t Waves.t -> int
+  (** Maximum number of waveform time steps. *)
+  val total_time_steps_in_waveform : Data.t Waves.t -> int
 
-  (** max no of wave signals *)
+  (** Number of signals in the waveform. *)
   val total_signals_in_waveform : Data.t Waves.t -> int
 
-  (** Turn the UI integer representation of wave_width into a the rendering form. *)
-  val wave_width_of_code : int -> [ `Cycles_per_char of int | `Chars_per_cycle of int ]
-
-  (** draws [cnt] clock cycles *)
-  val draw_clock_cycles
-    :  ctx:Draw.ctx
-    -> style:Style.t
-    -> bounds:Rect.t
-    -> wave_width:[ `Cycles_per_char of int | `Chars_per_cycle of int ]
-    -> cnt:int
-    -> unit
+  (** Turn the UI integer representation of [wave_scale] into a rendering scale. *)
+  val wave_scale_of_code
+    :  int
+    -> [ `Time_steps_per_char of int | `Chars_per_time_step of int ]
 
   (** draw binary waveform data *)
   val draw_binary_data
     :  ctx:Draw.ctx
     -> style:Style.t
     -> bounds:Rect.t
-    -> wave_width:[ `Cycles_per_char of int | `Chars_per_cycle of int ]
+    -> wave_scale:[ `Time_steps_per_char of int | `Chars_per_time_step of int ]
     -> data:Data.t
     -> off:int
     -> unit
@@ -48,7 +41,19 @@ module type S = sig
     -> bounds:Rect.t
     -> to_str:(Bits.t -> string)
     -> alignment:Text_alignment.t
-    -> wave_width:[ `Cycles_per_char of int | `Chars_per_cycle of int ]
+    -> wave_scale:[ `Time_steps_per_char of int | `Chars_per_time_step of int ]
+    -> data:Data.t
+    -> off:int
+    -> unit
+
+  (** Like [draw_data], for data whose values are 4-state (see [Four_state_value]). *)
+  val draw_four_state_data
+    :  ctx:Draw.ctx
+    -> style:Style.t
+    -> bounds:Rect.t
+    -> to_str:(Four_state_logic.t -> string)
+    -> alignment:Text_alignment.t
+    -> wave_scale:[ `Time_steps_per_char of int | `Chars_per_time_step of int ]
     -> data:Data.t
     -> off:int
     -> unit
@@ -124,7 +129,7 @@ module type S = sig
 
   type pick =
     | Wave of
-        { cycle : int
+        { time : int
         ; signal_index : int option
         }
     | Value of { signal_index : int option }
@@ -155,18 +160,22 @@ module type S = sig
   end
 
   module To_render : sig
+    (** Values are held as raw [Four_state_value] planes; on 2-state data the masks are
+        all-zeros. *)
     type 'a t =
       { at_most_one_transition : bool
       ; first : 'a
+      ; first_mask : 'a
       ; last : 'a
+      ; last_mask : 'a
       }
   end
 
   module For_testing : sig
     val get_transition_data
-      :  prev_bits:Bits.t option
+      :  prev_data:(Bits.t * Bits.t) option
       -> data:Data.t
-      -> chars_per_cycle:int
+      -> time_steps_per_char:int
       -> off:int
       -> Bits.t To_render.t
   end

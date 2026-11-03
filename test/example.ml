@@ -2,8 +2,7 @@ open! Import
 
 module I = struct
   type 'a t =
-    { clk : 'a
-    ; clr : 'a
+    { clocking : 'a Clocking.t
     ; a : 'a [@bits 16]
     }
   [@@deriving hardcaml]
@@ -19,7 +18,7 @@ end
 
 let create (i : Signal.t I.t) =
   let open Signal in
-  let reg_spec = Reg_spec.create () ~clock:i.clk ~clear:i.clr in
+  let reg_spec = Clocking.to_spec i.clocking in
   { O.b = reg reg_spec ~enable:vdd (i.a +:. 1)
   ; output_c_with_a_long_name = reg reg_spec ~:(sel_bottom i.a ~width:1)
   }
@@ -30,9 +29,9 @@ let testbench () =
   let sim = Sim.create ~config:Cyclesim.Config.trace_all create in
   let i = Cyclesim.inputs sim in
   let waveform, sim = Cyclesim.Waveform.create sim in
-  i.clr := Bits.vdd;
+  i.clocking.clear := Bits.vdd;
   Cyclesim.cycle sim;
-  i.clr := Bits.gnd;
+  i.clocking.clear := Bits.gnd;
   i.a := Bits.of_int_trunc ~width:16 23;
   Cyclesim.cycle sim;
   i.a := Bits.of_int_trunc ~width:16 45;

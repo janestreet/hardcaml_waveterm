@@ -167,7 +167,6 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     Array.iter waves.waves ~f:(function
       | Empty _ -> ()
       | Divider { style; _ } -> style.style <- Waveform_window.default_waves_style
-      | Clock { style; _ } -> style.style <- Waveform_window.default_waves_style
       | Binary { style; _ } -> style.style <- Waveform_window.default_waves_style
       | Data { style; _ } -> style.style <- Waveform_window.default_waves_style);
     let%bind ctx = Context.create ~ui_state_file waves in
@@ -189,13 +188,13 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
   let create_waves
     ?(signals_width = 20)
     ?(values_width = 20)
-    ?(start_cycle = 0)
-    ?(wave_width = 3)
+    ?(start_time = 0)
+    ?(wave_scale = 3)
     ?display_rules
     t
     =
     { Hardcaml_waveterm.Waves.cfg =
-        { Waves.Config.default with start_cycle; wave_width; signals_width; values_width }
+        { Waves.Config.default with start_time; wave_scale; signals_width; values_width }
     ; waves = Hardcaml_waveterm_kernel.Waveform.sort_ports_and_formats t display_rules
     }
   ;;
@@ -204,102 +203,90 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     ?ui_state_file
     ?signals_width
     ?values_width
-    ?start_cycle
-    ?wave_width
+    ?start_time
+    ?wave_scale
     ?display_rules
     t
     =
     run_and_close
       ?ui_state_file
-      (create_waves
-         ?signals_width
-         ?values_width
-         ?start_cycle
-         ?wave_width
-         ?display_rules
-         t)
+      (create_waves ?signals_width ?values_width ?start_time ?wave_scale ?display_rules t)
   ;;
 
   let run_async
     ?ui_state_file
     ?signals_width
     ?values_width
-    ?start_cycle
-    ?wave_width
+    ?start_time
+    ?wave_scale
     ?display_rules
     t
     =
     run_waves
       ?ui_state_file
-      (create_waves
-         ?signals_width
-         ?values_width
-         ?start_cycle
-         ?wave_width
-         ?display_rules
-         t)
+      (create_waves ?signals_width ?values_width ?start_time ?wave_scale ?display_rules t)
   ;;
 end
 
-module By_cycle = Make (Hardcaml.Wave_data_in_cycles)
-module By_event = Make (Hardcaml.Wave_data_in_events.Bits)
+module By_mutable_event = Make (Hardcaml.Wave_data_in_mutable_events)
+module By_mutable_event_four_state = Make (Hardcaml.Wave_data_in_mutable_events_four_state)
 
 let run_async
   ?ui_state_file
   ?signals_width
   ?values_width
-  ?start_cycle
-  ?wave_width
+  ?start_time
+  ?wave_scale
   ?display_rules
   (t : Hardcaml.Wave_data.t)
   =
   match t with
-  | By_cycle cycles ->
-    By_cycle.run_async
+  | By_mutable_event waves ->
+    By_mutable_event.run_async
       ?ui_state_file
       ?signals_width
       ?values_width
-      ?start_cycle
-      ?wave_width
+      ?start_time
+      ?wave_scale
       ?display_rules
-      cycles
-  | By_event events ->
-    By_event.run_async
+      waves
+  | By_mutable_event_four_state waves ->
+    By_mutable_event_four_state.run_async
       ?ui_state_file
       ?signals_width
       ?values_width
-      ?start_cycle
-      ?wave_width
+      ?start_time
+      ?wave_scale
       ?display_rules
-      events
+      waves
 ;;
 
 let run
   ?ui_state_file
   ?signals_width
   ?values_width
-  ?start_cycle
-  ?wave_width
+  ?start_time
+  ?wave_scale
   ?display_rules
   (t : Hardcaml.Wave_data.t)
   =
   match t with
-  | By_cycle cycles ->
-    By_cycle.run
+  | By_mutable_event waves ->
+    By_mutable_event.run
       ?ui_state_file
       ?signals_width
       ?values_width
-      ?start_cycle
-      ?wave_width
+      ?start_time
+      ?wave_scale
       ?display_rules
-      cycles
-  | By_event events ->
-    By_event.run
+      waves
+  | By_mutable_event_four_state waves ->
+    By_mutable_event_four_state.run
       ?ui_state_file
       ?signals_width
       ?values_width
-      ?start_cycle
-      ?wave_width
+      ?start_time
+      ?wave_scale
       ?display_rules
-      events
+      waves
 ;;

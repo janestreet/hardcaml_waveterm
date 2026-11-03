@@ -9,32 +9,23 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
   open Draw
   open Wave
 
-  (* The user specifies the wave width with an integer - here we encode the integer into a
+  (* The user specifies the wave scale with an integer - here we encode the integer into a
      rendering representation.
 
      {v
-       -3 -> 3 cycles encoded into 1 char
-       -2 -> 2 cycles encoded into 1 char
-       -1 -> 1 cycle encoded into 1 char
-        0 -> 1 cyle encoded into 2 chars
-        1 -> 1 cycle encoded into 4 char
-        2 -> 1 cycle encoded into 6 chars
-     v}
-
-     Note that when we encode 1 cycle into multiple chars, we require an even number of
-     chars - this is because to render the clock properly it must be even. *)
-  let wave_width_of_code wave_width_code =
-    if wave_width_code = -1
-    then `Chars_per_cycle 1
-    else if wave_width_code < 0
-    then `Cycles_per_char (-wave_width_code)
-    else `Chars_per_cycle ((wave_width_code + 1) * 2)
+       -2 -> 3 time steps encoded into 1 char
+       -1 -> 2 time steps encoded into 1 char
+        0 -> 1 time step encoded into 1 char
+        1 -> 1 time step encoded into 2 chars
+        2 -> 1 time step encoded into 3 chars
+     v} *)
+  let wave_scale_of_code wave_scale_code =
+    if wave_scale_code < 0
+    then `Time_steps_per_char (1 - wave_scale_code)
+    else `Chars_per_time_step (wave_scale_code + 1)
   ;;
 
-  let wave_width (state : _ Waves.t) =
-    let wave_width_code = state.cfg.wave_width in
-    wave_width_of_code wave_width_code
-  ;;
+  let wave_scale (state : _ Waves.t) = wave_scale_of_code state.cfg.wave_scale
 
   let get_max_signal_width_in_chars (state : _ Waves.t) =
     Array.fold state.waves ~init:0 ~f:(fun m s -> max m (String.length (get_name s)))
@@ -100,7 +91,7 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
       max max_width (get_width (Wave.get_format wave)))
   ;;
 
-  let total_cycles_in_waveform (state : _ Waves.t) =
+  let total_time_steps_in_waveform (state : _ Waves.t) =
     Array.fold state.waves ~init:0 ~f:(fun m d ->
       max
         m
@@ -110,12 +101,13 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
 
   let total_signals_in_waveform (state : _ Waves.t) = Array.length state.waves
 
-  let get_max_wave_width_in_chars (state : _ Waves.t) =
-    let total_cycles = total_cycles_in_waveform state in
-    match wave_width state with
-    | `Cycles_per_char cycles_per_char ->
-      Int.round_up total_cycles ~to_multiple_of:cycles_per_char / cycles_per_char
-    | `Chars_per_cycle chars_per_cycle -> total_cycles * chars_per_cycle
+  let get_max_wave_scale_in_chars (state : _ Waves.t) =
+    let total_time_steps = total_time_steps_in_waveform state in
+    match wave_scale state with
+    | `Time_steps_per_char time_steps_per_char ->
+      Int.round_up total_time_steps ~to_multiple_of:time_steps_per_char
+      / time_steps_per_char
+    | `Chars_per_time_step chars_per_time_step -> total_time_steps * chars_per_time_step
   ;;
 
   let get_max_wave_height_in_chars (state : _ Waves.t) start_signal =
@@ -132,7 +124,7 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
   let get_max_bounds state =
     let swidth = get_max_signal_width_in_chars state in
     let vwidth = get_max_value_width_in_chars state in
-    let wwidth = get_max_wave_width_in_chars state in
+    let wwidth = get_max_wave_scale_in_chars state in
     let wheight = get_max_wave_height_in_chars state state.cfg.start_signal in
     let z = { Rect.r = 0; c = 0; h = wheight; w = 0 } in
     { Window_bounds.signals = { z with w = swidth }
@@ -142,343 +134,42 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     }
   ;;
 
-  let draw_clock_cycles_per_char ~ctx ~style ~bounds ~cnt =
+  let draw_divider ~ctx ~style ~(bounds : Rect.t) ~wave_scale:_ ~cnt =
+    let r = (bounds.h - 1) / 2 in
     for c = 0 to cnt - 1 do
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c BH;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c TH
+      draw_glyph ~ctx ~style ~bounds ~r ~c Horizontal_dash
     done
   ;;
 
-  let draw_clock_chars_per_cycle ~ctx ~style ~bounds ~w ~cnt =
-    let cnt = Int.round_up cnt ~to_multiple_of:w / w in
-    for c = 0 to cnt - 1 do
-      let c = c * w in
-      let half_w = w / 2 in
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c BR;
-      for i = 1 to half_w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:0 ~c:(c + i) H
-      done;
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c:(c + half_w) BL;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c:(c + half_w) TR;
-      for i = 1 to half_w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:1 ~c:(c + half_w + i) H
-      done;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c:(c + w) TL
-    done
+  module Trace =
+    Wave_trace.Make
+      (Data)
+      (struct
+        type ctx = Draw.ctx
+        type style = Style.t
+
+        let draw_glyph = Draw.draw_glyph
+        let draw_int = Draw.draw_int
+      end)
+
+  module To_render = Trace.To_render
+  module For_testing = Trace.For_testing
+
+  let draw_binary_data ~ctx ~style ~bounds ~wave_scale ~data ~off =
+    Trace.draw_binary_data data ~ctx ~style ~bounds ~wave_scale ~off
   ;;
 
-  let draw_clock_cycles ~ctx ~style ~bounds ~wave_width ~cnt =
-    match wave_width with
-    | `Chars_per_cycle w when w = 1 -> draw_clock_cycles_per_char ~ctx ~style ~bounds ~cnt
-    | `Chars_per_cycle w -> draw_clock_chars_per_cycle ~ctx ~style ~bounds ~w ~cnt
-    | `Cycles_per_char _w -> draw_clock_cycles_per_char ~ctx ~style ~bounds ~cnt
+  let draw_four_state_data ~ctx ~style ~bounds ~to_str ~alignment ~wave_scale ~data ~off =
+    (* Values are only built when text is actually formatted, not per event. *)
+    let to_str ~bits ~mask = to_str (Four_state_logic.create_exn ~bits ~mask) in
+    Trace.draw_data data ~ctx ~style ~bounds ~to_str ~alignment ~wave_scale ~off
   ;;
 
-  let draw_divider ~ctx ~style ~bounds ~wave_width:_ ~cnt =
-    for c = 0 to cnt - 1 do
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c H_dash
-    done
-  ;;
-
-  let get_data_bounds_clipped data i =
-    let length = Data.length data in
-    if length = 0
-    then Bits.gnd
-    else if i < 0
-    then Data.get data 0
-    else if i >= length
-    then Data.get data (length - 1)
-    else Data.get data i
-  ;;
-
-  module Binary_rendering = struct
-    let low ~ctx ~style ~bounds ~w ~c =
-      for i = 0 to w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:1 ~c:(c + i) H
-      done
-    ;;
-
-    let low_high ~ctx ~style ~bounds ~w ~c =
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c BR;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c TL;
-      for i = 1 to w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:0 ~c:(c + i) H
-      done
-    ;;
-
-    let high_low ~ctx ~style ~bounds ~w ~c =
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c BL;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c TR;
-      for i = 1 to w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:1 ~c:(c + i) H
-      done
-    ;;
-
-    let high ~ctx ~style ~bounds ~w ~c =
-      for i = 0 to w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:0 ~c:(c + i) H
-      done
-    ;;
-
-    let fuzz ~ctx ~style ~bounds ~c =
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c BH;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c TH
-    ;;
-  end
-
-  module To_render = struct
-    type 'a t =
-      { at_most_one_transition : bool
-      ; first : 'a
-      ; last : 'a
-      }
-
-    let bits_to_bool t =
-      { at_most_one_transition = t.at_most_one_transition
-      ; first = Bits.to_bool t.first
-      ; last = Bits.to_bool t.last
-      }
-    ;;
-  end
-
-  let get_transition_data ~(prev_bits : Bits.t option) ~data ~chars_per_cycle ~off =
-    let get_data i = get_data_bounds_clipped data (off + i) in
-    let rec find_first_diff value i =
-      if i >= chars_per_cycle
-      then None
-      else (
-        let cur = get_data i in
-        if Bits.equal value cur then find_first_diff value (i + 1) else Some (i, cur))
-    in
-    let all_the_same value i = find_first_diff value i |> Option.is_none in
-    let first = get_data 0 in
-    let last = get_data (Int.max 0 (chars_per_cycle - 1)) in
-    let at_most_one_transition =
-      match prev_bits with
-      | Some prev when not (Bits.equal prev first) ->
-        (* Count prev -> fist as one transition; check that there are no remaining
-           transitions. *)
-        all_the_same first 1
-      | None | Some _ ->
-        (* When there is no prev data or the first cycle is the same as the prev data,
-           allow one transition in the remaining cycles. *)
-        (match find_first_diff first 1 with
-         | None -> true
-         | Some (i, value) -> all_the_same value (i + 1))
-    in
-    { To_render.at_most_one_transition; first; last }
-  ;;
-
-  module For_testing = struct
-    let get_transition_data = get_transition_data
-  end
-
-  let draw_binary_data_chars_per_cycle ~ctx ~style ~(bounds : Rect.t) ~w ~data ~off =
-    (* [w] represents the number of chars per cycle and must be 1 or more *)
-    assert (w > 0);
-    let rec f prev_data c cycle =
-      if c >= bounds.w || cycle >= Data.length data
-      then ()
-      else (
-        let cur_data = get_data_bounds_clipped data cycle in
-        (match Bits.to_bool prev_data, Bits.to_bool cur_data with
-         | false, false -> Binary_rendering.low ~ctx ~style ~bounds ~w ~c
-         | true, false -> Binary_rendering.high_low ~ctx ~style ~bounds ~w ~c
-         | false, true -> Binary_rendering.low_high ~ctx ~style ~bounds ~w ~c
-         | true, true -> Binary_rendering.high ~ctx ~style ~bounds ~w ~c);
-        f cur_data (c + w) (cycle + 1))
-    in
-    f (get_data_bounds_clipped data off) 0 off
-  ;;
-
-  let draw_binary_data_cycles_per_char ~ctx ~style ~(bounds : Rect.t) ~w ~data ~off =
-    (* [w] represents the number of cycles per char and must be greater than 0 *)
-    assert (w > 0);
-    let rec f prev_data c cycle =
-      if c >= bounds.w || cycle >= Data.length data
-      then ()
-      else (
-        let cur_data =
-          get_transition_data
-            ~prev_bits:(Option.map prev_data ~f:Bits.of_bool)
-            ~data
-            ~chars_per_cycle:w
-            ~off:cycle
-          |> To_render.bits_to_bool
-        in
-        let prev_data = Option.value prev_data ~default:cur_data.first in
-        (match prev_data, cur_data with
-         | _, { at_most_one_transition = false; _ } ->
-           Binary_rendering.fuzz ~ctx ~style ~bounds ~c
-         | false, { last = false; _ } -> Binary_rendering.low ~ctx ~style ~bounds ~w:1 ~c
-         | true, { last = false; _ } ->
-           Binary_rendering.high_low ~ctx ~style ~bounds ~w:1 ~c
-         | false, { last = true; _ } ->
-           Binary_rendering.low_high ~ctx ~style ~bounds ~w:1 ~c
-         | true, { last = true; _ } -> Binary_rendering.high ~ctx ~style ~bounds ~w:1 ~c);
-        f (Some cur_data.last) (c + 1) (cycle + w))
-    in
-    f None 0 off
-  ;;
-
-  let draw_binary_data ~ctx ~style ~bounds ~wave_width ~data ~off =
-    match wave_width with
-    | `Chars_per_cycle w ->
-      draw_binary_data_chars_per_cycle ~ctx ~style ~bounds ~w ~data ~off
-    | `Cycles_per_char w ->
-      draw_binary_data_cycles_per_char ~ctx ~style ~bounds ~w ~data ~off
-  ;;
-
-  module Data_rendering = struct
-    let transition ~ctx ~style ~bounds ~w ~c =
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c T;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c V;
-      draw_piece ~ctx ~style ~bounds ~r:2 ~c Tu;
-      for c = c + 1 to c + w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:0 ~c H;
-        draw_piece ~ctx ~style ~bounds ~r:2 ~c H
-      done
-    ;;
-
-    let extend ~ctx ~style ~bounds ~w ~c =
-      for c = c to c + w - 1 do
-        draw_piece ~ctx ~style ~bounds ~r:0 ~c H;
-        draw_piece ~ctx ~style ~bounds ~r:2 ~c H
-      done
-    ;;
-
-    let fuzz ~ctx ~style ~bounds ~c =
-      draw_piece ~ctx ~style ~bounds ~r:0 ~c BH;
-      draw_piece ~ctx ~style ~bounds ~r:1 ~c F;
-      draw_piece ~ctx ~style ~bounds ~r:2 ~c TH
-    ;;
-  end
-
-  let draw_text_data
-    ~ctx
-    ~style
-    ~bounds
-    ~(alignment : Text_alignment.t)
-    ~r
-    ~c
-    ~max_length
-    data
-    =
-    let putc i ch = draw_char ~ctx ~style ~bounds ~r ~c:(c + i) ch in
-    let length = String.length data in
-    if length <= max_length
-    then
-      for i = 0 to length - 1 do
-        putc i data.[i]
-      done
-    else (
-      match alignment with
-      | Left ->
-        for i = 0 to max_length - 1 do
-          putc i (if i = max_length - 1 then '.' else data.[i])
-        done
-      | Right ->
-        for i = 0 to max_length - 1 do
-          putc i (if i = 0 then '.' else data.[length - 1 - (max_length - 1 - i)])
-        done)
-  ;;
-
-  let draw_data_chars_per_cycle ~ctx ~style ~bounds ~to_str ~alignment ~w ~data ~off =
-    (* [w] represents the number of chars per cycle and must be 1 or more *)
-    assert (w > 0);
-    let rec f prev_data_space prev_data c cycle =
-      let draw_previous_text_data () =
-        draw_text_data
-          ~ctx
-          ~style
-          ~bounds
-          ~alignment
-          ~r:1
-          ~c:(c - prev_data_space)
-          ~max_length:prev_data_space
-          (to_str prev_data)
-      in
-      if c >= bounds.w || cycle >= Data.length data
-      then draw_previous_text_data ()
-      else (
-        let cur_data = get_data_bounds_clipped data cycle in
-        if Bits.equal prev_data cur_data
-        then (
-          Data_rendering.extend ~ctx ~style ~bounds ~w ~c;
-          let prev_data_space_except_at_start =
-            prev_data_space + w - if c = 0 then 1 else 0
-          in
-          f prev_data_space_except_at_start cur_data (c + w) (cycle + 1))
-        else (
-          draw_previous_text_data ();
-          Data_rendering.transition ~ctx ~style ~bounds ~w ~c;
-          f (w - 1) cur_data (c + w) (cycle + 1)))
-    in
-    f 0 (get_data_bounds_clipped data off) 0 off
-  ;;
-
-  let draw_data_cycles_per_char ~ctx ~style ~bounds ~to_str ~alignment ~w ~data ~off =
-    (* [w] represents the number of cycles per char and must be 1 or more *)
-    assert (w > 0);
-    let rec f prev_data_space prev_data c cycle =
-      let draw_previous_text_data () =
-        Option.iter prev_data ~f:(fun prev_data ->
-          draw_text_data
-            ~ctx
-            ~style
-            ~bounds
-            ~alignment
-            ~r:1
-            ~c:(c - prev_data_space)
-            ~max_length:prev_data_space
-            (to_str prev_data.To_render.last))
-      in
-      if c >= bounds.w || cycle >= Data.length data
-      then draw_previous_text_data ()
-      else (
-        let cur_data =
-          get_transition_data
-            ~prev_bits:(Option.map prev_data ~f:(fun p -> p.last))
-            ~data
-            ~chars_per_cycle:w
-            ~off:cycle
-        in
-        match prev_data, cur_data with
-        | _, { at_most_one_transition = false; _ } ->
-          (* Multiple transitions internal to the character, fuzz *)
-          draw_previous_text_data ();
-          Data_rendering.fuzz ~ctx ~style ~bounds ~c;
-          f 0 None (c + 1) (cycle + w)
-        | _, { first; last; _ } when not (Bits.equal first last) ->
-          (* One transition internal to the character, draw a transition *)
-          draw_previous_text_data ();
-          Data_rendering.transition ~ctx ~style ~bounds ~w:1 ~c;
-          f 0 (Some cur_data) (c + 1) (cycle + w)
-        | (None | Some { at_most_one_transition = false; _ }), _ ->
-          (* Previous character was fuzzed or doesn't exist, don't draw a transition in
-             this case. *)
-          Data_rendering.extend ~ctx ~style ~bounds ~w:1 ~c;
-          let prev_data_space_except_at_start = if c = 0 then 0 else 1 in
-          f prev_data_space_except_at_start (Some cur_data) (c + 1) (cycle + w)
-        | Some { last = prev_data; _ }, { last = cur; _ } when Bits.equal prev_data cur ->
-          (* New data is the same as the old, extend *)
-          Data_rendering.extend ~ctx ~style ~bounds ~w:1 ~c;
-          f (prev_data_space + 1) (Some cur_data) (c + 1) (cycle + w)
-        | Some _, _ ->
-          (* New data is the different than the old, draw a transition *)
-          draw_previous_text_data ();
-          Data_rendering.transition ~ctx ~style ~bounds ~w:1 ~c;
-          f 0 (Some cur_data) (c + 1) (cycle + w))
-    in
-    f 0 None 0 off
-  ;;
-
-  let draw_data ~ctx ~style ~bounds ~to_str ~alignment ~wave_width ~data ~off =
-    match wave_width with
-    | `Chars_per_cycle w ->
-      draw_data_chars_per_cycle ~ctx ~style ~bounds ~to_str ~alignment ~w ~data ~off
-    | `Cycles_per_char w ->
-      draw_data_cycles_per_char ~ctx ~style ~bounds ~to_str ~alignment ~w ~data ~off
+  let draw_data ~ctx ~style ~bounds ~to_str ~alignment ~wave_scale ~data ~off =
+    (* The mask is never inspected, so 2-state data pays nothing for mask handling and
+       never builds a [Four_state_value.t]. *)
+    let to_str ~bits ~mask:_ = to_str bits in
+    Trace.draw_data data ~ctx ~style ~bounds ~to_str ~alignment ~wave_scale ~off
   ;;
 
   let rec draw_iter i (bounds : Rect.t) (state : _ Waves.t) f =
@@ -516,10 +207,10 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
 
   let draw_cursor ~ctx ~(bounds : Rect.t) ~wave_cursor ~primary ~(state : _ Waves.t) =
     let c =
-      let cycle_offset = wave_cursor - state.cfg.start_cycle in
-      match wave_width state with
-      | `Chars_per_cycle w -> cycle_offset * w
-      | `Cycles_per_char w -> cycle_offset / w
+      let time_offset = wave_cursor - state.cfg.start_time in
+      match wave_scale state with
+      | `Chars_per_time_step w -> time_offset * w
+      | `Time_steps_per_char w -> time_offset / w
     in
     let style =
       if primary then Some { Style.fg = Black; bg = Yellow; bold = false } else None
@@ -544,7 +235,7 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     ~bounds
     (state : _ Waves.t)
     =
-    let wave_width = wave_width state in
+    let wave_scale = wave_scale state in
     fill ~ctx ~bounds ~style ' ';
     let maybe_fill ~bounds ~style:(local_style : Style.t) =
       (* If the local signal style differs, then we need to fill it first *)
@@ -552,31 +243,42 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
       then fill ~ctx ~bounds ~style:local_style ' '
     in
     draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
-      let off = state.cfg.start_cycle in
+      let off = state.cfg.start_time in
       (match wave with
        | Empty _ -> ()
        | Divider { name = _; style } ->
          maybe_fill ~bounds ~style:style.style;
-         draw_divider ~ctx ~style:style.style ~bounds ~wave_width ~cnt:bounds.w
-       | Clock { name = _; style } ->
-         maybe_fill ~bounds ~style:style.style;
-         draw_clock_cycles ~ctx ~style:style.style ~bounds ~wave_width ~cnt:bounds.w
+         draw_divider ~ctx ~style:style.style ~bounds ~wave_scale ~cnt:bounds.w
        | Binary { name = _; data; style } ->
          maybe_fill ~bounds ~style:style.style;
          let off = min (Data.length data - 1) off in
-         draw_binary_data ~ctx ~style:style.style ~bounds ~wave_width ~data ~off
+         draw_binary_data ~ctx ~style:style.style ~bounds ~wave_scale ~data ~off
        | Data { name = _; data; width = _; wave_format = _; text_alignment; style } ->
          maybe_fill ~bounds ~style:style.style;
          let off = min (Data.length data - 1) off in
-         draw_data
-           ~ctx
-           ~style:style.style
-           ~bounds
-           ~alignment:text_alignment
-           ~to_str:(Wave.get_to_str wave)
-           ~wave_width
-           ~data
-           ~off);
+         (* [Wave_format]'s formatters build lookup structures when unstaged, so build
+            only the one this wave needs. *)
+         if Data.is_four_state data
+         then
+           draw_four_state_data
+             ~ctx
+             ~style:style.style
+             ~bounds
+             ~alignment:text_alignment
+             ~to_str:(Wave.get_to_str_four_state wave)
+             ~wave_scale
+             ~data
+             ~off
+         else
+           draw_data
+             ~ctx
+             ~style:style.style
+             ~bounds
+             ~alignment:text_alignment
+             ~to_str:(Wave.get_to_str wave)
+             ~wave_scale
+             ~data
+             ~off);
       let is_selected =
         match selected_wave_index with
         | None -> false
@@ -639,6 +341,13 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
       let wah = Wave.get_height_in_chars wave in
       let r = (wah - 1) / 2 in
+      (* Extend the divider line through the signals window, underneath the name. *)
+      (match wave with
+       | Divider _ ->
+         for c = 0 to bounds.w - 1 do
+           draw_glyph ~ctx ~style ~bounds ~r ~c Horizontal_dash
+         done
+       | Empty _ | Binary _ | Data _ -> ());
       (match alignment with
        | Left ->
          draw_scroll_string
@@ -689,23 +398,48 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     let off =
       match wave_cursor with
       | Some wave_cursor when wave_cursor >= 0 -> wave_cursor
-      | None | Some _ -> state.cfg.start_cycle
+      | None | Some _ -> state.cfg.start_time
     in
     let max_string_length = ref 0 in
     draw_iter state.cfg.start_signal bounds state (fun i bounds wave ->
       let wah = Wave.get_height_in_chars wave in
       let r = (wah - 1) / 2 in
       (match wave with
-       | Empty _ | Divider _ | Clock _ -> ()
+       | Empty _ -> ()
+       | Divider _ ->
+         (* Extend the divider line through the values window. *)
+         for c = 0 to bounds.w - 1 do
+           draw_glyph ~ctx ~style ~bounds ~r ~c Horizontal_dash
+         done
        | Binary { name = _; data; style = _ } ->
-         let d = get_data_bounds_clipped data off in
-         let str = Bits.to_bstr d in
+         let four_state = Data.is_four_state data in
+         let default = Bits.zero (Data.width data) in
+         let d = Trace.get_data_bounds_clipped data off ~four_state ~default in
+         let str =
+           if four_state
+           then
+             Four_state_logic.create_exn
+               ~bits:d
+               ~mask:(Trace.get_mask_bounds_clipped data off ~four_state ~default)
+             |> Four_state_logic.to_string
+           else Bits.to_bstr d
+         in
          max_string_length := max !max_string_length (String.length str);
          draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str
        | Data { name = _; data; width = _; wave_format; text_alignment = _; style = _ } ->
-         let d = get_data_bounds_clipped data off in
-         let to_str = Wave.get_to_str wave in
-         let str = add_value_prefix wave_format.current d (to_str d) in
+         let four_state = Data.is_four_state data in
+         let default = Bits.zero (Data.width data) in
+         let d = Trace.get_data_bounds_clipped data off ~four_state ~default in
+         let str =
+           if four_state
+           then
+             Four_state_logic.create_exn
+               ~bits:d
+               ~mask:(Trace.get_mask_bounds_clipped data off ~four_state ~default)
+             |> Wave.get_to_str_four_state wave
+           else Wave.get_to_str wave d
+         in
+         let str = add_value_prefix wave_format.current d str in
          max_string_length := max !max_string_length (String.length str);
          draw_scroll_string_right ~ctx ~style ~bounds ~r ~c:state.cfg.value_scroll str);
       let is_selected =
@@ -726,10 +460,10 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
       ~r:0
       ~c:0
       (Printf.sprintf
-         "cycle=%i cursor=%s w=%i sc=%i vs=%i"
-         state.cfg.start_cycle
+         "time=%i cursor=%s w=%i sc=%i vs=%i"
+         state.cfg.start_time
          (Option.value_map wave_cursor ~default:"?" ~f:Int.to_string)
-         state.cfg.wave_width
+         state.cfg.wave_scale
          state.cfg.signal_scroll
          state.cfg.value_scroll)
   ;;
@@ -788,9 +522,9 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     List.iteri help ~f:(fun i { Key_help.key; descr } ->
       (* If there are elements before or after the displayed values, draw an arrow *)
       if i = offset && offset <> 0
-      then draw_piece ~ctx ~bounds ~style ~r:0 ~c:22 Up_arrow
+      then draw_glyph ~ctx ~bounds ~style ~r:0 ~c:22 Up_arrow
       else if i - offset = bounds.h - 1 && i < help_length - 1
-      then draw_piece ~ctx ~bounds ~style ~r:(bounds.h - 1) ~c:22 Down_arrow
+      then draw_glyph ~ctx ~bounds ~style ~r:(bounds.h - 1) ~c:22 Down_arrow
       else if i >= offset
       then
         (* Print the help string *)
@@ -805,7 +539,7 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
 
   type pick =
     | Wave of
-        { cycle : int
+        { time : int
         ; signal_index : int option
         }
     | Value of { signal_index : int option }
@@ -828,14 +562,14 @@ module Make (Data : Hardcaml.Wave_data.S) = struct
     in
     let get_wave_offset (bounds : Rect.t) =
       let c = c - bounds.c in
-      match wave_width state with
-      | `Chars_per_cycle w -> state.cfg.start_cycle + (c / w)
-      | `Cycles_per_char w -> state.cfg.start_cycle + (c * w)
+      match wave_scale state with
+      | `Chars_per_time_step w -> state.cfg.start_time + (c / w)
+      | `Time_steps_per_char w -> state.cfg.start_time + (c * w)
     in
     if in_rect bounds.waves
     then
       Wave
-        { cycle = get_wave_offset bounds.waves
+        { time = get_wave_offset bounds.waves
         ; signal_index = get_signal_offset bounds.waves
         }
     else if in_rect bounds.values

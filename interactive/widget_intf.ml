@@ -8,8 +8,8 @@ module type S = sig
     :  ?ui_state_file:string
     -> ?signals_width:int
     -> ?values_width:int
-    -> ?start_cycle:int
-    -> ?wave_width:int
+    -> ?start_time:int
+    -> ?wave_scale:int
     -> ?display_rules:Display_rules.t
     -> wave
     -> unit Async.Deferred.t
@@ -19,8 +19,8 @@ module type S = sig
     :  ?ui_state_file:string
     -> ?signals_width:int
     -> ?values_width:int
-    -> ?start_cycle:int
-    -> ?wave_width:int
+    -> ?start_time:int
+    -> ?wave_scale:int
     -> ?display_rules:Display_rules.t
     -> wave
     -> unit
@@ -35,7 +35,10 @@ module type Widget = sig
 
   module M = M
   module Make (Data : Hardcaml.Wave_data.S) : M(Data).S
-  module By_cycle : M(Hardcaml.Wave_data_in_cycles).S
-  module By_event : M(Hardcaml.Wave_data_in_events.Bits).S
+  module By_mutable_event : M(Hardcaml.Wave_data_in_mutable_events).S
+
+  module By_mutable_event_four_state :
+    M(Hardcaml.Wave_data_in_mutable_events_four_state).S
+
   include S with type wave := Hardcaml.Wave_data.t
 end

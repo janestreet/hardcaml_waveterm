@@ -25,8 +25,9 @@ let create
 
 let create (t : Hardcaml.Wave_data.t) =
   match t with
-  | By_cycle waves -> create (module Wave_data_in_cycles) waves
-  | By_event waves -> create (module Wave_data_in_events.Bits) waves
+  | By_mutable_event waves -> create (module Wave_data_in_mutable_events) waves
+  | By_mutable_event_four_state waves ->
+    create (module Wave_data_in_mutable_events_four_state) waves
 ;;
 
 let to_hex_string t =

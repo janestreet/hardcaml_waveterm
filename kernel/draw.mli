@@ -5,38 +5,6 @@
 
 open Base
 
-type piece =
-  (* corners, vert/horz bar, T shapes, cross *)
-  | TL
-  | BR
-  | BL
-  | TR
-  | V
-  | H
-  | T
-  | Tu
-  | C
-  (* full/half blocks *)
-  | F
-  | TH
-  | BH
-  | LH
-  | RH
-  (* quarter blocks *)
-  | QTL
-  | QBR
-  | QBL
-  | QTR
-  (* Arrows *)
-  | Up_arrow
-  | Down_arrow
-  (* Other *)
-  | H_dash
-[@@deriving sexp_of]
-
-(** unicode value of piece *)
-val unicode_of_piece : piece -> int
-
 (** drawing context *)
 type ctx = (int * Style.t) array array
 
@@ -56,14 +24,14 @@ val fill : ctx:ctx -> style:Style.t -> bounds:Rect.t -> char -> unit
 (** draw int (representing unicode value) *)
 val draw_int : ctx:ctx -> style:Style.t -> bounds:Rect.t -> r:int -> c:int -> int -> unit
 
-(** draw piece *)
-val draw_piece
+(** draw glyph *)
+val draw_glyph
   :  ctx:ctx
   -> style:Style.t
   -> bounds:Rect.t
   -> r:int
   -> c:int
-  -> piece
+  -> Glyph.t
   -> unit
 
 (** draw char *)

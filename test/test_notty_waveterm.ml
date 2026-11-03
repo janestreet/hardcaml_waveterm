@@ -7,15 +7,15 @@ let%expect_test "show a waveform through notty" =
   in
   Render.draw_ui
     ~ctx
-    { Waves.cfg = Waves.Config.default
+    { Waves.cfg = { Waves.Config.default with wave_scale = 7 }
     ; waves = Waveform.sort_ports_and_formats waves (Some [ Default ])
     };
   Draw_notty.to_image ctx |> Notty_unix.output_image;
   [%expect
     {|
     ┌Signals─┐┌Values──┐┌Waves─────────────────────────────────┐
-    │clock   ││        ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐ │
-    │        ││        ││    └───┘   └───┘   └───┘   └───┘   └─│
+    │clock   ││       0││                                      │
+    │        ││        ││────────                              │
     │dder    ││       1││────────┐                       ┌─────│
     │        ││        ││        └───────────────────────┘     │
     │ikgcvexs││       1││────────┐       ┌───────┐       ┌─────│
@@ -32,7 +32,7 @@ let render_binary_data ~data ~w ~off =
     ~ctx
     ~style:Hardcaml_waveterm_kernel.Style.default
     ~bounds:{ r = 0; c = 0; w = 60; h = 2 }
-    ~wave_width:w
+    ~wave_scale:w
     ~data
     ~off;
   Draw_notty.to_image ctx |> Notty_unix.output_image;
@@ -44,14 +44,14 @@ let%expect_test "normal binary rendering" =
     Test_data.create ~prefix:(fun _ -> "") ~length:10 ~num_signals:3 ~max_bits:2
   in
   let data = waves.(1).wave_data in
-  render_binary_data ~data ~w:(`Cycles_per_char 3) ~off:0;
-  render_binary_data ~data ~w:(`Cycles_per_char 2) ~off:0;
-  render_binary_data ~data ~w:(`Cycles_per_char 1) ~off:0;
-  render_binary_data ~data ~w:(`Chars_per_cycle 1) ~off:0;
-  render_binary_data ~data ~w:(`Chars_per_cycle 2) ~off:0;
-  render_binary_data ~data ~w:(`Chars_per_cycle 3) ~off:0;
-  render_binary_data ~data ~w:(`Chars_per_cycle 4) ~off:0;
-  render_binary_data ~data ~w:(`Chars_per_cycle 5) ~off:0;
+  render_binary_data ~data ~w:(`Time_steps_per_char 3) ~off:0;
+  render_binary_data ~data ~w:(`Time_steps_per_char 2) ~off:0;
+  render_binary_data ~data ~w:(`Time_steps_per_char 1) ~off:0;
+  render_binary_data ~data ~w:(`Chars_per_time_step 1) ~off:0;
+  render_binary_data ~data ~w:(`Chars_per_time_step 2) ~off:0;
+  render_binary_data ~data ~w:(`Chars_per_time_step 3) ~off:0;
+  render_binary_data ~data ~w:(`Chars_per_time_step 4) ~off:0;
+  render_binary_data ~data ~w:(`Chars_per_time_step 5) ~off:0;
   [%expect
     {|
     ┌┐┌┐
@@ -87,14 +87,14 @@ let bits_to_str bits = List.map bits ~f:Bits.to_string |> String.concat ~sep:" "
 let test_single data ~render =
   List.iter data ~f:(fun data ->
     print_endline (bits_to_str data);
-    render ~data:(data_of_list data) ~w:(`Cycles_per_char 3) ~off:0)
+    render ~data:(data_of_list data) ~w:(`Time_steps_per_char 3) ~off:0)
 ;;
 
 let test_back_to_back data ~render =
   List.iter data ~f:(fun prev ->
     List.iter data ~f:(fun data ->
       print_endline (bits_to_str prev ^ " - " ^ bits_to_str data);
-      render ~data:(data_of_list (prev @ data)) ~w:(`Cycles_per_char 3) ~off:0))
+      render ~data:(data_of_list (prev @ data)) ~w:(`Time_steps_per_char 3) ~off:0))
 ;;
 
 let fuzz_data =
@@ -252,7 +252,7 @@ let render_data ~data ~w ~off =
     ~bounds:{ r = 0; c = 0; w = 60; h = 3 }
     ~alignment:Left
     ~to_str:Bits.to_string
-    ~wave_width:w
+    ~wave_scale:w
     ~data
     ~off;
   Draw_notty.to_image ctx |> Notty_unix.output_image;
@@ -265,14 +265,14 @@ let%expect_test "data rendering" =
   in
   let data = waves.(2).wave_data in
   (* fuzzy *)
-  render_data ~data ~w:(`Cycles_per_char 3) ~off:0;
-  render_data ~data ~w:(`Cycles_per_char 2) ~off:0;
-  render_data ~data ~w:(`Cycles_per_char 1) ~off:0;
-  render_data ~data ~w:(`Chars_per_cycle 1) ~off:0;
-  render_data ~data ~w:(`Chars_per_cycle 2) ~off:0;
-  render_data ~data ~w:(`Chars_per_cycle 3) ~off:0;
-  render_data ~data ~w:(`Chars_per_cycle 4) ~off:0;
-  render_data ~data ~w:(`Chars_per_cycle 5) ~off:0;
+  render_data ~data ~w:(`Time_steps_per_char 3) ~off:0;
+  render_data ~data ~w:(`Time_steps_per_char 2) ~off:0;
+  render_data ~data ~w:(`Time_steps_per_char 1) ~off:0;
+  render_data ~data ~w:(`Chars_per_time_step 1) ~off:0;
+  render_data ~data ~w:(`Chars_per_time_step 2) ~off:0;
+  render_data ~data ~w:(`Chars_per_time_step 3) ~off:0;
+  render_data ~data ~w:(`Chars_per_time_step 4) ~off:0;
+  render_data ~data ~w:(`Chars_per_time_step 5) ~off:0;
   [%expect
     {|
     ┬╥──

@@ -5,8 +5,8 @@ module type S = sig
     type t =
       { mutable signals_width : int
       ; mutable values_width : int
-      ; mutable wave_width : int
-      ; mutable start_cycle : int
+      ; mutable wave_scale : int
+      ; mutable start_time : int
       ; mutable start_signal : int
       ; mutable selected_signal : int
       ; mutable signal_scroll : int

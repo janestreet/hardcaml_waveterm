@@ -16,13 +16,13 @@ type matched_rule =
   | Port of matched_port
   | Divider of string
 
-let compare_matched_rule_by_port s t =
+let%template compare_matched_rule_by_port (s @ local) (t @ local) =
   match s, t with
   | Port _, Divider _ -> -1
   | Divider _, Port _ -> 1
   | Divider _, Divider _ -> 0
   | Port { port; format = _ }, Port { port = port'; format = _ } ->
-    Port.compare port port'
+    (Port.compare [@mode local]) port port'
 ;;
 
 let run_rule (t : Display_rule.t) (port : Port.t) : format option =
@@ -54,6 +54,20 @@ let run_rule (t : Display_rule.t) (port : Port.t) : format option =
     Option.map (f port) ~f:(fun (wave_format, alignment) ->
       { wave_format = Some wave_format; alignment })
   | Divider _ -> (* this is handled before the call *) failwith "Unexpected"
+;;
+
+let remove_port_names rules ~port_names =
+  let port_names = Set.of_list (module String) port_names in
+  List.filter_map rules ~f:(function
+    | Display_rule.Names { names; wave_format; alignment } ->
+      let names =
+        List.filter names ~f:(fun name ->
+          not (Set.mem port_names (Port_name.to_string name)))
+      in
+      Option.some_if
+        (not (List.is_empty names))
+        (Display_rule.Names { names; wave_format; alignment })
+    | rule -> Some rule)
 ;;
 
 let run_matches rule ~unmatched =

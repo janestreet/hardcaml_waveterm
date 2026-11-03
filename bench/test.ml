@@ -1,36 +1,26 @@
 open Core
 module Bits = Hardcaml.Bits
-module Data = Hardcaml.Wave_data_in_cycles
+module Data = Hardcaml.Wave_data_in_mutable_events
 
 let size = 1_000
 
-(* Test [Data.set] *)
-(* let setup width =
- *   let data = Data.create width in
- *   let bits = Array.init size ~f:(fun _ -> Bits.random ~width) in
- *   (* Force allocation of the array - focus on the cost of the set itself *)
- *   Data.set data (size - 1) bits.(0);
- *   data, bits
- * ;;
- *
- * let loop (data, bits) =
- *   for idx = 0 to size - 1 do
- *     Data.set data idx bits.(idx)
- *   done
- * ;; *)
-
 (* Test [Data.set_mutable_unsafe] *)
 let setup width =
-  let data = Data.create width in
+  let data = Data.create width (ref (size - 1)) in
+  (* [set_mutable_unsafe] writes unchecked and never resizes: grow the store to hold
+     [size] events up front, so the loop measures the cost of the set itself. *)
+  while Data.capacity data < size do
+    Data.resize data
+  done;
   let bits = Array.init size ~f:(fun _ -> Bits.Mutable.create width) in
-  (* Force allocation of the array - focus on the cost of the set itself *)
-  Data.set_mutable_unsafe data (size - 1) bits.(0);
+  (* Touch the last slot so first-write effects are off the measured path. *)
+  Data.set_mutable_unsafe data (size - 1) ~time:(size - 1) bits.(0);
   data, bits
 ;;
 
 let loop (data, bits) =
   for idx = 0 to size - 1 do
-    Data.set_mutable_unsafe data idx bits.(idx)
+    Data.set_mutable_unsafe data idx ~time:idx bits.(idx)
   done
 ;;
 

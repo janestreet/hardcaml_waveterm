@@ -25,6 +25,10 @@ type matched_rule =
 
 val run_rule : Display_rule.t -> Port.t -> format option
 
+(** Remove [port_names] from {!Display_rule.Names} rules. Other kinds of rules are left
+    unchanged, so a removed port may still match a later non-[Names] rule. *)
+val remove_port_names : t -> port_names:string list -> t
+
 (** Construct the port order and formatting from the display rules and ports (derived from
     a testbench simulation object). Unmatched ports are not shown, unless [Rule.default]
     (or a similar custom rule) is included as the last display rule. *)

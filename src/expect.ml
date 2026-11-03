@@ -17,9 +17,9 @@ let expect
   ?display_width
   ?display_height
   ?display_values
-  ?wave_width
+  ?wave_scale
   ?signals_width
-  ?start_cycle
+  ?start_time
   ?signals_alignment
   ?(show_digest = true)
   ?serialize_to
@@ -31,9 +31,9 @@ let expect
     ?display_width
     ?display_height
     ?display_values
-    ?wave_width
+    ?wave_scale
     ?signals_width
-    ?start_cycle
+    ?start_time
     ?signals_alignment
     t;
   let digest = lazy (Waveform_digest.to_hex_string (Waveform_digest.create t)) in
@@ -59,9 +59,9 @@ let expect_exact
   ?(display_width = 90)
   ?display_height
   ?display_values
-  ?wave_width
+  ?wave_scale
   ?signals_width
-  ?start_cycle
+  ?start_time
   ?signals_alignment
   ?show_digest
   ?serialize_to
@@ -73,9 +73,9 @@ let expect_exact
     ~display_width
     ?display_height
     ?display_values
-    ?wave_width
+    ?wave_scale
     ?signals_width
-    ?start_cycle
+    ?start_time
     ?signals_alignment
     ?show_digest
     ?serialize_to

@@ -16,10 +16,6 @@ module type S = sig
         { mutable name : string
         ; style : mutable_style
         }
-    | Clock of
-        { mutable name : string
-        ; style : mutable_style
-        }
     | Binary of
         { mutable name : string
         ; data : 'data
@@ -39,6 +35,10 @@ module type S = sig
   val get_name : 'a t -> string
   val get_data : 'data t -> 'data
   val get_to_str : 'a t -> Bits.t -> string
+
+  (** Like [get_to_str], for 4-state values. Pure values display exactly as [get_to_str]. *)
+  val get_to_str_four_state : 'a t -> Four_state_logic.t -> string
+
   val get_alignment : 'a t -> Text_alignment.t
   val get_format : 'a t -> Wave_format.t
   val get_height_in_chars : 'a t -> int

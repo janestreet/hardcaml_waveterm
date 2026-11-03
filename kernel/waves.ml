@@ -6,8 +6,8 @@ module Config = struct
   type t =
     { mutable signals_width : int
     ; mutable values_width : int
-    ; mutable wave_width : int
-    ; mutable start_cycle : int
+    ; mutable wave_scale : int
+    ; mutable start_time : int
     ; mutable start_signal : int
     ; mutable selected_signal : int
     ; mutable signal_scroll : int
@@ -18,8 +18,8 @@ module Config = struct
   let default =
     { signals_width = 20
     ; values_width = 20
-    ; wave_width = 3
-    ; start_cycle = 0
+    ; wave_scale = 3
+    ; start_time = 0
     ; start_signal = 0
     ; selected_signal = 0
     ; signal_scroll = 0
