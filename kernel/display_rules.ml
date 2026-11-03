@@ -56,6 +56,20 @@ let run_rule (t : Display_rule.t) (port : Port.t) : format option =
   | Divider _ -> (* this is handled before the call *) failwith "Unexpected"
 ;;
 
+let remove_port_names rules ~port_names =
+  let port_names = Set.of_list (module String) port_names in
+  List.filter_map rules ~f:(function
+    | Display_rule.Names { names; wave_format; alignment } ->
+      let names =
+        List.filter names ~f:(fun name ->
+          not (Set.mem port_names (Port_name.to_string name)))
+      in
+      Option.some_if
+        (not (List.is_empty names))
+        (Display_rule.Names { names; wave_format; alignment })
+    | rule -> Some rule)
+;;
+
 let run_matches rule ~unmatched =
   List.partition_map unmatched ~f:(fun port ->
     match run_rule rule port with

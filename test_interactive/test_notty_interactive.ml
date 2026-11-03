@@ -28,6 +28,6 @@ let () =
            ~num_signals:1000
            ~max_bits:64
        in
-       Widget.By_cycle.run_async ~signals_width ~values_width waves)
+       Widget.By_mutable_event.run_async ~signals_width ~values_width waves)
   |> Command_unix.run
 ;;

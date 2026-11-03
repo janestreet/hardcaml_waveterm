@@ -14,7 +14,7 @@ depends: [
   "ocaml" {>= "5.1.0"}
   "async"
   "base"
-  "bignum"
+  "bin_prot"
   "core"
   "core_unix"
   "hardcaml"

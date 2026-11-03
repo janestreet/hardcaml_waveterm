@@ -55,20 +55,20 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     }
   ;;
 
-  let move_to_delta_on_active_node ~start_cycle ~search_forwards_or_backwards (t : t) =
+  let move_to_delta_on_active_node ~start_time ~search_forwards_or_backwards (t : t) =
     let selected_wave_index = t.cfg.selected_signal in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
-    | Clock _ | Empty _ | Divider _ -> None
+    | Empty _ | Divider _ -> None
     | Binary { data; _ } | Data { data; _ } ->
       let len = Data.length data in
-      let start_cycle =
+      let start_time =
         match search_forwards_or_backwards with
-        | `Forwards -> start_cycle
-        | `Backwards -> start_cycle - 1
+        | `Forwards -> start_time
+        | `Backwards -> start_time - 1
       in
       let%bind.Option initial =
-        if 0 <= start_cycle && start_cycle < len
-        then Some (Data.get data start_cycle)
+        if 0 <= start_time && start_time < len
+        then Some (Data.get data start_time)
         else None
       in
       let inc_or_dec i =
@@ -90,13 +90,13 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
              | `Backwards -> i + 1)
         else loop (inc_or_dec i)
       in
-      loop (inc_or_dec start_cycle)
+      loop (inc_or_dec start_time)
   ;;
 
   let cycle_wave_format (t : t) =
     let selected_wave_index = t.cfg.selected_signal in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
-    | Clock _ | Empty _ | Divider _ | Binary _ -> ()
+    | Empty _ | Divider _ | Binary _ -> ()
     | Data { wave_format; _ } ->
       wave_format.current
       <- (match wave_format.current with
@@ -116,7 +116,7 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
   let reset_wave_format (t : t) =
     let selected_wave_index = t.cfg.selected_signal in
     match t.currently_rendered.actual_wave.(selected_wave_index) with
-    | Clock _ | Empty _ | Divider _ | Binary _ -> ()
+    | Empty _ | Divider _ | Binary _ -> ()
     | Data { wave_format; _ } -> wave_format.current <- wave_format.default
   ;;
 
@@ -141,7 +141,6 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     match t.currently_rendered.actual_wave.(selected_wave_index) with
     | Empty _ -> ()
     | Divider { style; _ } -> style.style <- cycle_fg_colour style.style
-    | Clock { style; _ } -> style.style <- cycle_fg_colour style.style
     | Binary { style; _ } -> style.style <- cycle_fg_colour style.style
     | Data { style; _ } -> style.style <- cycle_fg_colour style.style
   ;;
@@ -152,7 +151,6 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     match t.currently_rendered.actual_wave.(selected_wave_index) with
     | Empty _ -> ()
     | Divider { style; _ } -> style.style <- toggle_bold style.style
-    | Clock { style; _ } -> style.style <- toggle_bold style.style
     | Binary { style; _ } -> style.style <- toggle_bold style.style
     | Data { style; _ } -> style.style <- toggle_bold style.style
   ;;
@@ -253,6 +251,6 @@ module Make (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     | Empty { name } ->
       toggle_module t name;
       true
-    | Clock _ | Divider _ | Data _ | Binary _ -> false
+    | Divider _ | Data _ | Binary _ -> false
   ;;
 end

@@ -6,7 +6,7 @@ let test
   ?display_rules
   ?display_width
   ?display_height
-  ?wave_width
+  ?wave_scale
   ?signals_width
   ?signals_alignment
   ()
@@ -16,7 +16,7 @@ let test
     ?display_rules
     ?display_width
     ?display_height
-    ?wave_width
+    ?wave_scale
     ?signals_width
     ?signals_alignment
 ;;
@@ -26,9 +26,9 @@ let%expect_test "default" =
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clk            ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
-    │clr            ││────────┐                                          │
+    │clock          ││────┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐              │
+    │               ││    └───┘   └───┘   └───┘   └───┘   └───           │
+    │clear          ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     │               ││────────┬───────┬───────────────────────           │
     │a              ││ 0000   │0017   │002D                              │
@@ -39,7 +39,7 @@ let%expect_test "default" =
     │output_c_with_a││                                                   │
     │               ││────────────────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -48,12 +48,12 @@ let%expect_test "display height" =
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clk            ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
-    │clr            ││────────┐                                          │
+    │clock          ││────┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐              │
+    │               ││    └───┘   └───┘   └───┘   └───┘   └───           │
+    │clear          ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -62,31 +62,31 @@ let%expect_test "display width" =
   [%expect
     {|
     ┌Signals─┐┌Waves───────────────────────┐
-    │clk     ││┌───┐   ┌───┐   ┌───┐   ┌───│
+    │clock   ││────┐   ┌───┐   ┌───┐   ┌───│
     │        ││    └───┘   └───┘   └───┘   │
-    │clr     ││────────┐                   │
+    │clear   ││────────┐                   │
     │        ││        └───────────────────│
     │        ││────────┬───────┬───────────│
     │a       ││ 0000   │0017   │002D       │
     │        ││────────┴───────┴───────────│
     │        ││────────────────┬───────┬───│
-    │b       ││ 0000           │0018   │002│
+    │b       ││ 0000           │0018   │00.│
     │        ││────────────────┴───────┴───│
     │output_c││                            │
     │        ││────────────────────────────│
     └────────┘└────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
 let%expect_test "negative wave width" =
-  test () ~wave_width:(-1) ~display_height:13;
+  test () ~wave_scale:(-1) ~display_height:13;
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clk            ││╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥╥│
-    │               ││╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨╨│
-    │clr            ││─┐                                                 │
+    │clock          ││┐╥╥╥╥                                              │
+    │               ││└╨╨╨╨                                              │
+    │clear          ││─┐                                                 │
     │               ││ └───                                              │
     │               ││─┬┬──                                              │
     │a              ││ ││0.                                              │
@@ -96,7 +96,7 @@ let%expect_test "negative wave width" =
     │               ││──┴┴─                                              │
     │output_c_with_a││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -108,7 +108,7 @@ let%expect_test "display rules" =
       ; port_name_matches (Glob "*long*") ~wave_format:Binary
       ; port_name_is_one_of [ "b"; "a" ] ~wave_format:Int
       ; divider "SEPARATOR"
-      ; port_name_is "clr" ~wave_format:(Index [ "run"; "clear" ])
+      ; port_name_is "clear" ~wave_format:(Index [ "run"; "clear" ])
       ]
   in
   print_s [%message "" (display_rules : Display_rules.t)];
@@ -123,14 +123,12 @@ let%expect_test "display rules" =
       (Regexp (re <opaque>) (wave_format (Binary)) (alignment Left))
       (Names (names (b a)) (wave_format (Int)) (alignment Left))
       (Divider SEPARATOR)
-      (Names (names (clr)) (wave_format ((Index (run clear)))) (alignment Left))))
+      (Names (names (clear)) (wave_format ((Index (run clear)))) (alignment Left))))
     |}];
   test () ~display_rules ~display_height:16;
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clk            ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
     │               ││────────────────────────────────────────           │
     │output_c_with_a││ 0                                                 │
     │               ││────────────────────────────────────────           │
@@ -140,11 +138,13 @@ let%expect_test "display rules" =
     │               ││────────┬───────┬───────────────────────           │
     │a              ││ 0      │23     │45                                │
     │               ││────────┴───────┴───────────────────────           │
-    │SEPARATOR      ││╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍│
+    │SEPARATOR╍╍╍╍╍╍││╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍│
     │               ││────────┬───────────────────────────────           │
-    │clr            ││ clear  │run                                       │
+    │clear          ││ clear  │run                                       │
+    │               ││────────┴───────────────────────────────           │
+    │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -166,44 +166,44 @@ let%expect_test "config with outputs then inputs" =
     │               ││────────────────────────────────────────           │
     │output_c_with_a││ 0                                                 │
     │               ││────────────────────────────────────────           │
-    │clk            ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
+    │               ││────┬───┬───┬───┬───┬───┬───┬───┬───┬───           │
+    │clock          ││ 1  │0  │1  │0  │1  │0  │1  │0  │1  │0             │
+    │               ││────┴───┴───┴───┴───┴───┴───┴───┴───┴───           │
     │               ││────────┬───────────────────────────────           │
-    │clr            ││ 1      │0                                         │
-    │               ││────────┴───────────────────────────────           │
+    │clear          ││ 1      │0                                         │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
 let%expect_test "single bits" =
-  let display_rules = [ Display_rule.port_name_is "clr" ~wave_format:Binary ] in
+  let display_rules = [ Display_rule.port_name_is "clear" ~wave_format:Binary ] in
   test () ~display_rules ~display_height:5;
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
     │               ││────────┬───────────────────────────────           │
-    │clr            ││ 1      │0                                         │
+    │clear          ││ 1      │0                                         │
     │               ││────────┴───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}];
-  let display_rules = [ Display_rule.port_name_is "clr" ~wave_format:Bit ] in
+  let display_rules = [ Display_rule.port_name_is "clear" ~wave_format:Bit ] in
   test () ~display_rules ~display_height:4;
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clr            ││────────┐                                          │
+    │clear          ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
 let%expect_test "Bit_or constructor" =
   let display_rules =
     Display_rule.
-      [ port_name_is "clr" ~wave_format:(Bit_or Hex)
+      [ port_name_is "clear" ~wave_format:(Bit_or Hex)
       ; port_name_is "a" ~wave_format:(Bit_or Hex)
       ; port_name_is "b" ~wave_format:(Bit_or Unsigned_int)
       ]
@@ -212,7 +212,7 @@ let%expect_test "Bit_or constructor" =
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clr            ││────────┐                                          │
+    │clear          ││────────┐                                          │
     │               ││        └───────────────────────────────           │
     │               ││────────┬───────┬───────────────────────           │
     │a              ││ 0000   │0017   │002D                              │
@@ -221,23 +221,23 @@ let%expect_test "Bit_or constructor" =
     │b              ││ 0              │24     │46                        │
     │               ││────────────────┴───────┴───────────────           │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
 let%expect_test "Alignment" =
   let display_rules alignment =
     Display_rule.
-      [ port_name_is "clr" ~wave_format:(Bit_or Hex)
+      [ port_name_is "clear" ~wave_format:(Bit_or Hex)
       ; port_name_is "a" ~wave_format:Hex ~alignment
       ; port_name_is "b" ~wave_format:(Bit_or Unsigned_int)
       ]
   in
-  test () ~display_rules:(display_rules Right) ~display_height:10 ~wave_width:1;
+  test () ~display_rules:(display_rules Right) ~display_height:10 ~wave_scale:1;
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clr            ││────┐                                              │
+    │clear          ││────┐                                              │
     │               ││    └───────────────                               │
     │               ││────┬───┬───────────                               │
     │a              ││ .00│.17│002D                                      │
@@ -246,13 +246,13 @@ let%expect_test "Alignment" =
     │b              ││ 0      │24 │46                                    │
     │               ││────────┴───┴───────                               │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}];
-  test () ~display_rules:(display_rules Left) ~display_height:10 ~wave_width:1;
+  test () ~display_rules:(display_rules Left) ~display_height:10 ~wave_scale:1;
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │clr            ││────┐                                              │
+    │clear          ││────┐                                              │
     │               ││    └───────────────                               │
     │               ││────┬───┬───────────                               │
     │a              ││ 00.│00.│002D                                      │
@@ -261,7 +261,7 @@ let%expect_test "Alignment" =
     │b              ││ 0      │24 │46                                    │
     │               ││────────┴───┴───────                               │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -270,9 +270,9 @@ let%expect_test "minimum display size" =
   [%expect
     {|
     ┌S┐┌Wa┐
-    │c││┌─│
+    │c││──│
     └─┘└──┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -281,9 +281,9 @@ let%expect_test "Custom signals width" =
   [%expect
     {|
     ┌Signals─┐┌Waves─────────────────────────────────────────────────────┐
-    │clk     ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌─│
-    │        ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘ │
-    │clr     ││────────┐                                                 │
+    │clock   ││────┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐                     │
+    │        ││    └───┘   └───┘   └───┘   └───┘   └───                  │
+    │clear   ││────────┐                                                 │
     │        ││        └───────────────────────────────                  │
     │        ││────────┬───────┬───────────────────────                  │
     │a       ││ 0000   │0017   │002D                                     │
@@ -294,15 +294,15 @@ let%expect_test "Custom signals width" =
     │output_c││                                                          │
     │        ││────────────────────────────────────────                  │
     └────────┘└──────────────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}];
   test () ~signals_width:25;
   [%expect
     {|
     ┌Signals────────────────┐┌Waves──────────────────────────────────────┐
-    │clk                    ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │                       ││    └───┘   └───┘   └───┘   └───┘   └───┘  │
-    │clr                    ││────────┐                                  │
+    │clock                  ││────┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐      │
+    │                       ││    └───┘   └───┘   └───┘   └───┘   └───   │
+    │clear                  ││────────┐                                  │
     │                       ││        └───────────────────────────────   │
     │                       ││────────┬───────┬───────────────────────   │
     │a                      ││ 0000   │0017   │002D                      │
@@ -313,7 +313,7 @@ let%expect_test "Custom signals width" =
     │output_c_with_a_long_na││                                           │
     │                       ││────────────────────────────────────────   │
     └───────────────────────┘└───────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -337,9 +337,9 @@ let%expect_test "right signals alignment" =
   [%expect
     {|
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
-    │            clk││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌──│
-    │               ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘  │
-    │            clr││────────┐                                          │
+    │          clock││────┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐              │
+    │               ││    └───┘   └───┘   └───┘   └───┘   └───           │
+    │          clear││────────┐                                          │
     │               ││        └───────────────────────────────           │
     │               ││────────┬───────┬───────────────────────           │
     │              a││ 0000   │0017   │002D                              │
@@ -352,7 +352,7 @@ let%expect_test "right signals alignment" =
     │               ││                                                   │
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
-    8810362927e35cce94c7652659a13137
+    2a68a0627c3545aa8c368d3050c0e494
     |}]
 ;;
 
@@ -393,9 +393,9 @@ let%expect_test "expect_exact" =
   [%expect_exact
     {|
 ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
-│clk               ││┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───│
-│                  ││    └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   │
-│clr               ││────────┐                                                           │
+│clock             ││────┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐                               │
+│                  ││    └───┘   └───┘   └───┘   └───┘   └───                            │
+│clear             ││────────┐                                                           │
 │                  ││        └───────────────────────────────                            │
 │                  ││────────┬───────┬───────────────────────                            │
 │a                 ││ 0000   │0017   │002D                                               │
@@ -406,7 +406,7 @@ let%expect_test "expect_exact" =
 │output_c_with_a_lo││                                                                    │
 │                  ││────────────────────────────────────────                            │
 └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-8810362927e35cce94c7652659a13137
+2a68a0627c3545aa8c368d3050c0e494
 |}]
 ;;
 
@@ -436,7 +436,7 @@ let%expect_test "auto display rules" =
     │a                 ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────────────│
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    ba2e36d1d08d114b90957c7b1fa80e3a
+    bf486cf5ba64582a9551b4b0d2ae10de
     |}];
   Waveform.expect_exact waves ~display_rules:(List.concat [ A.default ~prefix:"b$" () ]);
   [%expect
@@ -445,7 +445,7 @@ let%expect_test "auto display rules" =
     │b$a               ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────────────│
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    ba2e36d1d08d114b90957c7b1fa80e3a
+    bf486cf5ba64582a9551b4b0d2ae10de
     |}];
   Waveform.expect_exact waves ~display_rules:(List.concat [ A.default ~suffix:"$c" () ]);
   [%expect
@@ -454,7 +454,7 @@ let%expect_test "auto display rules" =
     │a$c               ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────────────│
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    ba2e36d1d08d114b90957c7b1fa80e3a
+    bf486cf5ba64582a9551b4b0d2ae10de
     |}]
 ;;
 
@@ -466,7 +466,7 @@ let%expect_test "look_for_nth_instance_of_condition_in_waveform with suffix and 
       waveform
       ~n:1
       ~conditions:
-        [ { Wave_condition.how_to_find = Suffix "clr"
+        [ { Wave_condition.how_to_find = Suffix "clear"
           ; condition = (fun bits -> Bits.equal bits Bits.vdd)
           }
         ]
@@ -493,12 +493,12 @@ let%expect_test "look_for_nth_instance_of_condition_in_waveform with pos/span/ne
   let waveform = Lazy.force testbench in
   (* In the testbench: clr = 1 at cycle 0, 0 at cycles 1..4. *)
   let clr_is_high =
-    { Wave_condition.how_to_find = Suffix "clr"
+    { Wave_condition.how_to_find = Suffix "clear"
     ; condition = (fun bits -> Bits.equal bits Bits.vdd)
     }
   in
   let clr_is_low =
-    { Wave_condition.how_to_find = Suffix "clr"
+    { Wave_condition.how_to_find = Suffix "clear"
     ; condition = (fun bits -> Bits.equal bits Bits.gnd)
     }
   in

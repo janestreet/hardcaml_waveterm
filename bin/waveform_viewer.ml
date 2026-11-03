@@ -54,9 +54,9 @@ let command_show =
     ~summary:"Display a hardcaml waveform from a waveform binary dump."
     [%map_open.Command
       let filename = anon ("filename" %: Filename_unix.arg_type)
-      and wave_width = flag "-scale" (optional int) ~doc:" Waveform scale"
-      and start_cycle =
-        flag "-start-cycle" (optional int) ~doc:" Initial clock cycle to render"
+      and wave_scale = flag "-scale" (optional int) ~doc:" Waveform scale"
+      and start_time =
+        flag "-start-time" (optional int) ~doc:" Initial time step to render"
       and signals_width =
         flag "-signals-width" (optional int) ~doc:" Width of signals display window"
       and values_width =
@@ -69,16 +69,18 @@ let command_show =
           (optional string)
           ~doc:" Location to save/load UI state file"
       and regex_engine = regex_engine_flag
-      and wave_format = wave_format_flag in
+      and wave_format = wave_format_flag
+      and properties = return [] in
       fun () ->
         let waveform = Hardcaml_waveterm.Waveform.Serialize.unmarshall filename in
         let display_rules = get_display_rules ~regex_engine ~display_rules ~wave_format in
+        let waveform = waveform in
         Hardcaml_waveterm_interactive.Widget.run
           ?ui_state_file
           ?signals_width
           ?values_width
-          ?start_cycle
-          ?wave_width
+          ?start_time
+          ?wave_scale
           ?display_rules
           waveform]
 ;;
@@ -94,7 +96,6 @@ let command_convert =
         Waveform.Serialize.marshall_vcd waves filename_out]
 ;;
 
-let () =
-  Command_unix.run
-    (Command.group ~summary:"" [ "show", command_show; "convert", command_convert ])
-;;
+let commands = [ "show", command_show; "convert", command_convert ]
+let commands = commands
+let () = Command_unix.run (Command.group ~summary:"" commands)

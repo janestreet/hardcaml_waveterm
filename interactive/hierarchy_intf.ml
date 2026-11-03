@@ -33,7 +33,7 @@ module M (Data : Hardcaml_waveterm_kernel.Data.S) = struct
     val toggle_selected_module_if_present : t -> bool
 
     val move_to_delta_on_active_node
-      :  start_cycle:int
+      :  start_time:int
       -> search_forwards_or_backwards:[< `Backwards | `Forwards ]
       -> t
       -> int option

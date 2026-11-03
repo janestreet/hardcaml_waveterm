@@ -32,55 +32,59 @@ module Waveform_window = struct
 
     let show_help _ = Show_help
 
-    let cursor_centered_zoom t ~new_wave_width =
+    let cursor_centered_zoom t ~new_wave_scale =
       let cfg = cfg t in
-      let new_wave_width =
-        let new_wave_width = Int.min new_wave_width 1_000 in
-        let new_wave_width = Int.max new_wave_width (-1_000_000) in
-        new_wave_width
+      let new_wave_scale =
+        let new_wave_scale = Int.min new_wave_scale 1_000 in
+        let new_wave_scale = Int.max new_wave_scale (-1_000_000) in
+        new_wave_scale
       in
-      (* Set the new wave width *)
-      cfg.wave_width <- new_wave_width;
+      (* Set the new wave scale *)
+      cfg.wave_scale <- new_wave_scale;
       (* Center on cursor, if set *)
       Option.iter
         (Cursors.get_offset (cursors t))
         ~f:(fun cursor_offset ->
-          set_cycle_offset t (cursor_offset - (cycles_displayed t / 2)))
+          set_time_offset t (cursor_offset - (time_steps_displayed t / 2)))
     ;;
 
     let cursor_centered_zoom_out t =
-      cursor_centered_zoom t ~new_wave_width:((cfg t).wave_width - 1);
+      cursor_centered_zoom t ~new_wave_scale:((cfg t).wave_scale - 1);
       Redraw_window
     ;;
 
     let cursor_centered_zoom_in t =
-      cursor_centered_zoom t ~new_wave_width:((cfg t).wave_width + 1);
+      cursor_centered_zoom t ~new_wave_scale:((cfg t).wave_scale + 1);
       Redraw_window
     ;;
 
     let cursor_centered_zoom_out_fast t =
       let cfg = cfg t in
-      let new_wave_width =
-        if cfg.wave_width = 0
+      let new_wave_scale =
+        (* [wave_scale = 0] is the pivot between chars-per-time-step and
+           time-steps-per-char, where halving/doubling makes no progress, so step off it
+           explicitly. *)
+        if cfg.wave_scale = 0
         then -1
-        else if cfg.wave_width < 0
-        then cfg.wave_width * 2
-        else cfg.wave_width / 2
+        else if cfg.wave_scale < 0
+        then cfg.wave_scale * 2
+        else cfg.wave_scale / 2
       in
-      cursor_centered_zoom t ~new_wave_width;
+      cursor_centered_zoom t ~new_wave_scale;
       Redraw_window
     ;;
 
     let cursor_centered_zoom_in_fast t =
       let cfg = cfg t in
-      let new_wave_width =
-        if cfg.wave_width = 0
+      let new_wave_scale =
+        (* See [cursor_centered_zoom_out_fast] for why [wave_scale = 0] is special. *)
+        if cfg.wave_scale = 0
         then 1
-        else if cfg.wave_width > 0
-        then cfg.wave_width * 2
-        else cfg.wave_width / 2
+        else if cfg.wave_scale > 0
+        then cfg.wave_scale * 2
+        else cfg.wave_scale / 2
       in
-      cursor_centered_zoom t ~new_wave_width;
+      cursor_centered_zoom t ~new_wave_scale;
       Redraw_window
     ;;
 
@@ -109,12 +113,12 @@ module Waveform_window = struct
     ;;
 
     let scroll_wave_to_beginning t =
-      set_cycle_offset t 0;
+      set_time_offset t 0;
       Redraw_window
     ;;
 
     let scroll_wave_to_end t =
-      set_cycle_offset t (max_cycle_offset t);
+      set_time_offset t (max_time_offset t);
       Redraw_window
     ;;
 
@@ -130,7 +134,7 @@ module Waveform_window = struct
 
     let scroll_horizontal t ~by =
       let by = by * scroll_step t in
-      set_cycle_offset t (get_cycle_offset t + by);
+      set_time_offset t (get_time_offset t + by);
       Redraw_window
     ;;
 
@@ -176,28 +180,28 @@ module Waveform_window = struct
         (match get_cursor_offset t with
          | None ->
            (* No cursor - scroll screen *)
-           set_cycle_offset t (get_cycle_offset t + by)
+           set_time_offset t (get_time_offset t + by)
          | Some cursor_offset ->
            (* move cursor and update scroll if needed *)
            set_cursor_offset t (cursor_offset + by);
            Option.iter (get_cursor_offset t) ~f:(fun cursor_offset ->
-             if cursor_offset < get_cycle_offset t
-             then set_cycle_offset t cursor_offset
+             if cursor_offset < get_time_offset t
+             then set_time_offset t cursor_offset
              else if cursor_offset > max_cycle
              then (
                let diff = cursor_offset - max_cycle in
-               set_cycle_offset t (get_cycle_offset t + diff))));
+               set_time_offset t (get_time_offset t + diff))));
         Redraw_window
     ;;
 
     let center_on_cursor t =
       Option.iter (get_cursor_offset t) ~f:(fun cursor_offset ->
-        set_cycle_offset t (cursor_offset - (cycles_displayed t / 2)));
+        set_time_offset t (cursor_offset - (time_steps_displayed t / 2)));
       Redraw_window
     ;;
 
     let set_cursor_to_first_wave_on_screen t =
-      set_cursor_offset t (get_cycle_offset t);
+      set_cursor_offset t (get_time_offset t);
       Redraw_window
     ;;
 
@@ -250,20 +254,20 @@ module Waveform_window = struct
         | Some offset -> Int.max 0 offset
         | None -> 0
       in
-      let new_cycle_offset =
+      let new_time_offset =
         Hierarchy.move_to_delta_on_active_node
-          ~start_cycle:wave_cursor
+          ~start_time:wave_cursor
           ~search_forwards_or_backwards
           (hierarchy t)
       in
-      match new_cycle_offset with
+      match new_time_offset with
       | None -> No_action
-      | Some new_cycle_offset ->
-        let distance = new_cycle_offset - wave_cursor in
-        Cursors.set_offset cursor (Some new_cycle_offset);
+      | Some new_time_offset ->
+        let distance = new_time_offset - wave_cursor in
+        Cursors.set_offset cursor (Some new_time_offset);
         (* If the wave we are trying to select is going to be out of bounds, we move the
            window just enough so we can see it. *)
-        set_cycle_offset t (get_cycle_offset t + distance);
+        set_time_offset t (get_time_offset t + distance);
         Redraw_window
     ;;
 

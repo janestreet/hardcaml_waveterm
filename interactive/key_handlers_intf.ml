@@ -7,12 +7,12 @@ module type Waveform_window_api = sig
   val cfg : t -> Hardcaml_waveterm_kernel.Waves.Config.t
   val cursors : t -> Cursors.t
   val hierarchy : t -> hierarchy
-  val cycles_displayed : t -> int
-  val set_cycle_offset : t -> int -> unit
-  val get_cycle_offset : t -> int
+  val time_steps_displayed : t -> int
+  val set_time_offset : t -> int -> unit
+  val get_time_offset : t -> int
   val set_signal_offset : t -> int -> unit
   val get_signal_offset : t -> int
-  val max_cycle_offset : t -> int
+  val max_time_offset : t -> int
   val max_signal_offset : t -> int
   val change_selected_signal_index : t -> by:int -> int
   val max_view : t -> (int * int option) option

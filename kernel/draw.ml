@@ -1,60 +1,5 @@
 open Base
 
-type piece =
-  (* lines *)
-  | TL
-  | BR
-  | BL
-  | TR
-  | V
-  | H
-  | T
-  | Tu
-  | C
-  (* full/half blocks *)
-  | F
-  | TH
-  | BH
-  | LH
-  | RH
-  (* quarter blocks *)
-  | QTL
-  | QBR
-  | QBL
-  | QTR
-  (* Arrows *)
-  | Up_arrow
-  | Down_arrow
-  | H_dash
-[@@deriving sexp_of]
-
-(* kinda interesting *)
-let bars = true
-
-let unicode_of_piece = function
-  | TL -> 0x2518
-  | BR -> 0x250c
-  | BL -> 0x2510
-  | TR -> 0x2514
-  | V -> 0x2502
-  | H -> 0x2500
-  | T -> 0x252c
-  | Tu -> 0x2534
-  | C -> 0x253c
-  | F -> if bars then 0x2551 else 0x2588
-  | TH -> if bars then 0x2568 else 0x2580
-  | BH -> if bars then 0x2565 else 0x2584
-  | LH -> 0x258c
-  | RH -> 0x2590
-  | QTL -> 0x2598
-  | QBR -> 0x2597
-  | QBL -> 0x2596
-  | QTR -> 0x259d
-  | Up_arrow -> 0x2191
-  | Down_arrow -> 0x2193
-  | H_dash -> 0x254d
-;;
-
 type ctx = (int * Style.t) array array
 
 let rows ctx = Array.length ctx
@@ -87,8 +32,8 @@ let draw_char ~ctx ~style ~bounds ~r ~c ch =
   draw_int ~ctx ~style ~bounds ~r ~c (Char.to_int ch)
 ;;
 
-let draw_piece ~ctx ~style ~bounds ~r ~c piece =
-  draw_int ~ctx ~style ~bounds ~r ~c (unicode_of_piece piece)
+let draw_glyph ~ctx ~style ~bounds ~r ~c glyph =
+  draw_int ~ctx ~style ~bounds ~r ~c (Glyph.to_unicode glyph)
 ;;
 
 let fill ~ctx ~style ~(bounds : Rect.t) ch =
@@ -119,21 +64,21 @@ let draw_box ~ctx ~style ~(bounds : Rect.t) label =
   let w, h = bounds.w, bounds.h in
   assert (w >= 2 && h >= 2);
   (* min box size including borders *)
-  draw_piece ~ctx ~style ~bounds ~r:0 ~c:0 BR;
-  draw_piece ~ctx ~style ~bounds ~r:(h - 1) ~c:0 TR;
-  draw_piece ~ctx ~style ~bounds ~r:0 ~c:(w - 1) BL;
-  draw_piece ~ctx ~style ~bounds ~r:(h - 1) ~c:(w - 1) TL;
+  draw_glyph ~ctx ~style ~bounds ~r:0 ~c:0 Top_left;
+  draw_glyph ~ctx ~style ~bounds ~r:(h - 1) ~c:0 Bottom_left;
+  draw_glyph ~ctx ~style ~bounds ~r:0 ~c:(w - 1) Top_right;
+  draw_glyph ~ctx ~style ~bounds ~r:(h - 1) ~c:(w - 1) Bottom_right;
   for c = 1 to w - 2 do
-    draw_piece ~ctx ~style ~bounds ~r:0 ~c H
+    draw_glyph ~ctx ~style ~bounds ~r:0 ~c Horizontal
   done;
   for c = 1 to w - 2 do
-    draw_piece ~ctx ~style ~bounds ~r:(h - 1) ~c H
+    draw_glyph ~ctx ~style ~bounds ~r:(h - 1) ~c Horizontal
   done;
   for r = 1 to h - 2 do
-    draw_piece ~ctx ~style ~bounds ~r ~c:0 V
+    draw_glyph ~ctx ~style ~bounds ~r ~c:0 Vertical
   done;
   for r = 1 to h - 2 do
-    draw_piece ~ctx ~style ~bounds ~r ~c:(w - 1) V
+    draw_glyph ~ctx ~style ~bounds ~r ~c:(w - 1) Vertical
   done;
   draw_string ~ctx ~style ~bounds:{ bounds with w = w - 1 } ~r:0 ~c:1 label
 ;;

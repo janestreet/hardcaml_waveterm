@@ -11,7 +11,7 @@ type colour =
   | Magenta
   | Cyan
   | White
-[@@deriving sexp_of, compare ~localize, equal ~localize]
+[@@deriving sexp_of, compare, equal]
 
 (** foreground/backgound colours and weight (bold) *)
 type t =
@@ -19,7 +19,7 @@ type t =
   ; fg : colour
   ; bg : colour
   }
-[@@deriving sexp_of, compare ~localize, equal ~localize]
+[@@deriving sexp_of, compare, equal]
 
 (** white on black, normal weight *)
 val default : t

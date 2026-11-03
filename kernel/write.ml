@@ -174,7 +174,13 @@ let utf8 ?(styler = no_styler) os ctx =
           | 0 -> Char.of_int_exn ((c lsr 12) lor 0b11100000)
           | 1 -> Char.of_int_exn ((c lsr 6) land 0b00111111 lor 0b10000000)
           | _ -> Char.of_int_exn (c land 0b00111111 lor 0b10000000)))
-    else failwith "extend utf-8 writer!"
+    else
+      os
+        (String.init 4 ~f:(function
+          | 0 -> Char.of_int_exn ((c lsr 18) lor 0b11110000)
+          | 1 -> Char.of_int_exn ((c lsr 12) land 0b00111111 lor 0b10000000)
+          | 2 -> Char.of_int_exn ((c lsr 6) land 0b00111111 lor 0b10000000)
+          | _ -> Char.of_int_exn (c land 0b00111111 lor 0b10000000)))
   in
   let bounds = get_bounds ctx in
   styler.start os;

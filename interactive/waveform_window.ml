@@ -30,7 +30,7 @@ struct
     ; scroll_waves : Scroll.HScrollbar.t
     ; scroll_vert : Scroll.VScrollbar.t
     ; max_signal_offset : int
-    ; max_cycle_offset : int
+    ; max_time_offset : int
     ; ui_state_file : string
     ; key_table : (Key_actions.Key.t, t -> Event_response.t) Hashtbl.t
     }
@@ -44,10 +44,10 @@ struct
     Scroll.Scrollbar.set_offset t.scroll_vert offset
   ;;
 
-  let get_cycle_offset (t : t) = t.hierarchy.cfg.start_cycle
+  let get_time_offset (t : t) = t.hierarchy.cfg.start_time
 
-  let set_cycle_offset (t : t) offset =
-    t.hierarchy.cfg.start_cycle <- max 0 (min (t.max_cycle_offset - 1) offset);
+  let set_time_offset (t : t) offset =
+    t.hierarchy.cfg.start_time <- max 0 (min (t.max_time_offset - 1) offset);
     Scroll.Scrollbar.set_offset t.scroll_waves offset
   ;;
 
@@ -56,7 +56,7 @@ struct
   let set_cursor_offset (t : t) offset =
     Cursors.set_offset
       t.hierarchy.cursors
-      (Some (max 0 (min (t.max_cycle_offset - 1) offset)))
+      (Some (max 0 (min (t.max_time_offset - 1) offset)))
   ;;
 
   let _get_signal_name_offset (t : t) = t.hierarchy.cfg.signal_scroll
@@ -77,18 +77,19 @@ struct
     Scroll.Scrollbar.set_offset t.scroll_values offset
   ;;
 
-  let cycles_displayed t =
-    match Render.wave_width_of_code t.hierarchy.cfg.wave_width with
-    | `Cycles_per_char w ->
+  let time_steps_displayed t =
+    match Render.wave_scale_of_code t.hierarchy.cfg.wave_scale with
+    | `Time_steps_per_char w ->
       (* This isn't the actual bounds - it needs adjustment for the border. *)
       t.waves_window.bounds.w * w
-    | `Chars_per_cycle w -> Int.round_down ~to_multiple_of:w t.waves_window.bounds.w / w
+    | `Chars_per_time_step w ->
+      Int.round_down ~to_multiple_of:w t.waves_window.bounds.w / w
   ;;
 
   let scroll_step t =
-    match Render.wave_width_of_code t.hierarchy.cfg.wave_width with
-    | `Chars_per_cycle _ -> 1
-    | `Cycles_per_char w -> w
+    match Render.wave_scale_of_code t.hierarchy.cfg.wave_scale with
+    | `Chars_per_time_step _ -> 1
+    | `Time_steps_per_char w -> w
   ;;
 
   module Keys =
@@ -99,12 +100,12 @@ struct
         let cfg (t : t) = t.hierarchy.cfg
         let cursors (t : t) = t.hierarchy.cursors
         let hierarchy (t : t) = t.hierarchy
-        let cycles_displayed = cycles_displayed
-        let set_cycle_offset = set_cycle_offset
-        let get_cycle_offset = get_cycle_offset
+        let time_steps_displayed = time_steps_displayed
+        let set_time_offset = set_time_offset
+        let get_time_offset = get_time_offset
         let set_signal_offset = set_signal_offset
         let get_signal_offset = get_signal_offset
-        let max_cycle_offset t = t.max_cycle_offset
+        let max_time_offset t = t.max_time_offset
         let max_signal_offset t = t.max_signal_offset
 
         let change_selected_signal_index t ~by =
@@ -113,7 +114,7 @@ struct
 
         let max_view t =
           (* [pick] the bottom right character of the window bounds and see what
-             cycle/signal we select *)
+             time/signal we select *)
           let rendered_waves = Hierarchy.get_currently_rendered_waves t.hierarchy in
           let bounds = Draw_notty.Border.adjust t.waves_window.bounds in
           match
@@ -128,7 +129,7 @@ struct
               ~c:(bounds.c + bounds.w - 1)
               rendered_waves
           with
-          | Wave { cycle; signal_index } -> Some (cycle, signal_index)
+          | Wave { time; signal_index } -> Some (time, signal_index)
           | _ -> None
         ;;
 
@@ -201,7 +202,7 @@ struct
       in
       values_window, scroll_values
     in
-    let max_cycle_offset = Render.total_cycles_in_waveform waves in
+    let max_time_offset = Render.total_time_steps_in_waveform waves in
     let max_signal_offset = Render.total_signals_in_waveform waves in
     let waves =
       match waveform with
@@ -216,7 +217,7 @@ struct
           ~container:bounds_wo_vert_scroll
           ~c
           ~w
-          ~range:max_cycle_offset
+          ~range:max_time_offset
           ()
       in
       let waves_window : Waves_window.t With_bounds.t =
@@ -239,13 +240,13 @@ struct
       ; scroll_waves
       ; scroll_vert
       ; max_signal_offset
-      ; max_cycle_offset
+      ; max_time_offset
       ; ui_state_file
       ; key_table
       }
     in
     Scroll.Scrollbar.on_offset_change scroll_vert ~f:(set_signal_offset waveform);
-    Scroll.Scrollbar.on_offset_change scroll_waves ~f:(set_cycle_offset waveform);
+    Scroll.Scrollbar.on_offset_change scroll_waves ~f:(set_time_offset waveform);
     Scroll.Scrollbar.on_offset_change scroll_signals ~f:(set_signal_name_offset waveform);
     Scroll.Scrollbar.on_offset_change scroll_values ~f:(set_value_offset waveform);
     Scroll.Scrollbar.set_offset_max scroll_values;
@@ -272,7 +273,7 @@ struct
       "values"
       t.values_window.window;
     let cursor_sel = Cursors.get_selected_as_string cursors in
-    let cursor_cycle = Cursors.get_offset_as_string cursors in
+    let cursor_time = Cursors.get_offset_as_string cursors in
     let cursor_deltas =
       match Cursors.get_offset cursors with
       | None -> "-"
@@ -296,7 +297,7 @@ struct
       ~ctx
       ~bounds:t.waves_window.bounds
       [%string
-        "waves [%{cfg.start_cycle#Int} cursor %{cursor_sel}:%{cursor_cycle} deltas \
+        "waves [%{cfg.start_time#Int} cursor %{cursor_sel}:%{cursor_time} deltas \
          %{cursor_deltas}]"]
       t.waves_window.window;
     Scroll.VScrollbar.draw ~ctx ~style:Style.default t.scroll_vert;
@@ -335,8 +336,8 @@ struct
              ~c:col
              rendered_waves
          with
-         | Wave { cycle; signal_index = _ } ->
-           Cursors.set_offset cursors (Some cycle);
+         | Wave { time; signal_index = _ } ->
+           Cursors.set_offset cursors (Some time);
            true
          | _ -> false)
       | _ -> false
@@ -368,7 +369,6 @@ struct
                  let name = Wave.get_name actual_wave in
                  Hierarchy.toggle_module t.hierarchy name;
                  true
-               | Clock _ -> false
                | _ ->
                  (* Select the highlighted signal *)
                  t.hierarchy.cfg.selected_signal <- signal_index;
@@ -378,11 +378,11 @@ struct
            Option.iter signal_index ~f:(fun signal_index ->
              t.hierarchy.cfg.selected_signal <- signal_index);
            true
-         | Wave { cycle; signal_index } ->
+         | Wave { time; signal_index } ->
            (* Select the highlighted signal and place the cursor *)
            Option.iter signal_index ~f:(fun signal_index ->
              t.hierarchy.cfg.selected_signal <- signal_index);
-           Cursors.set_offset cursors (Some cycle);
+           Cursors.set_offset cursors (Some time);
            true
          | Status | No_pick -> false)
       | _ -> false
@@ -396,10 +396,10 @@ struct
         set_signal_offset t (get_signal_offset t + 1);
         true
       | Some (`Scroll `Up, [ `Ctrl ]) ->
-        set_cycle_offset t (get_cycle_offset t - scroll_step t);
+        set_time_offset t (get_time_offset t - scroll_step t);
         true
       | Some (`Scroll `Down, [ `Ctrl ]) ->
-        set_cycle_offset t (get_cycle_offset t + scroll_step t);
+        set_time_offset t (get_time_offset t + scroll_step t);
         true
       | _ -> false
     in

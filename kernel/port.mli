@@ -8,4 +8,4 @@ type t =
   ; port_name : Port_name.t
   ; width : int
   }
-[@@deriving compare ~localize, sexp_of, equal ~localize]
+[@@deriving compare, sexp_of, equal]

@@ -4,8 +4,7 @@ open! Import
 
 module I : sig
   type 'a t =
-    { clk : 'a
-    ; clr : 'a
+    { clocking : 'a Clocking.t
     ; a : 'a
     }
   [@@deriving hardcaml]

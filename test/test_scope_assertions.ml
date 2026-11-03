@@ -32,16 +32,21 @@ module Or_with_enable = struct
 end
 
 let%expect_test "scope with assertions" =
-  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
+  let scope =
+    Scope.create
+      ~flatten_design:true
+      ~trace_properties:(Scope.Trace_properties.create ~enable_assertions:true ())
+      ()
+  in
   let sim =
     Or_with_enable.Sim.create
       ~config:Cyclesim.Config.trace_all
-      ~circuit_config:(Assertions.circuit_config_with_assertions scope)
+      ~circuit_config:(Scope.circuit_config_with_properties scope)
       (Or_with_enable.create scope)
   in
   let inputs = Cyclesim.inputs sim in
   let waveform, sim = Cyclesim.Waveform.create sim in
-  let assertions, sim = Assertions.trace sim (Scope.assertion_manager scope) in
+  let assertions, sim = Assertions.trace sim (Scope.property_manager scope) in
   inputs.a := Bits.of_int_trunc ~width:1 0;
   inputs.b := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
@@ -66,12 +71,12 @@ let%expect_test "scope with assertions" =
     │                            ││────────┘       └───────              │
     │enable_passthrough_assert   ││────────────────────────              │
     │                            ││                                      │
-    │enabled_means_it_is_being_us││────────────────┐                     │
-    │                            ││                └───────              │
     │result_implies_an_input_is_o││────────────────────────              │
     │                            ││                                      │
+    │enabled_means_it_is_being_us││────────────────┐                     │
+    │                            ││                └───────              │
     └────────────────────────────┘└──────────────────────────────────────┘
-    506341df454732fc001f2b86fa8ca25a
+    2975dd0cc80b329e953242ec381bba98
     (assertions
      (((enable_passthrough_assert Not_violated)
        (enabled_means_it_is_being_used (Violated (2)))
@@ -137,15 +142,20 @@ module Operator_operation = struct
 end
 
 let%expect_test "scope always with assertions" =
-  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
+  let scope =
+    Scope.create
+      ~flatten_design:true
+      ~trace_properties:(Scope.Trace_properties.create ~enable_assertions:true ())
+      ()
+  in
   let sim =
     Operator_operation.Sim.create
-      ~circuit_config:(Assertions.circuit_config_with_assertions scope)
+      ~circuit_config:(Scope.circuit_config_with_properties scope)
       (Operator_operation.create_with_always scope)
   in
   let inputs = Cyclesim.inputs sim in
   let waveform, sim = Cyclesim.Waveform.create sim in
-  let assertions, sim = Assertions.trace sim (Scope.assertion_manager scope) in
+  let assertions, sim = Assertions.trace sim (Scope.property_manager scope) in
   inputs.a := Bits.of_int_trunc ~width:1 0;
   inputs.b := Bits.of_int_trunc ~width:1 1;
   Cyclesim.cycle sim;
@@ -183,20 +193,20 @@ let%expect_test "scope always with assertions" =
     │                  ││────────┘                       └───────        │
     │result            ││        ┌───────┐       ┌───────────────        │
     │                  ││────────┘       └───────┘                       │
-    │assert_(nested_fal││────────┐       ┌───────────────────────        │
-    │                  ││        └───────┘                               │
-    │assert_(nested_tru││────────────────────────────────────────        │
-    │                  ││                                                │
     │assert_enable     ││        ┌───────────────────────┐               │
     │                  ││────────┘                       └───────        │
-    │assert_false      ││                                                │
-    │                  ││────────────────────────────────────────        │
-    │enable_->_~foo    ││────────────────────────────────────────        │
-    │                  ││                                                │
+    │assert_(nested_fal││────────┐       ┌───────────────────────        │
+    │                  ││        └───────┘                               │
     │~enable_->_foo    ││        ┌───────────────────────────────        │
     │                  ││────────┘                                       │
+    │enable_->_~foo    ││────────────────────────────────────────        │
+    │                  ││                                                │
+    │assert_false      ││                                                │
+    │                  ││────────────────────────────────────────        │
+    │assert_(nested_tru││────────────────────────────────────────        │
+    │                  ││                                                │
     └──────────────────┘└────────────────────────────────────────────────┘
-    d55aa079985ec7093fb9c721f9db0b34
+    f813990c185723fc5c2f9da10636db3b
     (assertions
      ((("assert_(nested_false)" (Violated (1)))
        ("assert_(nested_true)" Not_violated) (assert_enable (Violated (0 4)))
@@ -206,7 +216,12 @@ let%expect_test "scope always with assertions" =
 ;;
 
 let%expect_test "assertions checked to be 1 bit" =
-  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
+  let scope =
+    Scope.create
+      ~flatten_design:true
+      ~trace_properties:(Scope.Trace_properties.create ~enable_assertions:true ())
+      ()
+  in
   require_does_raise (fun () ->
     Assertions.add scope "oops - 2 bit assertion" (Signal.zero 2));
   [%expect
@@ -218,7 +233,12 @@ let%expect_test "assertions checked to be 1 bit" =
         (width 2)
         (value 0b00))))
     |}];
-  let scope = Scope.create ~flatten_design:true ~trace_properties:true () in
+  let scope =
+    Scope.create
+      ~flatten_design:true
+      ~trace_properties:(Scope.Trace_properties.create ~enable_assertions:true ())
+      ()
+  in
   require_does_raise (fun () ->
     Always.(
       compile [ Assertions.Always.add scope "oops - 2 bit assertion" (Signal.zero 2) ]));

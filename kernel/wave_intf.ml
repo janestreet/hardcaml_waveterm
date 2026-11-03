@@ -6,17 +6,13 @@ module type S = sig
     { mutable current : Wave_format.t
     ; default : Wave_format.t
     }
-  [@@deriving sexp_of, equal ~localize]
+  [@@deriving sexp_of, equal]
 
   type mutable_style = { mutable style : Style.t }
 
   type 'data t =
     | Empty of { mutable name : string }
     | Divider of
-        { mutable name : string
-        ; style : mutable_style
-        }
-    | Clock of
         { mutable name : string
         ; style : mutable_style
         }
@@ -33,12 +29,16 @@ module type S = sig
         ; text_alignment : Text_alignment.t
         ; style : mutable_style
         }
-  [@@deriving sexp_of, equal ~localize]
+  [@@deriving sexp_of, equal]
 
   val set_name : 'a t -> string -> 'a t
   val get_name : 'a t -> string
   val get_data : 'data t -> 'data
   val get_to_str : 'a t -> Bits.t -> string
+
+  (** Like [get_to_str], for 4-state values. Pure values display exactly as [get_to_str]. *)
+  val get_to_str_four_state : 'a t -> Four_state_logic.t -> string
+
   val get_alignment : 'a t -> Text_alignment.t
   val get_format : 'a t -> Wave_format.t
   val get_height_in_chars : 'a t -> int

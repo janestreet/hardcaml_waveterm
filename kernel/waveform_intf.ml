@@ -10,14 +10,14 @@ open! Hardcaml
     [display_rules] see [Display_rules]. A waveform may be constructed once and displayed
     multiple times with differing options.
 
-    [wave_width] sets the number of chars used to render each clock cycle.
+    [wave_scale] sets the relationship between waveform time steps and rendered
+    characters.
 
-    - [n>=0] ((n+1)*2) characters per cycle. This ensures that the clock is properly
-      rendered when [n=0]. The default of [3] allows up to 7 chars per cycle to be
-      rendered to represent data values in the waveform.
+    - [n>=0] [n+1] characters per time step. The default is [3], which allows up to 4
+      chars per time step to be rendered to represent data values in the waveform.
 
-    - [n<0] (-n) cycles per character. Characters in the waveform within which multiple
-      transitions occur are displayed with a double veritical bar.
+    - [n<0] [1-n] time steps per character. Characters in the waveform within which
+      multiple transitions occur are displayed with a double vertical bar.
 
     [display_width] and [display_height] set the overall size of the displayed waveform.
     An auto scaling routine assigns approximately [1/3] of the display for the signals and
@@ -32,14 +32,14 @@ type 'a with_options =
   -> ?display_width:int
   -> ?display_height:int
   -> ?display_values:bool
-  -> ?wave_width:int
+  -> ?wave_scale:int
   -> ?signals_width:int
-  -> ?start_cycle:int
+  -> ?start_time:int
   -> ?signals_alignment:Text_alignment.t
   -> 'a
 
 module type S = sig
-  type t [@@deriving sexp_of, equal ~localize]
+  type t [@@deriving sexp_of, equal]
 
   (** Write waveform into a [Buffer.t]. *)
   val to_buffer : (t -> Buffer.t) with_options
@@ -53,11 +53,15 @@ module type S = sig
 
   (** General function to look up the nth cycle where the set of conditions given are met.
       Searches cycles [pos] (default 0) through [pos + span - 1] (or to the end of the
-      waveform if [span] is not specified). [negate] inverts the combined condition. *)
+      waveform if [span] is not specified). [negate] inverts the combined condition.
+
+      If the waveform is 4 state it is converted to 2 state before the search. X&Z become
+      0. *)
   val look_for_nth_instance_of_condition_in_waveform
     :  ?pos:int
     -> ?span:int
     -> ?negate:bool
+    -> ?time_steps_per_cycle:int
     -> n:int
     -> conditions:Wave_condition.t list
     -> t
@@ -66,7 +70,8 @@ module type S = sig
   (** Convenience wrapper for [look_for_nth_instance_of_condition_in_waveform] when you
       are looking for one condition and matching by wave name *)
   val look_for_first_instance_of_condition_in_wave
-    :  f:(Bits.t -> bool)
+    :  ?time_steps_per_cycle:int
+    -> f:(Bits.t -> bool)
     -> wave_name:string
     -> t
     -> int option
@@ -74,7 +79,8 @@ module type S = sig
   (** Specialization of [look_for_nth_instance_of_condition_in_waveform] to find the first
       cycle where a wave is [vdd]. *)
   val look_for_wave_first_vdd_cycle
-    :  how_to_find:Wave_condition.How_to_find.t
+    :  ?time_steps_per_cycle:int
+    -> how_to_find:Wave_condition.How_to_find.t
     -> t
     -> int option
 end
@@ -93,13 +99,15 @@ module type Waveform = sig
   module Make (Data : Hardcaml.Wave_data.S) :
     S with type t = Data.t Hardcaml.Wave_data.Wave.t array
 
-  (** Printer for Cycle based waveforms *)
-  module By_cycle :
-    S with type t = Hardcaml.Wave_data_in_cycles.t Hardcaml.Wave_data.Wave.t array
+  (** Printer for mutable event based waveforms *)
+  module By_mutable_event :
+    S with type t = Hardcaml.Wave_data_in_mutable_events.t Hardcaml.Wave_data.Wave.t array
 
-  (** Printer for Event based waveforms *)
-  module By_event :
-    S with type t = Hardcaml.Wave_data_in_events.Bits.t Hardcaml.Wave_data.Wave.t array
+  (** Printer for 4-state mutable event based waveforms *)
+  module By_mutable_event_four_state :
+    S
+    with type t =
+      Hardcaml.Wave_data_in_mutable_events_four_state.t Hardcaml.Wave_data.Wave.t array
 
   (** Generic waveform printer *)
   include S with type t = Hardcaml.Wave_data.t
